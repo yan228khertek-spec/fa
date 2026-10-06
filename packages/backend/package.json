@@ -1,0 +1,15 @@
+{
+  "name": "@fa/backend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Приёмник CommerceML («Обмен с сайтом» 1С:Розница 2.3) и API витрины",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fastify": "^5.6.0"
+  }
+}

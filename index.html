@@ -18,13 +18,13 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--graphite);font-family:var(--ff);font-size:15px;line-height:1.5;overflow-wrap:break-word;
+body{background:var(--bg);color:var(--graphite);font-family:var(--ff);font-size:15px;line-height:1.5;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:rgba(0,0,0,.05)}
 a{color:inherit;text-decoration:none}
 button,input{font-family:inherit;font-size:16px}
 button{cursor:pointer;border:none;background:none;color:inherit}
 img{display:block;max-width:100%}
-.wrap{padding-left:calc(12px + var(--sl));padding-right:calc(12px + var(--sr))}
+.wrap{padding:0 calc(12px + var(--sl)) 0 calc(12px + var(--sr))}
 @media(min-width:900px){.wrap{max-width:1600px;margin:0 auto;padding:0 24px}}
 
 /* ═════ БЕГУЩАЯ СТРОКА ═════ */
@@ -35,15 +35,16 @@ img{display:block;max-width:100%}
 @keyframes tk{to{transform:translateX(-50%)}}
 
 /* ═════ ЧЁРНАЯ ШАПКА (leform) ═════ */
-header{position:sticky;top:0;z-index:60}
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--line);transition:transform .3s ease}
+header.hidden{transform:translateY(-100%)}
 .bar{background:#fff;color:#000;border-bottom:1px solid var(--line);display:flex;align-items:center;height:72px;position:relative;
-  padding-left:calc(6px + var(--sl));padding-right:calc(6px + var(--sr))}
+  padding:0 calc(6px + var(--sl)) 0 calc(6px + var(--sr))}
 .ic{width:48px;height:48px;display:grid;place-items:center;color:#000}
 .burger{display:block;width:20px;height:14px;position:relative}
 .burger i,.burger i::before,.burger i::after{position:absolute;left:0;width:20px;height:1.6px;background:#000;content:''}
 .burger i{top:6px}.burger i::before{top:-6px}.burger i::after{top:6px}
-.logo{position:absolute;left:50%;transform:translateX(-50%);font-weight:700;font-size:clamp(14px,4.4vw,26px);max-width:calc(100% - 150px);letter-spacing:.07em;white-space:nowrap;text-align:center}
-.logo small{display:block;font-size:clamp(6px,1.6vw,7.5px);font-weight:400;letter-spacing:.36em;color:var(--muted);margin-top:2px}
+.logo{position:absolute;left:50%;transform:translateX(-50%);font-weight:700;font-size:26px;letter-spacing:.07em;white-space:nowrap;text-align:center}
+.logo small{display:block;font-size:7.5px;font-weight:400;letter-spacing:.36em;color:var(--muted);margin-top:2px}
 .right{display:flex}
 .right .n{position:absolute;top:8px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#000;color:#fff;
   font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
@@ -62,15 +63,15 @@ header{position:sticky;top:0;z-index:60}
 .mtop button{width:44px;height:44px;display:grid;place-items:center;font-size:20px;color:#000}
 .mtabs{display:flex;gap:22px;padding:6px 18px 0;flex:none;overflow-x:auto;scrollbar-width:none}
 .mtabs::-webkit-scrollbar{display:none}
-.mtabs button{font-size:clamp(13px,3.9vw,15px);font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:#B4B1AC;
+.mtabs button{font-size:15px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:#B4B1AC;
   padding:6px 0 10px;white-space:nowrap;position:relative}
 .mtabs button.on{color:#000}
 .mtabs button.on::after{content:'';position:absolute;left:0;right:0;bottom:4px;height:1.5px;background:#000}
 .mscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 18px calc(24px + var(--sb))}
 .mgrp{margin-bottom:26px}
 .mgrp:last-child{margin-bottom:0}
-.mcap{font-size:clamp(13.5px,4vw,15px);letter-spacing:.02em;text-transform:uppercase;color:#000;margin-bottom:14px}
-.mlink{display:block;font-size:clamp(13.5px,4vw,15px);letter-spacing:.02em;text-transform:uppercase;color:#000;padding:5px 0;position:relative}
+.mcap{font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:#000;margin-bottom:14px}
+.mlink{display:block;font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:#000;padding:5px 0;position:relative}
 .mlink sup{font-size:8.5px;letter-spacing:.08em;vertical-align:super;margin-left:1px;color:#000}
 .mlink.red{color:var(--red)}
 .mlink:active{opacity:.5}
@@ -86,7 +87,7 @@ header{position:sticky;top:0;z-index:60}
 .slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .slides::-webkit-scrollbar{display:none}
 .slide{position:relative;flex:0 0 100%;scroll-snap-align:center}
-.slide img{width:100%;height:clamp(380px,74svh,660px);object-fit:cover;object-position:center 30%;display:block}
+.slide img{width:100%;height:74svh;min-height:420px;max-height:660px;object-fit:cover;object-position:center 30%;display:block}
 .slide .c{position:absolute;left:0;right:0;bottom:0;padding:100px 16px 40px;color:#fff;
   background:linear-gradient(transparent,rgba(0,0,0,.62))}
 .dots{position:absolute;left:0;right:0;bottom:16px;z-index:4;display:flex;gap:7px;justify-content:center}
@@ -98,9 +99,9 @@ header{position:sticky;top:0;z-index:60}
 @media(hover:hover) and (min-width:900px){.arw{display:grid}.arw:hover{background:#fff}}
 @media(min-width:900px){.slide img{height:66vw;max-height:760px}.slide .c{padding:140px 28px 56px}}
 .eb{font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
-.hero h1{font-size:clamp(22px,7vw,30px);font-weight:700;line-height:1.06;letter-spacing:-.01em}
+.hero h1{font-size:30px;font-weight:700;line-height:1.06;letter-spacing:-.01em}
 .hero h1 em{font-style:italic;font-weight:400}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 clamp(18px,6vw,30px);max-width:100%;background:#fff;
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 30px;background:#fff;
   color:#000;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin-top:18px}
 .btn.dark{background:#000;color:#fff}
 .btn.full{width:100%}
@@ -108,12 +109,10 @@ header{position:sticky;top:0;z-index:60}
 /* ═════ СЕТКА КАК У LEFORM ═════ */
 .sec{padding:36px 0 0}
 .sh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:16px}
-.sh h2{font-size:clamp(14px,4.2vw,17px);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.sh h2{font-size:17px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .sh a{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--graphite);padding-bottom:2px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 8px}
-@media(min-width:600px){.grid{grid-template-columns:repeat(3,1fr);gap:30px 12px}}
 @media(min-width:900px){.sec{padding:56px 0 0}.sh h2{font-size:22px}.grid{grid-template-columns:repeat(4,1fr);gap:40px 14px}}
-@media(max-width:359px){.grid{gap:20px 6px}.szs{gap:6px}.ic{width:42px;height:42px}}
 
 .card{position:relative}
 .pic{position:relative;aspect-ratio:733/1025;overflow:hidden;background:var(--soft);display:block}
@@ -122,14 +121,21 @@ header{position:sticky;top:0;z-index:60}
 .lab{position:absolute;top:8px;left:8px;z-index:3;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   padding:4px 8px;background:#fff;color:var(--graphite)}
 .lab.red{background:var(--accent);color:#fff}
-
+.needph::after{content:"фото бренда";position:absolute;left:0;right:0;bottom:0;z-index:3;background:rgba(255,255,255,.92);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#8A8780;text-align:center;padding:5px 0}
+.pic.has::after{display:none}
+.pic.drop{outline:2px dashed var(--accent);outline-offset:-3px}
+.phbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--sb));z-index:97;background:#000;color:#fff;display:flex;align-items:center;gap:14px;padding:11px 14px 11px 18px;font-size:12.5px;max-width:calc(100% - 24px)}
+.phbar button{border:1px solid #555;padding:8px 13px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;white-space:nowrap}
+.phbar button:hover{background:#fff;color:#000}
+.phbar .x{border:none;font-size:17px;padding:0 2px;color:#888}
+.phbar.hide{display:none}
 .fav{position:absolute;top:0;right:0;z-index:4;width:46px;height:46px;display:grid;place-items:center;opacity:.75}
 .fav.on svg{fill:var(--red);stroke:var(--red);opacity:1}
 .ci{padding-top:10px;text-align:left}
-.ci .br{font-size:clamp(9px,2.6vw,10px);font-weight:700;letter-spacing:.16em;text-transform:uppercase}
-.ci .nm{font-size:clamp(11.5px,3.3vw,12.5px);color:var(--muted);margin:4px 0 6px;line-height:1.35}
+.ci .br{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.ci .nm{font-size:12.5px;color:var(--muted);margin:4px 0 6px;line-height:1.35}
 .prs{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.now{font-size:clamp(12.5px,3.6vw,13.5px);font-weight:600}
+.now{font-size:13.5px;font-weight:600}
 .now.red{color:var(--red)}
 .old{font-size:12px;color:var(--muted);text-decoration:line-through}
 .szs{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}
@@ -138,25 +144,25 @@ header{position:sticky;top:0;z-index:60}
 
 /* полноширинные баннеры */
 .ban{position:relative;overflow:hidden;margin-top:36px;background:var(--soft)}
-.ban img{width:100%;height:clamp(240px,52svh,460px);object-fit:cover}
+.ban img{width:100%;height:52svh;min-height:280px;object-fit:cover}
 .ban .c{position:absolute;left:0;right:0;bottom:0;padding:80px 16px 24px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.58))}
-.ban b{display:block;font-size:clamp(16px,5vw,20px);font-weight:700}
+.ban b{display:block;font-size:20px;font-weight:700}
 .ban span{font-size:13px;opacity:.92}
 .duo{display:grid;grid-template-columns:1fr;gap:8px}
 @media(min-width:900px){.duo{grid-template-columns:1fr 1fr;gap:12px}.ban img{height:40vw;max-height:520px}}
 
 /* бренды */
 .brgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.brgrid a{border:1px solid var(--line);min-height:78px;display:grid;place-items:center;font-size:clamp(11px,3.2vw,13px);font-weight:600;letter-spacing:.08em;text-align:center;padding:10px}
+.brgrid a{border:1px solid var(--line);min-height:78px;display:grid;place-items:center;font-size:13px;font-weight:600;letter-spacing:.08em;text-align:center;padding:10px}
 @media(min-width:900px){.brgrid{grid-template-columns:repeat(5,1fr);gap:12px}}
 
 /* ═════ COOKIE КАК У ZARA ═════ */
 .cookie{position:fixed;left:0;right:0;bottom:0;z-index:98;background:#fff;border-top:1px solid var(--line);
   padding:22px 18px calc(20px + var(--sb));box-shadow:0 -18px 44px rgba(0,0,0,.14);display:none}
 .cookie.on{display:block}
-.cookie p{font-size:clamp(12.5px,3.6vw,14px);line-height:1.55;color:var(--graphite);margin-bottom:18px}
+.cookie p{font-size:14px;line-height:1.55;color:var(--graphite);margin-bottom:18px}
 .cookie p a{border:1px solid var(--graphite);padding:2px 7px;font-weight:600;white-space:nowrap;display:inline-block}
-.cookie .b{display:block;width:100%;min-height:52px;background:var(--graphite);color:#fff;font-size:clamp(11px,3.2vw,12.5px);
+.cookie .b{display:block;width:100%;min-height:52px;background:var(--graphite);color:#fff;font-size:12.5px;
   font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px;line-height:52px;text-align:center}
 .cookie .b.line{background:#fff;color:var(--graphite);border:1px solid var(--graphite)}
 .cookie .b:last-child{margin-bottom:0}
@@ -178,9 +184,12 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
 .toast.on{opacity:1;transform:none}
 @media(min-width:900px){.toast{left:50%;right:auto;transform:translate(-50%,60px);max-width:420px}.toast.on{transform:translate(-50%,0)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Шапка: плавное скрытие при скролле вниз */
+header{transition:transform .3s ease}
+header.hidden{transform:translateY(-100%)}
 </style>
 </head>
-<body>
+<body{padding-top:64px;margin:0;font-family:var(--f);background:var(--bg);color:var(--tx);...}>
 
 <div class="tick"><div class="tk" id="tk"></div></div>
 
@@ -311,6 +320,12 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
   </div>
 </div>
 
+<div class="phbar" id="phbar">
+  <span id="phstat">Перетащите фото Diesel на карточки</span>
+  <button onclick="document.getElementById('picker').click()">Выбрать</button>
+  <button class="x" onclick="document.getElementById('phbar').classList.add('hide')">✕</button>
+</div>
+<input type="file" id="picker" accept="image/*" multiple hidden>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -328,7 +343,7 @@ const DS=[
  {b:'DIESEL',n:'Футболка из обработанного хлопка',pr:13990,old:0,sz:[['XS',1],['S',1],['M',1],['L',0]],lab:'Новинка',im:[IM.d1a,IM.d1b]},
  {b:'DIESEL',n:'Платье-рубашка с принтом и денимовой вставкой',pr:66500,old:0,sz:[['XS',1],['S',1],['M',1]],lab:'Новинка',im:[IM.d2a,IM.d2b]},
  {b:'DIESEL',n:'Рубашка с драпировкой и овальным лого',pr:37525,old:0,sz:[['XS',1],['S',1],['M',1],['L',1]],lab:'',im:[IM.d3a,IM.d3b]},
- {b:'DIESEL',n:'Bootcut Jeans 1973 D-Partt, высокая посадка',pr:28025,old:34990,sz:[['25',1],['26',1],['27',1],['28',0]],lab:'Sale',im:[IM.a3]},
+ {b:'DIESEL',n:'Bootcut Jeans 1973 D-Partt, высокая посадка',pr:28025,old:34990,sz:[['25',1],['26',1],['27',1],['28',0]],lab:'Sale',im:[IM.a3],ph:1},
 ];
 const BRANDS=['MISS SIXTY','DIESEL','DOROTHEE SCHUMACHER','LUISA CERANO','MARINA RINALDI',
               'KARL LAGERFELD','MAX&MOI','AERONAUTICA MILITARE','ANNETTE GÖRTZ','SEVENTY VENEZIA'];
@@ -363,7 +378,7 @@ document.getElementById('tk').innerHTML=[...Array(2)].map(()=>
 function card(p){
   const id='p'+(++uid);
   return `<div class="card">
-   <span class="pic" onclick="toast('Карточка товара')">
+   <span class="pic${p.ph?' needph':''}" onclick="toast('Карточка товара')">
     ${p.im.map((s,i)=>`<img src="${s}" class="${i?'':'on'}" alt="">`).join('')}
     ${p.lab?`<span class="lab ${p.lab==='Sale'?'red':''}">${p.lab}</span>`:''}
    </span>
@@ -398,8 +413,59 @@ function ck(m){cookie.classList.remove('on');cdim.classList.remove('on');documen
 let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200)}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 
-
+/* ── ЗАГРУЗЧИК ФОТО: перетащите снимки на карточки ── */
+const read=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
+function paint(el,url){
+  el.classList.add('has');
+  el.querySelectorAll('img').forEach(i=>i.remove());
+  el.insertAdjacentHTML('afterbegin','<img class="on" src="'+url+'" alt="">');
+}
+async function fillAll(files){
+  const imgs=[...files].filter(f=>f.type.startsWith('image/')); if(!imgs.length)return;
+  const urls=await Promise.all(imgs.map(read));
+  const free=[...document.querySelectorAll('.pic.needph:not(.has)')];
+  urls.forEach((u,i)=>{if(free[i])paint(free[i],u)});
+  const left=document.querySelectorAll('.pic.needph:not(.has)').length;
+  document.getElementById('phstat').textContent=left?('Осталось карточек без фото: '+left):'Все карточки с фото';
+  toast(urls.length+' фото загружено');
+}
+async function fillOne(el,files){
+  const f=[...files].find(x=>x.type.startsWith('image/')); if(!f)return;
+  paint(el,await read(f)); toast('Фото заменено');
+}
+document.getElementById('picker').addEventListener('change',e=>fillAll(e.target.files));
+document.addEventListener('dragover',e=>{e.preventDefault();
+  const t=e.target.closest&&e.target.closest('.pic');
+  document.querySelectorAll('.pic.drop').forEach(x=>x.classList.remove('drop'));
+  if(t)t.classList.add('drop')});
+document.addEventListener('drop',e=>{e.preventDefault();
+  const t=e.target.closest&&e.target.closest('.pic');
+  document.querySelectorAll('.pic.drop').forEach(x=>x.classList.remove('drop'));
+  t?fillOne(t,e.dataTransfer.files):fillAll(e.dataTransfer.files)});
 setTimeout(()=>{cookie.classList.add('on');cdim.classList.add('on')},700);
+/* ── СКРЫТИЕ ШАПКИ ПРИ СКРОЛЛЕ ВНИЗ, ПОЯВЛЕНИЕ ПРИ СКРОЛЛЕ ВВЕРХ ── */
+(function(){
+  const header = document.querySelector('header');
+  let lastY = 0;
+  const THRESHOLD = 10; // минимальная разница в пикселях, чтобы срабатывало (защита от микро-скроллов)
+
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+
+    if (y > lastY && y > 80) {
+      // скроллим ВНИЗ и уже отъехали от верха — прячем шапку
+      header.classList.add('hidden');
+    } else if (y < lastY) {
+      // скроллим ВВЕРХ — показываем шапку
+      header.classList.remove('hidden');
+    }
+
+    // если вернулись в самый верх — шапка всегда видна
+    if (y <= 0) header.classList.remove('hidden');
+
+    lastY = y;
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>

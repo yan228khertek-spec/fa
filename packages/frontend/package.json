@@ -1,0 +1,9 @@
+{
+  "name": "@fa/frontend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Витрина Fashion Avenue (React/TS) — заглушка до этапа витрины",
+  "scripts": {
+    "test": "echo \"frontend: тестов пока нет\""
+  }
+}

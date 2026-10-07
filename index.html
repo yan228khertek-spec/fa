@@ -30,7 +30,6 @@
         }
         a{text-decoration:none;color:inherit}
 
-        /* ШАПКА */
         header{
             position:fixed; top:0; left:0; right:0;
             z-index:100; background:var(--bg);
@@ -45,7 +44,6 @@
         .icons span{cursor:pointer;display:flex}
         .burger{background:none;border:none;cursor:pointer;padding:4px;display:flex}
 
-        /* МЕНЮ (боковая панель) */
         .menu{
             position:fixed; top:0; left:0; bottom:0;
             width:320px; background:#fff; z-index:96;
@@ -67,7 +65,6 @@
         .mscroll{padding:20px;overflow-y:auto;flex:1}
         .mlink{display:block;padding:14px 0;font-size:15px;border-bottom:1px solid var(--line)}
 
-        /* КАРУСЕЛЬ */
         .hero{position:relative;overflow:hidden;margin-bottom:24px}
         .slides{display:flex;transition:transform .6s ease}
         .slide{min-width:100%;aspect-ratio:16/9;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;text-transform:uppercase}
@@ -75,12 +72,10 @@
         .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5);border:none;cursor:pointer}
         .dot.on{background:#fff}
 
-        /* ПЕРЕКЛЮЧАТЕЛЬ М/Ж */
         .gender-toggle{display:flex;max-width:1200px;margin:0 auto 24px;padding:0 20px;border-bottom:1px solid var(--line)}
         .gender-toggle button{flex:1;padding:14px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--ff);font-size:15px;font-weight:500;cursor:pointer;color:var(--muted)}
         .gender-toggle button.on{color:var(--graphite);border-bottom-color:var(--graphite)}
 
-        /* СЕТКИ ТОВАРОВ */
         .section{max-width:1200px;margin:0 auto 40px;padding:0 20px}
         .section h2{font-size:22px;font-weight:700;margin-bottom:20px;text-transform:uppercase;letter-spacing:.05em}
         .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
@@ -97,17 +92,14 @@
         .szs button{padding:4px 10px;border:1px solid var(--line);background:var(--bg);border-radius:4px;font-family:var(--ff);font-size:12px;cursor:pointer}
         .szs button.no{opacity:.4;cursor:not-allowed}
 
-        /* БРЕНДЫ */
         .brgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
         .brgrid a{display:flex;align-items:center;justify-content:center;padding:20px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;transition:all .3s}
         .brgrid a:hover{border-color:var(--graphite);transform:translateY(-2px)}
 
-        /* COOKIE */
         .cookie-banner{position:fixed;bottom:20px;left:20px;right:20px;max-width:400px;background:var(--graphite);color:#fff;padding:16px 20px;border-radius:12px;font-size:14px;z-index:90;display:none}
         .cookie-banner.on{display:block}
         .cookie-banner button{margin-top:12px;padding:8px 16px;background:#fff;color:var(--graphite);border:none;border-radius:6px;font-family:var(--ff);font-weight:600;cursor:pointer}
 
-        /* ФУТЕР */
         footer{border-top:1px solid var(--line);margin-top:44px;padding:30px 0 calc(34px + var(--sb));font-size:13px}
         .fg{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1200px;margin:0 auto;padding:0 20px}
         footer b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:11px}
@@ -116,7 +108,6 @@
         .footer-bottom{max-width:1200px;margin:20px auto 0;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:#888;text-align:center}
         @media(min-width:900px){.fg{grid-template-columns:repeat(4,1fr)}}
 
-        /* ТОСТ */
         .toast{
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px);
             background:var(--graphite); color:#fff; padding:12px 20px; border-radius:8px;
@@ -132,12 +123,9 @@
 </head>
 <body>
 
-    <!-- ПЛЕЙСХОЛДЕР ШАПКИ -->
     <div id="header-placeholder"></div>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main>
-        <!-- КАРУСЕЛЬ -->
         <section class="hero">
             <div class="slides" id="slides">
                 <div class="slide">Новая коллекция Miss Sixty</div>
@@ -147,46 +135,38 @@
             <div class="dots" id="dots"></div>
         </section>
 
-        <!-- ПЕРЕКЛЮЧАТЕЛЬ -->
         <div class="gender-toggle">
             <button class="on" onclick="setGender('women',this)">Женское</button>
             <button onclick="setGender('men',this)">Мужское</button>
         </div>
 
-        <!-- MISS SIXTY -->
         <section class="section">
             <h2>Miss Sixty</h2>
             <div class="grid" id="g1"></div>
         </section>
 
-        <!-- DIESEL -->
         <section class="section">
             <h2>Diesel</h2>
             <div class="grid" id="g2"></div>
         </section>
 
-        <!-- БРЕНДЫ -->
         <section class="section">
             <h2>Бренды</h2>
             <div class="brgrid" id="brg"></div>
         </section>
     </main>
 
-    <!-- COOKIE -->
     <div class="cookie-banner" id="cookieBanner">
         Мы используем cookies для улучшения работы сайта.
         <br>
         <button onclick="acceptCookies()">Принять</button>
     </div>
 
-    <!-- ПЛЕЙСХОЛДЕР ФУТЕРА -->
     <div id="footer-placeholder"></div>
 
-    <!-- ТОСТ -->
     <div class="toast" id="toast"></div>
 
     <script>
-    /* === ЗАГРУЗКА HEADER И FOOTER === */
     async function loadPartials() {
         try {
             const [headerRes, footerRes] = await Promise.all([
@@ -202,28 +182,26 @@
         }
     }
 
-    /* === ДАННЫЕ === */
-    const MS = [
-        {n:'Джинсы Miss Sixty', p:'18 900 ₽', sz:[['XS',1],['S',1],['M',1],['L',0]]},
-        {n:'Юбка Miss Sixty', p:'14 500 ₽', sz:[['S',1],['M',1],['L',1]]},
-        {n:'Блуза Miss Sixty', p:'12 900 ₽', sz:[['XS',1],['S',0],['M',1]]},
-        {n:'Платье Miss Sixty', p:'22 000 ₽', sz:[['S',1],['M',1],['L',1],['XL',0]]}
+    const MS=[
+        {b:'MISS SIXTY',n:'Блуза-халтер из хлопка',pr:18990,old:0,sz:[['XS',1],['S',1],['M',1],['L',0]],lab:'Новинка'},
+        {b:'MISS SIXTY',n:'Лонгслив с принтом «Русалка»',pr:28990,old:0,sz:[['XS',1],['S',1],['M',1]],lab:'Новинка'},
+        {b:'MISS SIXTY',n:'Сумка-хобо с тиснением',pr:44990,old:0,sz:[['One size',1]],lab:''},
+        {b:'MISS SIXTY',n:'Ремень кожаный с металлическим лого',pr:21990,old:0,sz:[['80',1],['85',1],['90',0]],lab:''}
     ];
-    const DS = [
-        {n:'Джинсы Diesel', p:'24 900 ₽', sz:[['28',1],['30',1],['32',1],['34',0]]},
-        {n:'Куртка Diesel', p:'38 500 ₽', sz:[['S',1],['M',1],['L',1]]},
-        {n:'Футболка Diesel', p:'8 900 ₽', sz:[['S',1],['M',1],['L',1],['XL',1]]},
-        {n:'Сумка Diesel', p:'19 900 ₽', sz:[['ONE',1]]}
+    const DS=[
+        {b:'DIESEL',n:'Джинсы D-Jet',pr:24990,old:0,sz:[['28',1],['30',1],['32',1],['34',0]],lab:''},
+        {b:'DIESEL',n:'Куртка-косуха',pr:38500,old:0,sz:[['S',1],['M',1],['L',1]],lab:'Новинка'},
+        {b:'DIESEL',n:'Футболка с лого',pr:8900,old:0,sz:[['S',1],['M',1],['L',1],['XL',1]],lab:''},
+        {b:'DIESEL',n:'Сумка через плечо',pr:19900,old:0,sz:[['ONE',1]],lab:''}
     ];
     const BRANDS = ['Balmain','Bottega Veneta','Burberry','Chloé','Diesel','Gucci','Prada','Saint Laurent','Brunello Cucinelli','TOTEME','Santoni','Marni','Moschino','Giorgio Armani','BOSS','Brioni'];
 
-    /* === РЕНДЕР КАРТОЧЕК === */
     function card(p){
         return `<div class="card">
             <div class="pic"><div style="width:100%;height:100%;background:var(--soft)"></div></div>
             <div class="card-info">
                 <div class="card-name">${p.n}</div>
-                <div class="card-price">${p.p}</div>
+                <div class="card-price">${p.pr.toLocaleString('ru-RU')} ₽</div>
                 <div class="szs">${p.sz.map(s=>`<button class="${s[1]?'':'no'}" onclick="${s[1]?`add('${p.n.replace(/'/g,"")}','${s[0]}')`:`toast('Размер закончился')`}">${s[0]}</button>`).join('')}</div>
             </div>
         </div>`;
@@ -233,7 +211,6 @@
     document.getElementById('g2').innerHTML = DS.map(card).join('');
     document.getElementById('brg').innerHTML = BRANDS.map(b=>`<a href="#" onclick="toast('Страница бренда ${b}');return false">${b}</a>`).join('');
 
-    /* === ФУНКЦИИ === */
     function openMenu(){
         const m=document.getElementById('menu'), o=document.getElementById('menuOverlay');
         if(m) m.classList.add('on');
@@ -261,7 +238,6 @@
     }
     function acceptCookies(){document.getElementById('cookieBanner').classList.remove('on')}
 
-    /* === КАРУСЕЛЬ === */
     (function(){
         const slides=document.getElementById('slides');
         const dotsWrap=document.getElementById('dots');
@@ -282,12 +258,10 @@
         setInterval(()=>go((idx+1)%count),5000);
     })();
 
-    /* === COOKIE === */
     if(!localStorage.getItem('cookies')){
         document.getElementById('cookieBanner').classList.add('on');
     }
 
-    /* === ПОСЛЕ ЗАГРУЗКИ ЧАСТЕЙ === */
     function initAfterLoad(){
         const header=document.querySelector('header');
         if(header){

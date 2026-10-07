@@ -1,0 +1,33 @@
+# Reverse proxy приёмника CommerceML. Домен и email берутся из .env
+# (EXCHANGE_DOMAIN, ACME_EMAIL) через окружение сервиса caddy.
+# Let's Encrypt выпускается автоматически при первом запросе; нужны
+# открытые 80 и 443 и A-запись домена на этот сервер ДО старта.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$EXCHANGE_DOMAIN} {
+	# Лимит тела запроса. Должен быть НЕ МЕНЬШЕ EXCHANGE_FILE_LIMIT
+	# (ответ init: file_limit — максимальный кусок, который шлёт 1С),
+	# иначе mode=file будет рваться на границе прокси.
+	request_body {
+		max_size 100MB
+	}
+
+	reverse_proxy backend:3000 {
+		# mode=import отвечает максимум через EXCHANGE_IMPORT_WAIT_MS (5 c),
+		# длинные загрузки идут в фоне под ответ progress — дефолтных
+		# таймаутов Caddy достаточно; явный запас на медленные куски файла.
+		transport http {
+			response_header_timeout 120s
+		}
+	}
+
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+	}
+}

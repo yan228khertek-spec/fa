@@ -11,6 +11,8 @@ import { resetSessions } from '../src/exchange/auth.js';
 import { safeRelativeName, unzipSafely } from '../src/exchange/files.js';
 import { MemoryCatalogRepository } from '../src/catalog/memory.js';
 import { buildImportXml } from '../src/catalog/fixtures.js';
+import { MemoryOffersRepository } from '../src/offers/memory.js';
+import { buildOffersXml } from '../src/offers/fixtures.js';
 import { MemoryExchangeLog } from '../src/log/memory.js';
 
 const LOGIN = 'site';
@@ -23,6 +25,7 @@ const iconvEncode = (xml: string): Buffer => iconv.encode(xml, 'win1251');
 let app: FastifyInstance;
 let logSink: MemoryExchangeLog;
 let catalog: MemoryCatalogRepository;
+let offers: MemoryOffersRepository;
 let spoolDir: string;
 let importWaitMs = 30_000;
 
@@ -58,7 +61,8 @@ beforeEach(async () => {
   spoolDir = await mkdtemp(path.join(tmpdir(), 'fa-spool-'));
   logSink = new MemoryExchangeLog();
   catalog = new MemoryCatalogRepository();
-  app = await buildApp({ config: cfg(), logSink, catalog });
+  offers = new MemoryOffersRepository();
+  app = await buildApp({ config: cfg(), logSink, catalog, offers });
 });
 
 afterEach(async () => {
@@ -199,6 +203,19 @@ const FIXTURE = buildImportXml({
   ],
 });
 
+const OFFERS_FIXTURE = buildOffersXml({
+  priceTypes: [{ id: 'pt-retail', name: 'Розничная', currency: 'RUB' }],
+  offers: [
+    {
+      id: 'p1#ch1',
+      name: 'Платье 44',
+      chars: [{ name: 'Размер', value: '44' }],
+      prices: [{ priceTypeId: 'pt-retail', value: 4990 }],
+      quantity: 3,
+    },
+  ],
+});
+
 /** Как настоящая 1С: mode=file кусками, затем mode=import. */
 async function postFile(cookie: string, filename: string, payload: Buffer): Promise<void> {
   const res = await app.inject({
@@ -280,7 +297,8 @@ describe('import', () => {
     importWaitMs = 0;
     await app.close();
     catalog = new MemoryCatalogRepository();
-    app = await buildApp({ config: cfg(), logSink, catalog });
+    offers = new MemoryOffersRepository();
+    app = await buildApp({ config: cfg(), logSink, catalog, offers });
     const cookie = await checkauth();
     await postFile(cookie, 'import.xml', iconvEncode(FIXTURE));
 
@@ -299,9 +317,9 @@ describe('import', () => {
     expect(catalog.products.size).toBe(1);
   });
 
-  it('offers.xml пока пропускается (этап 3), факт виден в журнале', async () => {
+  it('offers.xml разбирается в staging предложений (этап 3)', async () => {
     const cookie = await checkauth();
-    await postFile(cookie, 'offers.xml', Buffer.from('<x/>'));
+    await postFile(cookie, 'offers.xml', iconvEncode(OFFERS_FIXTURE));
     const res = await app.inject({
       method: 'GET',
       url: '/api/1c-exchange?type=catalog&mode=import&filename=offers.xml',
@@ -309,8 +327,55 @@ describe('import', () => {
     });
 
     expect(res.body).toBe('success');
-    expect(logSink.entries.at(-1)?.detail).toContain('этап 3');
+    expect(offers.rowCounts()).toMatchObject({ priceTypes: 1, offers: 1, prices: 1, stocks: 1 });
+    expect(offers.offers.get('p1#ch1')?.prices[0]?.value).toBe(4990);
+    expect(logSink.entries.at(-1)?.detail).toContain('предложений 1');
     expect(catalog.products.size).toBe(0);
+  });
+
+  it('один zip с import.xml и offers.xml: оба файла импортируются', async () => {
+    const cookie = await checkauth();
+    const zip = new AdmZip();
+    zip.addFile('import.xml', iconvEncode(FIXTURE));
+    zip.addFile('offers.xml', iconvEncode(OFFERS_FIXTURE));
+    await postFile(cookie, 'v8_fa.zip', zip.toBuffer());
+
+    for (const filename of ['import.xml', 'offers.xml']) {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/1c-exchange?type=catalog&mode=import&filename=${filename}`,
+        headers: { cookie },
+      });
+      expect(res.body).toBe('success');
+    }
+    expect(catalog.products.size).toBe(1);
+    expect(offers.offers.size).toBe(1);
+  });
+
+  it('повторный import offers.xml не плодит строк', async () => {
+    const cookie = await checkauth();
+    await postFile(cookie, 'offers.xml', iconvEncode(OFFERS_FIXTURE));
+    const url = '/api/1c-exchange?type=catalog&mode=import&filename=offers.xml';
+    await app.inject({ method: 'GET', url, headers: { cookie } });
+    const first = offers.rowCounts();
+    const again = await app.inject({ method: 'GET', url, headers: { cookie } });
+
+    expect(again.body).toBe('success');
+    expect(offers.rowCounts()).toEqual(first);
+  });
+
+  it('битый offers.xml — failure с причиной, staging не затронут', async () => {
+    const cookie = await checkauth();
+    await postFile(cookie, 'offers.xml', iconvEncode(OFFERS_FIXTURE.slice(0, 150)));
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/1c-exchange?type=catalog&mode=import&filename=offers.xml',
+      headers: { cookie },
+    });
+
+    const lines = iconv.decode(res.rawPayload, 'win1251').split('\n');
+    expect(lines[0]).toBe('failure');
+    expect(offers.offers.size).toBe(0);
   });
 
   it('init чистит spool: вторая выгрузка не склеивается с первой', async () => {

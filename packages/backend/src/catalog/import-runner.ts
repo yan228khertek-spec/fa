@@ -105,12 +105,16 @@ export async function importCatalogFile(
       durationMs: Date.now() - startedAt,
     };
   } catch (err) {
-    await repo.finishRun(runId, {
-      counters: written,
-      meta,
-      status: 'failure',
-      error: err instanceof Error ? err.message : String(err),
-    });
+    // Отказ finishRun (БД отвалилась между батчем и финишем) не должен
+    // подменять исходную причину в журнале обмена (ревью этапа 3, находка 2).
+    await repo
+      .finishRun(runId, {
+        counters: written,
+        meta,
+        status: 'failure',
+        error: err instanceof Error ? err.message : String(err),
+      })
+      .catch(() => undefined);
     throw err;
   }
 }

@@ -6,6 +6,8 @@ import type { ExchangeLogSink } from '../log/types.js';
 import type { CatalogRepository } from '../catalog/types.js';
 import { findImportFile, importCatalogFile } from '../catalog/import-runner.js';
 import { ImportParseError } from '../catalog/import-parser.js';
+import type { OffersRepository } from '../offers/types.js';
+import { importOffersFile } from '../offers/offers-runner.js';
 import { SESSION_COOKIE, checkBasicAuth, createSession, isAuthorized } from './auth.js';
 import {
   appendChunk,
@@ -28,6 +30,7 @@ export interface ExchangeOptions {
   config: AppConfig;
   logSink: ExchangeLogSink;
   catalog: CatalogRepository;
+  offers: OffersRepository;
   /** Реестр фоновых загрузок — создаётся в buildApp, он же их и дожидается. */
   jobs: ImportJobRegistry;
 }
@@ -60,7 +63,7 @@ function classifyImportFile(relative: string): 'catalog' | 'offers' | 'other' {
  * Ответы — plain text windows-1251, формат байт-точный (см. скилл commerceml-exchange).
  */
 export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions): Promise<void> {
-  const { config, logSink, catalog, jobs } = opts;
+  const { config, logSink, catalog, offers, jobs } = opts;
   const inboxDir = path.join(config.spoolDir, 'inbox');
   const unpackedDir = path.join(config.spoolDir, 'unpacked');
 
@@ -173,18 +176,12 @@ export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions
 
         const kind = classifyImportFile(relative);
 
-        // offers.xml — этап 3. Отвечаем success, чтобы 1С не зацикливалась,
-        // но факт пропуска виден в журнале обмена.
-        if (kind === 'offers') {
-          await log(req, q, 0, 'success', 'offers.xml пропущен (этап 3)');
-          return sendSuccess(reply);
-        }
         if (kind === 'other') {
           await log(req, q, 0, 'success', 'не каталог — обработка не требуется');
           return sendSuccess(reply);
         }
 
-        // --- import.xml: потоковый разбор в staging ---
+        // --- import.xml / offers.xml: потоковый разбор в staging ---
         // Задание заводится ДО любого await: иначе ретрай 1С успевает
         // проскочить проверку и запустить второй разбор того же файла.
         // Поиск файла поэтому живёт внутри задачи.
@@ -196,6 +193,10 @@ export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions
             file = await findImportFile(config.spoolDir, relative);
           }
           if (!file) throw new ImportFileMissing(`файл выгрузки ${relative} не найден в spool`);
+          if (kind === 'offers') {
+            const s = await importOffersFile(offers, file, relative);
+            return `${s.encoding}; типов цен ${s.priceTypes}, складов ${s.warehouses}, предложений ${s.offers}, цен ${s.prices}, остатков ${s.stocks}, ${s.durationMs} мс`;
+          }
           const s = await importCatalogFile(catalog, file, relative);
           return `${s.encoding}; категорий ${s.categories}, брендов ${s.brands}, свойств ${s.properties}, товаров ${s.products}, SKU ${s.variants}, картинок ${s.images}, ${s.durationMs} мс`;
         });

@@ -8,6 +8,13 @@ export interface AppConfig {
   fileLimit: number;
   /** Каталог, куда складываются принятые файлы обмена. */
   spoolDir: string;
+  /**
+   * Сколько ждать завершения разбора import.xml перед ответом `progress`, мс.
+   * Короткие выгрузки успевают за один запрос, длинные грузятся в фоне.
+   */
+  importWaitMs: number;
+  /** Предел суммарного распакованного размера одного zip, байт. */
+  unpackLimit: number;
   /** Строка подключения PostgreSQL; пусто — журнал пишется в память (dev/тесты). */
   databaseUrl: string | undefined;
   /** Отключает логгер (тесты). */
@@ -22,6 +29,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     exchangePassword: env.EXCHANGE_PASSWORD ?? '',
     fileLimit: Number(env.EXCHANGE_FILE_LIMIT ?? 10 * 1024 * 1024),
     spoolDir: env.EXCHANGE_SPOOL_DIR ?? 'spool',
+    importWaitMs: Number(env.EXCHANGE_IMPORT_WAIT_MS ?? 5000),
+    unpackLimit: Number(env.EXCHANGE_UNPACK_LIMIT ?? 2 * 1024 * 1024 * 1024),
     databaseUrl: env.DATABASE_URL || undefined,
     quiet: env.NODE_ENV === 'test',
   };

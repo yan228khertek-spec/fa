@@ -3,8 +3,19 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Readable } from 'node:stream';
 import type { AppConfig } from '../config.js';
 import type { ExchangeLogSink } from '../log/types.js';
+import type { CatalogRepository } from '../catalog/types.js';
+import { findImportFile, importCatalogFile } from '../catalog/import-runner.js';
+import { ImportParseError } from '../catalog/import-parser.js';
 import { SESSION_COOKIE, checkBasicAuth, createSession, isAuthorized } from './auth.js';
-import { appendChunk, isZip, safeRelativeName, unzipSafely } from './files.js';
+import {
+  appendChunk,
+  isZip,
+  safeRelativeName,
+  resetSpool,
+  unzipPendingArchives,
+  unzipSafely,
+} from './files.js';
+import { type ImportJobRegistry, settleWithin } from './import-jobs.js';
 import { emptyCommerceInfoXml, sendFailure, sendPlain, sendSuccess, sendXml } from './protocol.js';
 
 interface ExchangeQuery {
@@ -16,6 +27,31 @@ interface ExchangeQuery {
 export interface ExchangeOptions {
   config: AppConfig;
   logSink: ExchangeLogSink;
+  catalog: CatalogRepository;
+  /** Реестр фоновых загрузок — создаётся в buildApp, он же их и дожидается. */
+  jobs: ImportJobRegistry;
+}
+
+/** Файл выгрузки не доехал: куска нет ни в inbox, ни в unpacked. */
+class ImportFileMissing extends Error {}
+
+/**
+ * Что сказать 1С при отказе. Внутренние тексты (пути, сообщения PostgreSQL)
+ * наружу не отдаём — они уходят в exchange_log (ревью этапа 2, п. 14).
+ */
+function failureReason(err: unknown): string {
+  if (err instanceof ImportFileMissing) return 'Файл выгрузки не найден';
+  if (err instanceof ImportParseError) return `Ошибка разбора выгрузки: ${err.message}`;
+  return 'Внутренняя ошибка загрузки каталога, см. журнал обмена';
+}
+
+/** import.xml, import0_1.xml, …: 1С нумерует части выгрузки. */
+function classifyImportFile(relative: string): 'catalog' | 'offers' | 'other' {
+  const base = path.basename(relative).toLowerCase();
+  if (!base.endsWith('.xml')) return 'other';
+  if (base.startsWith('import')) return 'catalog';
+  if (base.startsWith('offers')) return 'offers';
+  return 'other';
 }
 
 /**
@@ -24,7 +60,7 @@ export interface ExchangeOptions {
  * Ответы — plain text windows-1251, формат байт-точный (см. скилл commerceml-exchange).
  */
 export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions): Promise<void> {
-  const { config, logSink } = opts;
+  const { config, logSink, catalog, jobs } = opts;
   const inboxDir = path.join(config.spoolDir, 'inbox');
   const unpackedDir = path.join(config.spoolDir, 'unpacked');
 
@@ -78,6 +114,16 @@ export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions
 
     switch (`${type}:${mode}`) {
       case 'catalog:init':
+        // Начало новой выгрузки: чистим spool, иначе куски дозапишутся
+        // к файлам прошлой сессии (см. resetSpool). Задания из прошлой сессии
+        // не ждём — 1С отвалилась бы по таймауту; они дописываются сами.
+        try {
+          jobs.clear();
+          await resetSpool(inboxDir, unpackedDir);
+        } catch (err) {
+          await log(req, q, 0, 'failure', String(err));
+          return sendFailure(reply, 'Не удалось подготовить каталог обмена');
+        }
         await log(req, q, 0, 'success', `file_limit=${config.fileLimit}`);
         return sendPlain(reply, ['zip=yes', `file_limit=${config.fileLimit}`]);
 
@@ -108,18 +154,67 @@ export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions
           await log(req, q, 0, 'failure', `bad filename: ${q.filename ?? ''}`);
           return sendFailure(reply, 'Недопустимое имя файла');
         }
-        try {
-          // Этап 1: файл собран — если это zip, распаковываем; сам парсинг
-          // import.xml/offers.xml подключается на этапах 2–3.
-          const extracted = isZip(relative)
-            ? await unzipSafely(inboxDir, relative, unpackedDir)
-            : [];
-          await log(req, q, 0, 'success', extracted.length ? `unzipped ${extracted.length}` : null);
-          return sendSuccess(reply);
-        } catch (err) {
-          await log(req, q, 0, 'failure', String(err));
-          return sendFailure(reply, 'Файл не найден или повреждён');
+        // 1С может вызвать import прямо на архиве — распаковываем и выходим.
+        if (isZip(relative)) {
+          try {
+            const extracted = await unzipSafely(
+              inboxDir,
+              relative,
+              unpackedDir,
+              config.unpackLimit,
+            );
+            await log(req, q, 0, 'success', `unzipped ${extracted.length}`);
+            return sendSuccess(reply);
+          } catch (err) {
+            await log(req, q, 0, 'failure', String(err));
+            return sendFailure(reply, 'Файл не найден или повреждён');
+          }
         }
+
+        const kind = classifyImportFile(relative);
+
+        // offers.xml — этап 3. Отвечаем success, чтобы 1С не зацикливалась,
+        // но факт пропуска виден в журнале обмена.
+        if (kind === 'offers') {
+          await log(req, q, 0, 'success', 'offers.xml пропущен (этап 3)');
+          return sendSuccess(reply);
+        }
+        if (kind === 'other') {
+          await log(req, q, 0, 'success', 'не каталог — обработка не требуется');
+          return sendSuccess(reply);
+        }
+
+        // --- import.xml: потоковый разбор в staging ---
+        // Задание заводится ДО любого await: иначе ретрай 1С успевает
+        // проскочить проверку и запустить второй разбор того же файла.
+        // Поиск файла поэтому живёт внутри задачи.
+        const job = jobs.start(relative, async () => {
+          let file = await findImportFile(config.spoolDir, relative);
+          if (!file) {
+            // 1С присылает архив, а import вызывает именем файла ВНУТРИ него.
+            await unzipPendingArchives(inboxDir, unpackedDir, config.unpackLimit).catch(() => []);
+            file = await findImportFile(config.spoolDir, relative);
+          }
+          if (!file) throw new ImportFileMissing(`файл выгрузки ${relative} не найден в spool`);
+          const s = await importCatalogFile(catalog, file, relative);
+          return `${s.encoding}; категорий ${s.categories}, брендов ${s.brands}, свойств ${s.properties}, товаров ${s.products}, SKU ${s.variants}, картинок ${s.images}, ${s.durationMs} мс`;
+        });
+
+        const settled = await settleWithin(job, config.importWaitMs);
+        if (!settled) {
+          await log(req, q, 0, 'progress', `идёт загрузка ${relative}`);
+          return sendPlain(reply, ['progress', 'Каталог загружается']);
+        }
+
+        const { status, detail, error } = job;
+        jobs.delete(relative);
+        if (status === 'failed') {
+          await log(req, q, 0, 'failure', detail);
+          // Подробности — в журнал; наружу только причина, пригодная оператору.
+          return sendFailure(reply, failureReason(error));
+        }
+        await log(req, q, 0, 'success', detail);
+        return sendSuccess(reply);
       }
 
       case 'sale:query':

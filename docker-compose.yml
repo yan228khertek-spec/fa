@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
       POSTGRES_DB: ${POSTGRES_DB:-fa}
     ports:
-      - '5432:5432'
+      # Только loopback: наружу Postgres не светим (ревью этапа 0, пункт 1).
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,5 +17,30 @@ services:
       timeout: 3s
       retries: 10
 
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-fa}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-fa}
+      EXCHANGE_LOGIN: ${EXCHANGE_LOGIN:?set in .env}
+      EXCHANGE_PASSWORD: ${EXCHANGE_PASSWORD:?set in .env}
+      EXCHANGE_FILE_LIMIT: ${EXCHANGE_FILE_LIMIT:-10485760}
+    ports:
+      - '3000:3000'
+    volumes:
+      - spool:/app/spool
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/healthz || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
 volumes:
   pgdata:
+  spool:

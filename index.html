@@ -26,10 +26,11 @@
             line-height:1.5;
             -webkit-font-smoothing:antialiased;
             -webkit-tap-highlight-color:rgba(0,0,0,.05);
-            padding-top:64px;
+            padding-top:72px;
         }
         a{text-decoration:none;color:inherit}
 
+        /* ШАПКА */
         header{
             position:fixed; top:0; left:0; right:0;
             z-index:100; background:var(--bg);
@@ -37,13 +38,45 @@
             transition:transform .3s ease;
         }
         header.hidden{transform:translateY(-100%)}
-        .bar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;max-width:1200px;margin:0 auto}
-        .logo{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
-        .logo small{display:block;font-size:10px;font-weight:400;color:#666;letter-spacing:.5px;margin-top:2px}
-        .icons{display:flex;gap:16px;align-items:center}
-        .icons span{cursor:pointer;display:flex}
+        .bar{
+            background:#fff; color:#000;
+            border-bottom:1px solid var(--line);
+            display:flex; align-items:center;
+            height:72px; position:relative;
+            padding:0 calc(6px + var(--sl,0px)) 0 calc(6px + var(--sr,0px));
+            max-width:1200px; margin:0 auto;
+        }
+        .logo{
+            font-size:20px; font-weight:700;
+            text-transform:uppercase; letter-spacing:.12em;
+            text-align:center; flex:1;
+        }
+        .logo small{
+            display:block; font-size:7px; font-weight:400;
+            color:#666; letter-spacing:.22em; margin-top:2px;
+        }
+        .ic{
+            width:48px; height:48px;
+            display:grid; place-items:center;
+            color:#000; background:none; border:none; cursor:pointer;
+        }
+        .icons{display:flex;gap:8px;align-items:center}
+        .icons span{cursor:pointer;display:flex;padding:4px}
         .burger{background:none;border:none;cursor:pointer;padding:4px;display:flex}
+        .burger i{
+            display:block; width:22px; height:2px;
+            background:#000; position:relative;
+            transition:transform .3s;
+        }
+        .burger i::before,.burger i::after{
+            content:''; position:absolute; left:0;
+            width:22px; height:2px; background:#000;
+            transition:transform .3s;
+        }
+        .burger i::before{top:-6px}
+        .burger i::after{top:6px}
 
+        /* МЕНЮ */
         .menu{
             position:fixed; top:0; left:0; bottom:0;
             width:320px; background:#fff; z-index:96;
@@ -65,41 +98,99 @@
         .mscroll{padding:20px;overflow-y:auto;flex:1}
         .mlink{display:block;padding:14px 0;font-size:15px;border-bottom:1px solid var(--line)}
 
+        /* КАРУСЕЛЬ */
         .hero{position:relative;overflow:hidden;margin-bottom:24px}
         .slides{display:flex;transition:transform .6s ease}
-        .slide{min-width:100%;aspect-ratio:16/9;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;text-transform:uppercase}
+        .slide{min-width:100%;aspect-ratio:16/9;background:var(--soft);display:flex;align-items:center;justify-content:center}
+        .slide img{width:100%;height:100%;object-fit:cover}
         .dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
         .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5);border:none;cursor:pointer}
         .dot.on{background:#fff}
 
-        .gender-toggle{display:flex;max-width:1200px;margin:0 auto 24px;padding:0 20px;border-bottom:1px solid var(--line)}
-        .gender-toggle button{flex:1;padding:14px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--ff);font-size:15px;font-weight:500;cursor:pointer;color:var(--muted)}
-        .gender-toggle button.on{color:var(--graphite);border-bottom-color:var(--graphite)}
+        /* ПЕРЕКЛЮЧАТЕЛЬ М/Ж */
+        .gender{display:flex;background:#fff;border-bottom:1px solid var(--line);max-width:1200px;margin:0 auto}
+        .gender button{
+            flex:1; min-height:46px; font-size:14.5px; font-weight:500;
+            color:var(--muted); position:relative; background:none;
+            border:none; cursor:pointer; font-family:var(--ff);
+        }
+        .gender button.on{color:var(--graphite)}
+        .gender button.on::after{
+            content:''; position:absolute; left:0; right:0; bottom:-1px;
+            height:2px; background:var(--graphite);
+        }
 
-        .section{max-width:1200px;margin:0 auto 40px;padding:0 20px}
-        .section h2{font-size:22px;font-weight:700;margin-bottom:20px;text-transform:uppercase;letter-spacing:.05em}
+        /* СЕТКИ ТОВАРОВ */
+        .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+        .sec{margin-bottom:40px}
+        .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .sh h2{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+        .sh a{font-size:14px;color:var(--muted)}
         .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
         @media(min-width:768px){.grid{grid-template-columns:repeat(3,1fr)}}
         @media(min-width:1024px){.grid{grid-template-columns:repeat(4,1fr)}}
         .card{display:flex;flex-direction:column;gap:8px}
-        .pic{aspect-ratio:3/4;background:var(--soft);border-radius:8px;overflow:hidden;position:relative;cursor:pointer}
-        .pic img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
-        .pic:hover img{transform:scale(1.05)}
+        .pic{
+            aspect-ratio:3/4; background:var(--soft);
+            border-radius:8px; overflow:hidden; position:relative;
+            cursor:pointer;
+        }
+        .pic img{
+            position:absolute; inset:0; width:100%; height:100%;
+            object-fit:cover; opacity:0; transition:opacity .4s;
+        }
+        .pic img.on{opacity:1}
+        .lab{
+            position:absolute; top:8px; left:8px; z-index:3;
+            font-size:9px; font-weight:600; letter-spacing:.12em;
+            text-transform:uppercase; padding:4px 8px;
+            background:#fff; color:var(--graphite);
+        }
+        .lab.red{background:var(--red);color:#fff}
         .card-info{display:flex;flex-direction:column;gap:4px}
         .card-name{font-size:14px;font-weight:500}
         .card-price{font-size:14px;color:var(--muted)}
         .szs{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-        .szs button{padding:4px 10px;border:1px solid var(--line);background:var(--bg);border-radius:4px;font-family:var(--ff);font-size:12px;cursor:pointer}
+        .szs button{
+            padding:4px 10px; border:1px solid var(--line);
+            background:var(--bg); border-radius:4px;
+            font-family:var(--ff); font-size:12px; cursor:pointer;
+        }
         .szs button.no{opacity:.4;cursor:not-allowed}
 
-        .brgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-        .brgrid a{display:flex;align-items:center;justify-content:center;padding:20px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;transition:all .3s}
+        /* БАННЕРЫ */
+        .ban{margin:40px 0}
+        .ban img{width:100%;height:auto;display:block}
+        .duo{display:grid;grid-template-columns:1fr;gap:8px}
+        @media(min-width:900px){.duo{grid-template-columns:1fr 1fr;gap:12px}}
+
+        /* БРЕНДЫ */
+        .brgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+        .brgrid a{
+            border:1px solid var(--line); min-height:78px;
+            display:grid; place-items:center;
+            font-size:13px; font-weight:600;
+            letter-spacing:.08em; text-align:center; padding:10px;
+            transition:all .3s;
+        }
         .brgrid a:hover{border-color:var(--graphite);transform:translateY(-2px)}
+        @media(min-width:900px){.brgrid{grid-template-columns:repeat(5,1fr);gap:12px}}
 
-        .cookie-banner{position:fixed;bottom:20px;left:20px;right:20px;max-width:400px;background:var(--graphite);color:#fff;padding:16px 20px;border-radius:12px;font-size:14px;z-index:90;display:none}
+        /* COOKIE */
+        .cookie-banner{
+            position:fixed; bottom:20px; left:20px; right:20px;
+            max-width:400px; background:var(--graphite); color:#fff;
+            padding:16px 20px; border-radius:12px; font-size:14px;
+            z-index:90; display:none;
+        }
         .cookie-banner.on{display:block}
-        .cookie-banner button{margin-top:12px;padding:8px 16px;background:#fff;color:var(--graphite);border:none;border-radius:6px;font-family:var(--ff);font-weight:600;cursor:pointer}
+        .cookie-banner button{
+            margin-top:12px; padding:8px 16px; background:#fff;
+            color:var(--graphite); border:none; border-radius:6px;
+            font-family:var(--ff); font-weight:600; cursor:pointer;
+        }
 
+        /* ФУТЕР */
         footer{border-top:1px solid var(--line);margin-top:44px;padding:30px 0 calc(34px + var(--sb));font-size:13px}
         .fg{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1200px;margin:0 auto;padding:0 20px}
         footer b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:11px}
@@ -108,6 +199,7 @@
         .footer-bottom{max-width:1200px;margin:20px auto 0;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:#888;text-align:center}
         @media(min-width:900px){.fg{grid-template-columns:repeat(4,1fr)}}
 
+        /* ТОСТ */
         .toast{
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px);
             background:var(--graphite); color:#fff; padding:12px 20px; border-radius:8px;
@@ -116,9 +208,18 @@
         }
         .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
+        /* АДАПТИВ */
+        @media(max-width:760px){
+            .bar{height:60px}
+            .logo{font-size:18px;letter-spacing:.1em}
+            .logo small{font-size:6.5px;letter-spacing:.22em}
+        }
         @media(min-width:900px){
             .mscroll{max-width:760px;margin:0 auto;width:100%}
+            .toast{left:50%;right:auto;transform:translate(-50%,60px);max-width:420px}
+            .toast.on{transform:translate(-50%,0)}
         }
+        @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
     </style>
 </head>
 <body>
@@ -126,34 +227,57 @@
     <div id="header-placeholder"></div>
 
     <main>
-        <section class="hero">
-            <div class="slides" id="slides">
-                <div class="slide">Новая коллекция Miss Sixty</div>
-                <div class="slide">Diesel — осень 2026</div>
-                <div class="slide">Распродажа до -50%</div>
-            </div>
-            <div class="dots" id="dots"></div>
-        </section>
+        <!-- КАРУСЕЛЬ -->
+        <div class="hero">
+            <div class="slides" id="slides"></div>
+            <div class="dots" id="hdots"></div>
+        </div>
 
-        <div class="gender-toggle">
+        <!-- ПЕРЕКЛЮЧАТЕЛЬ -->
+        <div class="gender">
             <button class="on" onclick="setGender('women',this)">Женское</button>
             <button onclick="setGender('men',this)">Мужское</button>
         </div>
 
-        <section class="section">
-            <h2>Miss Sixty</h2>
-            <div class="grid" id="g1"></div>
-        </section>
+        <div class="wrap">
+            <!-- MISS SIXTY -->
+            <div class="sec" id="new">
+                <div class="sh">
+                    <h2>Miss Sixty</h2>
+                    <a href="#" onclick="toast('Весь каталог');return false">Все</a>
+                </div>
+                <div class="grid" id="g1"></div>
+            </div>
 
-        <section class="section">
-            <h2>Diesel</h2>
-            <div class="grid" id="g2"></div>
-        </section>
+            <!-- БАННЕР -->
+            <div class="ban">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBENDQ0Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5H......" alt="Miss Sixty баннер">
+            </div>
 
-        <section class="section">
-            <h2>Бренды</h2>
-            <div class="brgrid" id="brg"></div>
-        </section>
+            <!-- DIESEL -->
+            <div class="sec" id="diesel">
+                <div class="sh">
+                    <h2>Diesel</h2>
+                    <a href="#" onclick="toast('Весь каталог Diesel');return false">Все</a>
+                </div>
+                <div class="grid" id="g2"></div>
+            </div>
+
+            <!-- БАННЕРЫ DUO -->
+            <div class="ban duo">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBENDQ0Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5H......" alt="Баннер 1">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBENDQ0Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5H......" alt="Баннер 2">
+            </div>
+
+            <!-- БРЕНДЫ -->
+            <div class="sec">
+                <div class="sh">
+                    <h2>Бренды</h2>
+                    <a href="brands.html" onclick="">Все бренды</a>
+                </div>
+                <div class="brgrid" id="brg"></div>
+            </div>
+        </div>
     </main>
 
     <div class="cookie-banner" id="cookieBanner">
@@ -167,6 +291,7 @@
     <div class="toast" id="toast"></div>
 
     <script>
+    /* === ЗАГРУЗКА HEADER И FOOTER === */
     async function loadPartials() {
         try {
             const [headerRes, footerRes] = await Promise.all([
@@ -182,6 +307,7 @@
         }
     }
 
+    /* === ДАННЫЕ ТОВАРОВ === */
     const MS=[
         {b:'MISS SIXTY',n:'Блуза-халтер из хлопка',pr:18990,old:0,sz:[['XS',1],['S',1],['M',1],['L',0]],lab:'Новинка'},
         {b:'MISS SIXTY',n:'Лонгслив с принтом «Русалка»',pr:28990,old:0,sz:[['XS',1],['S',1],['M',1]],lab:'Новинка'},
@@ -196,9 +322,12 @@
     ];
     const BRANDS = ['Balmain','Bottega Veneta','Burberry','Chloé','Diesel','Gucci','Prada','Saint Laurent','Brunello Cucinelli','TOTEME','Santoni','Marni','Moschino','Giorgio Armani','BOSS','Brioni'];
 
-    function card(p){
-        return `<div class="card">
-            <div class="pic"><div style="width:100%;height:100%;background:var(--soft)"></div></div>
+    /* === РЕНДЕР КАРТОЧЕК С ИЗОБРАЖЕНИЯМИ === */
+    function card(p,idx){
+        return `<div class="card" data-brand="${p.b}" data-name="${p.n.replace(/'/g,"")}" data-price="${p.pr}">
+            <div class="pic needph">
+                ${p.lab?`<span class="lab${p.lab==='Распродажа'?' red':''}">${p.lab}</span>`:''}
+            </div>
             <div class="card-info">
                 <div class="card-name">${p.n}</div>
                 <div class="card-price">${p.pr.toLocaleString('ru-RU')} ₽</div>
@@ -207,10 +336,33 @@
         </div>`;
     }
 
-    document.getElementById('g1').innerHTML = MS.map(card).join('');
-    document.getElementById('g2').innerHTML = DS.map(card).join('');
+    document.getElementById('g1').innerHTML = MS.map((p,i)=>card(p,i)).join('');
+    document.getElementById('g2').innerHTML = DS.map((p,i)=>card(p,i+MS.length)).join('');
     document.getElementById('brg').innerHTML = BRANDS.map(b=>`<a href="#" onclick="toast('Страница бренда ${b}');return false">${b}</a>`).join('');
 
+    /* === DRAG AND DROP ФОТО НА КАРТОЧКИ === */
+    document.querySelectorAll('.pic.needph').forEach(pic => {
+        pic.addEventListener('dragover', e => { e.preventDefault(); pic.style.outline='2px solid var(--accent)' });
+        pic.addEventListener('dragleave', () => { pic.style.outline='' });
+        pic.addEventListener('drop', e => {
+            e.preventDefault();
+            pic.style.outline='';
+            const file = e.dataTransfer.files[0];
+            if(file && file.type.startsWith('image/')){
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    let img = pic.querySelector('img');
+                    if(!img){ img=document.createElement('img'); pic.appendChild(img); }
+                    img.src = ev.target.result;
+                    img.classList.add('on');
+                    pic.classList.remove('needph');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
+    /* === ФУНКЦИИ === */
     function openMenu(){
         const m=document.getElementById('menu'), o=document.getElementById('menuOverlay');
         if(m) m.classList.add('on');
@@ -232,17 +384,29 @@
     }
     function add(name,size){toast(`Добавлено: ${name}, размер ${size}`)}
     function setGender(g,btn){
-        document.querySelectorAll('.gender-toggle button').forEach(b=>b.classList.remove('on'));
+        document.querySelectorAll('.gender button').forEach(b=>b.classList.remove('on'));
         btn.classList.add('on');
         toast(g==='women'?'Женское':'Мужское');
     }
-    function acceptCookies(){document.getElementById('cookieBanner').classList.remove('on')}
+    function acceptCookies(){
+        document.getElementById('cookieBanner').classList.remove('on');
+        localStorage.setItem('cookies','accepted');
+    }
 
+    /* === КАРУСЕЛЬ === */
     (function(){
-        const slides=document.getElementById('slides');
-        const dotsWrap=document.getElementById('dots');
-        if(!slides) return;
-        const count=slides.children.length;
+        const slidesEl=document.getElementById('slides');
+        const dotsWrap=document.getElementById('hdots');
+        if(!slidesEl) return;
+        
+        // Создаём слайды
+        slidesEl.innerHTML = `
+            <div class="slide"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBENDQ0Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5H......" alt="Слайд 1"></div>
+            <div class="slide"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBENDQ0Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5H......" alt="Слайд 2"></div>
+            <div class="slide"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBENDQ0Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc5Hyc......" alt="Слайд 3"></div>
+        `;
+        
+        const count=slidesEl.children.length;
         let idx=0;
         for(let i=0;i<count;i++){
             const d=document.createElement('button');
@@ -252,16 +416,18 @@
         }
         function go(i){
             idx=i;
-            slides.style.transform=`translateX(-${i*100}%)`;
+            slidesEl.style.transform=`translateX(-${i*100}%)`;
             dotsWrap.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('on',j===i));
         }
         setInterval(()=>go((idx+1)%count),5000);
     })();
 
+    /* === COOKIE === */
     if(!localStorage.getItem('cookies')){
         document.getElementById('cookieBanner').classList.add('on');
     }
 
+    /* === ПОСЛЕ ЗАГРУЗКИ ЧАСТЕЙ === */
     function initAfterLoad(){
         const header=document.querySelector('header');
         if(header){

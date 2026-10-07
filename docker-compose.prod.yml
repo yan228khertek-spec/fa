@@ -1,0 +1,86 @@
+# Прод/стейджинг-композ приёмника (этап 5-мини, сервер fa-dev).
+# Отличия от dev (docker-compose.yml):
+#   - Postgres и backend НЕ публикуют портов наружу — только внутренняя сеть;
+#   - перед backend стоит Caddy: 80/443, автоматический Let's Encrypt;
+#   - ротация docker-логов у всех сервисов;
+#   - NODE_ENV=production (без DATABASE_URL backend не стартует — так задумано).
+# Запуск: docker compose -f docker-compose.prod.yml up -d --build
+# Обязательные переменные — см. .env.production.example (скопировать в .env).
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-fa}
+    # Портов наружу нет: БД видна только backend'у внутри сети compose.
+    # psql — через: docker compose -f docker-compose.prod.yml exec db psql -U fa fa
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-fa}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:-fa}
+      EXCHANGE_LOGIN: ${EXCHANGE_LOGIN:?set in .env}
+      EXCHANGE_PASSWORD: ${EXCHANGE_PASSWORD:?set in .env}
+      EXCHANGE_FILE_LIMIT: ${EXCHANGE_FILE_LIMIT:-10485760}
+      EXCHANGE_UNPACK_LIMIT: ${EXCHANGE_UNPACK_LIMIT:-2147483648}
+      EXCHANGE_IMPORT_WAIT_MS: ${EXCHANGE_IMPORT_WAIT_MS:-5000}
+    # Портов наружу нет: трафик идёт только через Caddy.
+    volumes:
+      - spool:/app/spool
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/healthz || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      EXCHANGE_DOMAIN: ${EXCHANGE_DOMAIN:?set in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+
+volumes:
+  pgdata:
+  spool:
+  caddy_data:
+  caddy_config:
+  caddy_logs:

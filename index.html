@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* === ВАШИ ПЕРЕМЕННЫЕ И БАЗОВЫЕ СТИЛИ === */
         :root{
             --graphite:#000000; --bg:#fff; --soft:#F2F1EF; --line:#E7E5E2;
             --line2:#CFCCC8; --muted:#8A8780; --accent:#A38768; --red:#C8452F;
@@ -27,11 +26,11 @@
             line-height:1.5;
             -webkit-font-smoothing:antialiased;
             -webkit-tap-highlight-color:rgba(0,0,0,.05);
-            padding-top:64px; /* отступ под фиксированную шапку */
+            padding-top:64px;
         }
         a{text-decoration:none;color:inherit}
 
-        /* === ШАПКА (FIXED + СКРЫТИЕ ПРИ СКРОЛЛЕ) === */
+        /* ШАПКА */
         header{
             position:fixed; top:0; left:0; right:0;
             z-index:100; background:var(--bg);
@@ -44,8 +43,9 @@
         .logo small{display:block;font-size:10px;font-weight:400;color:#666;letter-spacing:.5px;margin-top:2px}
         .icons{display:flex;gap:16px;align-items:center}
         .icons span{cursor:pointer;display:flex}
+        .burger{background:none;border:none;cursor:pointer;padding:4px;display:flex}
 
-        /* === МЕНЮ (БУРГЕР) === */
+        /* МЕНЮ (боковая панель) */
         .menu{
             position:fixed; top:0; left:0; bottom:0;
             width:320px; background:#fff; z-index:96;
@@ -67,15 +67,56 @@
         .mscroll{padding:20px;overflow-y:auto;flex:1}
         .mlink{display:block;padding:14px 0;font-size:15px;border-bottom:1px solid var(--line)}
 
-        /* === ФУТЕР === */
+        /* КАРУСЕЛЬ */
+        .hero{position:relative;overflow:hidden;margin-bottom:24px}
+        .slides{display:flex;transition:transform .6s ease}
+        .slide{min-width:100%;aspect-ratio:16/9;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;text-transform:uppercase}
+        .dots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+        .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5);border:none;cursor:pointer}
+        .dot.on{background:#fff}
+
+        /* ПЕРЕКЛЮЧАТЕЛЬ М/Ж */
+        .gender-toggle{display:flex;max-width:1200px;margin:0 auto 24px;padding:0 20px;border-bottom:1px solid var(--line)}
+        .gender-toggle button{flex:1;padding:14px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--ff);font-size:15px;font-weight:500;cursor:pointer;color:var(--muted)}
+        .gender-toggle button.on{color:var(--graphite);border-bottom-color:var(--graphite)}
+
+        /* СЕТКИ ТОВАРОВ */
+        .section{max-width:1200px;margin:0 auto 40px;padding:0 20px}
+        .section h2{font-size:22px;font-weight:700;margin-bottom:20px;text-transform:uppercase;letter-spacing:.05em}
+        .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+        @media(min-width:768px){.grid{grid-template-columns:repeat(3,1fr)}}
+        @media(min-width:1024px){.grid{grid-template-columns:repeat(4,1fr)}}
+        .card{display:flex;flex-direction:column;gap:8px}
+        .pic{aspect-ratio:3/4;background:var(--soft);border-radius:8px;overflow:hidden;position:relative;cursor:pointer}
+        .pic img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+        .pic:hover img{transform:scale(1.05)}
+        .card-info{display:flex;flex-direction:column;gap:4px}
+        .card-name{font-size:14px;font-weight:500}
+        .card-price{font-size:14px;color:var(--muted)}
+        .szs{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+        .szs button{padding:4px 10px;border:1px solid var(--line);background:var(--bg);border-radius:4px;font-family:var(--ff);font-size:12px;cursor:pointer}
+        .szs button.no{opacity:.4;cursor:not-allowed}
+
+        /* БРЕНДЫ */
+        .brgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+        .brgrid a{display:flex;align-items:center;justify-content:center;padding:20px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;transition:all .3s}
+        .brgrid a:hover{border-color:var(--graphite);transform:translateY(-2px)}
+
+        /* COOKIE */
+        .cookie-banner{position:fixed;bottom:20px;left:20px;right:20px;max-width:400px;background:var(--graphite);color:#fff;padding:16px 20px;border-radius:12px;font-size:14px;z-index:90;display:none}
+        .cookie-banner.on{display:block}
+        .cookie-banner button{margin-top:12px;padding:8px 16px;background:#fff;color:var(--graphite);border:none;border-radius:6px;font-family:var(--ff);font-weight:600;cursor:pointer}
+
+        /* ФУТЕР */
         footer{border-top:1px solid var(--line);margin-top:44px;padding:30px 0 calc(34px + var(--sb));font-size:13px}
         .fg{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1200px;margin:0 auto;padding:0 20px}
         footer b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:11px}
         footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
         footer a:hover{color:var(--graphite)}
-        .footer-bottom{max-width:1200px;margin:20px auto 0;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:#888;text-align:center;padding:20px}
+        .footer-bottom{max-width:1200px;margin:20px auto 0;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:#888;text-align:center}
+        @media(min-width:900px){.fg{grid-template-columns:repeat(4,1fr)}}
 
-        /* === ТОСТ === */
+        /* ТОСТ */
         .toast{
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px);
             background:var(--graphite); color:#fff; padding:12px 20px; border-radius:8px;
@@ -84,33 +125,66 @@
         }
         .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
-        /* === АДАПТИВ === */
         @media(min-width:900px){
-            .fg{grid-template-columns:repeat(4,1fr)}
             .mscroll{max-width:760px;margin:0 auto;width:100%}
         }
     </style>
 </head>
 <body>
 
-    <!-- ПЛЕЙСХОЛДЕРЫ ДЛЯ HEADER И FOOTER -->
+    <!-- ПЛЕЙСХОЛДЕР ШАПКИ -->
     <div id="header-placeholder"></div>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ -->
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main>
-        <section style="max-width:1200px;margin:0 auto;padding:40px 20px;">
-            <h1 style="font-size:28px;font-weight:700;margin-bottom:20px;text-transform:uppercase;">Новые поступления</h1>
-            <p>Здесь будет ваш каталог товаров.</p>
-            <!-- Вставьте сюда остальной контент главной страницы -->
+        <!-- КАРУСЕЛЬ -->
+        <section class="hero">
+            <div class="slides" id="slides">
+                <div class="slide">Новая коллекция Miss Sixty</div>
+                <div class="slide">Diesel — осень 2026</div>
+                <div class="slide">Распродажа до -50%</div>
+            </div>
+            <div class="dots" id="dots"></div>
+        </section>
+
+        <!-- ПЕРЕКЛЮЧАТЕЛЬ -->
+        <div class="gender-toggle">
+            <button class="on" onclick="setGender('women',this)">Женское</button>
+            <button onclick="setGender('men',this)">Мужское</button>
+        </div>
+
+        <!-- MISS SIXTY -->
+        <section class="section">
+            <h2>Miss Sixty</h2>
+            <div class="grid" id="g1"></div>
+        </section>
+
+        <!-- DIESEL -->
+        <section class="section">
+            <h2>Diesel</h2>
+            <div class="grid" id="g2"></div>
+        </section>
+
+        <!-- БРЕНДЫ -->
+        <section class="section">
+            <h2>Бренды</h2>
+            <div class="brgrid" id="brg"></div>
         </section>
     </main>
 
+    <!-- COOKIE -->
+    <div class="cookie-banner" id="cookieBanner">
+        Мы используем cookies для улучшения работы сайта.
+        <br>
+        <button onclick="acceptCookies()">Принять</button>
+    </div>
+
+    <!-- ПЛЕЙСХОЛДЕР ФУТЕРА -->
     <div id="footer-placeholder"></div>
 
-    <!-- ТОСТ-УВЕДОМЛЕНИЕ -->
+    <!-- ТОСТ -->
     <div class="toast" id="toast"></div>
 
-    <!-- СКРИПТЫ -->
     <script>
     /* === ЗАГРУЗКА HEADER И FOOTER === */
     async function loadPartials() {
@@ -119,65 +193,115 @@
                 fetch('header.html'),
                 fetch('footer.html')
             ]);
-
             if (!headerRes.ok || !footerRes.ok) throw new Error('Файлы не найдены');
-
-            const headerHTML = await headerRes.text();
-            const footerHTML = await footerRes.text();
-
-            document.getElementById('header-placeholder').innerHTML = headerHTML;
-            document.getElementById('footer-placeholder').innerHTML = footerHTML;
-
-            // После вставки — запускаем инициализацию
+            document.getElementById('header-placeholder').innerHTML = await headerRes.text();
+            document.getElementById('footer-placeholder').innerHTML = await footerRes.text();
             initAfterLoad();
         } catch (e) {
-            console.error('Ошибка загрузки шапки/подвала:', e);
-            document.getElementById('header-placeholder').innerHTML = '<p style="color:red;padding:20px;">Ошибка: не удалось загрузить header.html и footer.html. Откройте сайт через Live Server.</p>';
+            console.error('Ошибка загрузки:', e);
         }
     }
 
-    /* === ОБЩИЕ ФУНКЦИИ === */
-    function openMenu() {
-        const menu = document.getElementById('menu');
-        const overlay = document.getElementById('menuOverlay');
-        if (menu) menu.classList.add('on');
-        if (overlay) overlay.classList.add('on');
-        document.body.style.overflow = 'hidden';
+    /* === ДАННЫЕ === */
+    const MS = [
+        {n:'Джинсы Miss Sixty', p:'18 900 ₽', sz:[['XS',1],['S',1],['M',1],['L',0]]},
+        {n:'Юбка Miss Sixty', p:'14 500 ₽', sz:[['S',1],['M',1],['L',1]]},
+        {n:'Блуза Miss Sixty', p:'12 900 ₽', sz:[['XS',1],['S',0],['M',1]]},
+        {n:'Платье Miss Sixty', p:'22 000 ₽', sz:[['S',1],['M',1],['L',1],['XL',0]]}
+    ];
+    const DS = [
+        {n:'Джинсы Diesel', p:'24 900 ₽', sz:[['28',1],['30',1],['32',1],['34',0]]},
+        {n:'Куртка Diesel', p:'38 500 ₽', sz:[['S',1],['M',1],['L',1]]},
+        {n:'Футболка Diesel', p:'8 900 ₽', sz:[['S',1],['M',1],['L',1],['XL',1]]},
+        {n:'Сумка Diesel', p:'19 900 ₽', sz:[['ONE',1]]}
+    ];
+    const BRANDS = ['Balmain','Bottega Veneta','Burberry','Chloé','Diesel','Gucci','Prada','Saint Laurent','Brunello Cucinelli','TOTEME','Santoni','Marni','Moschino','Giorgio Armani','BOSS','Brioni'];
+
+    /* === РЕНДЕР КАРТОЧЕК === */
+    function card(p){
+        return `<div class="card">
+            <div class="pic"><div style="width:100%;height:100%;background:var(--soft)"></div></div>
+            <div class="card-info">
+                <div class="card-name">${p.n}</div>
+                <div class="card-price">${p.p}</div>
+                <div class="szs">${p.sz.map(s=>`<button class="${s[1]?'':'no'}" onclick="${s[1]?`add('${p.n.replace(/'/g,"")}','${s[0]}')`:`toast('Размер закончился')`}">${s[0]}</button>`).join('')}</div>
+            </div>
+        </div>`;
     }
 
-    function closeMenu() {
-        const menu = document.getElementById('menu');
-        const overlay = document.getElementById('menuOverlay');
-        if (menu) menu.classList.remove('on');
-        if (overlay) overlay.classList.remove('on');
-        document.body.style.overflow = '';
-    }
+    document.getElementById('g1').innerHTML = MS.map(card).join('');
+    document.getElementById('g2').innerHTML = DS.map(card).join('');
+    document.getElementById('brg').innerHTML = BRANDS.map(b=>`<a href="#" onclick="toast('Страница бренда ${b}');return false">${b}</a>`).join('');
 
-    function toast(msg) {
-        const t = document.getElementById('toast');
-        if (!t) return;
-        t.textContent = msg;
+    /* === ФУНКЦИИ === */
+    function openMenu(){
+        const m=document.getElementById('menu'), o=document.getElementById('menuOverlay');
+        if(m) m.classList.add('on');
+        if(o) o.classList.add('on');
+        document.body.style.overflow='hidden';
+    }
+    function closeMenu(){
+        const m=document.getElementById('menu'), o=document.getElementById('menuOverlay');
+        if(m) m.classList.remove('on');
+        if(o) o.classList.remove('on');
+        document.body.style.overflow='';
+    }
+    function toast(msg){
+        const t=document.getElementById('toast');
+        if(!t) return;
+        t.textContent=msg;
         t.classList.add('on');
-        setTimeout(() => t.classList.remove('on'), 2000);
+        setTimeout(()=>t.classList.remove('on'),2000);
+    }
+    function add(name,size){toast(`Добавлено: ${name}, размер ${size}`)}
+    function setGender(g,btn){
+        document.querySelectorAll('.gender-toggle button').forEach(b=>b.classList.remove('on'));
+        btn.classList.add('on');
+        toast(g==='women'?'Женское':'Мужское');
+    }
+    function acceptCookies(){document.getElementById('cookieBanner').classList.remove('on')}
+
+    /* === КАРУСЕЛЬ === */
+    (function(){
+        const slides=document.getElementById('slides');
+        const dotsWrap=document.getElementById('dots');
+        if(!slides) return;
+        const count=slides.children.length;
+        let idx=0;
+        for(let i=0;i<count;i++){
+            const d=document.createElement('button');
+            d.className='dot'+(i===0?' on':'');
+            d.onclick=()=>go(i);
+            dotsWrap.appendChild(d);
+        }
+        function go(i){
+            idx=i;
+            slides.style.transform=`translateX(-${i*100}%)`;
+            dotsWrap.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('on',j===i));
+        }
+        setInterval(()=>go((idx+1)%count),5000);
+    })();
+
+    /* === COOKIE === */
+    if(!localStorage.getItem('cookies')){
+        document.getElementById('cookieBanner').classList.add('on');
     }
 
-    /* === ИНИЦИАЛИЗАЦИЯ ПОСЛЕ ЗАГРУЗКИ ЧАСТЕЙ === */
-    function initAfterLoad() {
-        // Скрытие шапки при скролле вниз
-        const header = document.querySelector('header');
-        if (header) {
-            let lastY = 0;
-            window.addEventListener('scroll', () => {
-                const y = window.scrollY;
-                if (y > lastY && y > 80) header.classList.add('hidden');
-                else if (y < lastY) header.classList.remove('hidden');
-                if (y <= 0) header.classList.remove('hidden');
-                lastY = y;
-            }, { passive: true });
+    /* === ПОСЛЕ ЗАГРУЗКИ ЧАСТЕЙ === */
+    function initAfterLoad(){
+        const header=document.querySelector('header');
+        if(header){
+            let lastY=0;
+            window.addEventListener('scroll',()=>{
+                const y=window.scrollY;
+                if(y>lastY && y>80) header.classList.add('hidden');
+                else if(y<lastY) header.classList.remove('hidden');
+                if(y<=0) header.classList.remove('hidden');
+                lastY=y;
+            },{passive:true});
         }
     }
 
-    // Запускаем загрузку
     loadPartials();
     </script>
 </body>

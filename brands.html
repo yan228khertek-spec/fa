@@ -86,16 +86,22 @@ header.hidden{transform:translateY(-100%)}
   .brands-main h1{font-size:28px;margin-bottom:24px}
 }
 
-/* логотипы топ-брендов */
-.brgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.brand-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 8px;
-  border:1px solid var(--line);background:var(--bg);transition:all .3s ease}
-.brand-card:hover{border-color:var(--graphite);transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
-.brand-logo{width:60px;height:60px;object-fit:contain;margin-bottom:12px;filter:grayscale(100%);transition:filter .3s ease}
-.brand-card:hover .brand-logo{filter:grayscale(0)}
-.brand-name{font-size:12px;font-weight:600;text-align:center;text-transform:uppercase;letter-spacing:.05em}
-@media(min-width:600px){.brgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-  .brand-card{padding:24px 10px}.brand-logo{width:80px;height:80px}}
+/* топ-бренды: плитки с фото */
+.top-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:8px 0 14px}
+.brgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px;margin-bottom:40px}
+.tb{display:block;color:inherit}
+.tb-photo{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--soft);
+  display:flex;align-items:center;justify-content:center}
+.tb-photo>img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}
+.tb:hover .tb-photo>img{transform:scale(1.04)}
+.tb-ph{font-size:clamp(18px,2.4vw,28px);overflow-wrap:anywhere;font-weight:300;letter-spacing:.06em;color:rgba(255,255,255,.85);text-align:center;padding:0 8px;line-height:1.1}
+.tb-logo{position:absolute;left:10px;bottom:10px;width:44px;height:44px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.tb-logo img{width:70%;height:70%;object-fit:contain}
+.tb-logo span{font-size:13px;font-weight:700;color:var(--graphite)}
+.tb-name{margin-top:10px;font-size:13px;font-weight:500;line-height:1.3}
+@media(min-width:600px){.brgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 14px}}
+@media(min-width:900px){.brgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:28px 16px}.tb-logo{width:48px;height:48px}}
 
 /* список «Все бренды» */
 .brands-list{margin-top:64px}
@@ -216,25 +222,11 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
   <h1>Бренды</h1>
   <input type="text" id="brandSearch" placeholder="Поиск бренда (например: Diesel)..." autocomplete="off">
 
-  <!-- логотипы топ-брендов -->
-  <div class="brgrid" id="brandsGrid">
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/b65cedbd98da6de5d4b3620ac6318b24/width/0/i/a3/7a/b1/ee/a37ab1ee-0ee0-4161-bb7f-9ec3bef9ec2f.png" alt="Balmain" class="brand-logo"><span class="brand-name">Balmain</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/b003531ab5222366a918ca0507a6327a/width/0/i/f6/a2/f8/00/f6a2f800-f24e-471a-b9ff-b65591ebaf8a.png" alt="Bottega Veneta" class="brand-logo"><span class="brand-name">Bottega Veneta</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/51a6d7466125e4d79d4a5a04d41f2fcd/width/0/i/56/d5/53/79/56d55379-efc3-4220-9d7e-8b40e33fbc51.png" alt="Burberry" class="brand-logo"><span class="brand-name">Burberry</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/ffd96129eb0e6ca929bd94bc4b33da4d/width/0/i/b/88885716-7c51-4b5c-8408-c9de9372e139.png" alt="Chloé" class="brand-logo"><span class="brand-name">Chloé</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/06766a1cb910157c6f70e264c930c45f/width/0/i/d1/49/86/a3/d14986a3-cecd-4f3e-9731-bf66d6222a65.png" alt="Diesel" class="brand-logo"><span class="brand-name">Diesel</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/d350d2a55a5841e516c3b81df78cc811/width/0/i/7b/68/8e/69/7b688e69-372b-4a73-a232-a3ed3f74f1a7.png" alt="Gucci" class="brand-logo"><span class="brand-name">Gucci</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/6acceaa91cbae28332eae45e380438cf/width/0/i/6a/fb/7a/44/6afb7a44-3498-42d9-9d74-5b599535cd2a.png" alt="Prada" class="brand-logo"><span class="brand-name">Prada</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/dbc2b656a38e0cc43d2f11a92c2e6b9d/width/0/i/bd/24/1e/0c/bd241e0c-a0fd-4c80-8034-de37e7215393.png" alt="Saint Laurent" class="brand-logo"><span class="brand-name">Saint Laurent</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/f5600ac4ecbb3062b2000628e52cb5b3/width/0/i/f6/a2/65/7f/f6a2657f-4bd6-4a15-9aff-d37353196479.png" alt="Brunello Cucinelli" class="brand-logo"><span class="brand-name">Brunello Cucinelli</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/010486196108a678aa88ddc247a54a8a/width/0/i/27/be/ab/71/27beab71-fd4b-476d-b9ff-7985c1537569.png" alt="TOTEME" class="brand-logo"><span class="brand-name">TOTEME</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/bce1ab3076f328fefd014daf054f1645/width/0/i/93/b1/42/a8/93b142a8-b455-4e7b-9c75-aa8a4bd08656.png" alt="Santoni" class="brand-logo"><span class="brand-name">Santoni</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/44723017827f3d1c8722035ff8eed768/width/0/i/16/e2/c8/c6/16e2c8c6-878f-4767-b2e2-c6838fe56240.png" alt="Marni" class="brand-logo"><span class="brand-name">Marni</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/2820211269cdecbee68cb3c27775973e/width/0/i/29/00/bc/f5/2900bcf5-ad2e-4190-b440-b75b225a7556.png" alt="Moschino" class="brand-logo"><span class="brand-name">Moschino</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/8c6514032330f1d948ee74479736f867/width/0/i/06/6a/d1/9d/066ad19d-44aa-4bde-bd5e-fdc2eb071920.png" alt="Giorgio Armani" class="brand-logo"><span class="brand-name">Giorgio Armani</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/59e5e8c5c3cff5a232f5942ae08b20c2/width/0/i/6c/d3/0c/a1/6cd30ca1-65b4-4790-8d2c-7b26064b99a6.png" alt="BOSS" class="brand-logo"><span class="brand-name">BOSS</span></a>
-    <a href="#" class="brand-card"><img src="https://st-cdn.tsum.com/sig/026d90c7d1b04b6cfed1f6b75e83d543/width/0/i/a2/f4/9f/83/a2f49f83-9762-4a22-9771-11a2f8efebb5.png" alt="Brioni" class="brand-logo"><span class="brand-name">Brioni</span></a>
-  </div>
+  <!-- топ-бренды -->
+  <section id="topBrands">
+    <h2 class="top-title">Топ бренды</h2>
+    <div class="brgrid" id="brandsGrid"></div>
+  </section>
 
   <!-- список «Все бренды» -->
   <section class="brands-list">
@@ -291,6 +283,44 @@ const favBrands=new Set();
 const HEART='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20s-7-4.6-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.4 12 20 12 20z"/></svg>';
 const esc=s=>s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
+/* ───── ТОП-БРЕНДЫ ─────
+   Позже этот объект приходит из API (админка: бренд → «Топ», пол, порядок, фото, логотип).
+   photo/logo — URL картинок. Пока null → показывается заглушка. */
+const TOP_BRANDS={
+  men:[
+    {name:'Aeronautica Militare',photo:null,logo:null,hue:215},
+    {name:'Hannes Roether',photo:null,logo:null,hue:25},
+    {name:'Diesel',photo:null,logo:null,hue:5},
+    {name:'Transit',photo:null,logo:null,hue:150},
+    {name:'Bogner',photo:null,logo:null,hue:200}
+  ],
+  women:[
+    {name:'Dorothee Schumacher',photo:null,logo:null,hue:330},
+    {name:'Miss Sixty',photo:null,logo:null,hue:350},
+    {name:'Annette Görtz',photo:null,logo:null,hue:30},
+    {name:'D.Exterior',photo:null,logo:null,hue:170},
+    {name:'Seventy',photo:null,logo:null,hue:260}
+  ]
+};
+const initials=n=>n.split(/[\s.]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+function renderTopBrands(){
+  const term=document.getElementById('brandSearch').value.trim().toLowerCase();
+  const items=TOP_BRANDS[gender].filter(b=>b.name.toLowerCase().includes(term));
+  document.getElementById('topBrands').style.display=items.length?'':'none';
+  document.getElementById('brandsGrid').innerHTML=items.map(b=>`
+    <a href="#" class="tb" data-name="${esc(b.name)}">
+      <div class="tb-photo"${b.photo?'':` style="background:linear-gradient(145deg,hsl(${b.hue},18%,58%),hsl(${b.hue},22%,32%))"`}>
+        ${b.photo?`<img src="${esc(b.photo)}" alt="${esc(b.name)}" loading="lazy">`:`<div class="tb-ph">${esc(b.name)}</div>`}
+        <div class="tb-logo">${b.logo?`<img src="${esc(b.logo)}" alt="">`:`<span>${esc(initials(b.name))}</span>`}</div>
+      </div>
+      <div class="tb-name">${esc(b.name)}</div>
+    </a>`).join('');
+}
+document.getElementById('brandsGrid').addEventListener('click',e=>{
+  const c=e.target.closest('.tb');
+  if(c){e.preventDefault();toast('Страница бренда '+c.dataset.name)}
+});
+
 function renderBrandList(){
   const f=document.getElementById('brandSearch').value.trim().toLowerCase();
   const list=BRANDS_BY_GENDER[gender]
@@ -334,7 +364,7 @@ function setGender(g,silent){
     if(i<2)b.classList.toggle('on',(i===0)===(g==='women'));
   });
   document.querySelectorAll('.mtabs button')[2].classList.remove('on');
-  renderBrandList();
+  renderBrandList();renderTopBrands();
   if(!silent)toast(g==='men'?'Мужское — раздел переключён':'Женское — раздел переключён');
 }
 function sw(b){setGender(b.textContent.trim()==='Мужское'?'men':'women')}
@@ -351,10 +381,7 @@ function mtab(b){
 /* ───── ПОИСК: фильтрует логотипы и список ───── */
 document.getElementById('brandSearch').addEventListener('input',e=>{
   const term=e.target.value.trim().toLowerCase();
-  document.querySelectorAll('.brand-card').forEach(c=>{
-    const name=c.querySelector('.brand-name').textContent.toLowerCase();
-    c.style.display=name.includes(term)?'flex':'none';
-  });
+  renderTopBrands();
   renderBrandList();
 });
 

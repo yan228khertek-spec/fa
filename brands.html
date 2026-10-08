@@ -303,6 +303,20 @@ const TOP_BRANDS={
   ]
 };
 const initials=n=>n.split(/[\s.]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+/* ───── ДАННЫЕ ИЗ АДМИНКИ (API). Если API недоступен — остаются данные выше ───── */
+const API_BASE='';   // '' — если сайт и API на одном домене; иначе 'https://api.ваш-домен.ru'
+const hueOf=n=>[...n].reduce((h,c)=>(h*31+c.charCodeAt(0))%360,7);
+async function loadBrandsFromApi(g){
+  try{
+    const r=await fetch(API_BASE+'/api/brands?gender='+g);
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    BRANDS_BY_GENDER[g]=d.all.map(b=>b.name);
+    TOP_BRANDS[g]=d.top.map(t=>({name:t.name,slug:t.slug,hue:hueOf(t.name),
+      photo:t.photo?API_BASE+t.photo:null,logo:t.logo?API_BASE+t.logo:null}));
+    if(g===gender){renderBrandList();renderTopBrands()}
+  }catch(e){/* API недоступен — остаются встроенные данные */}
+}
 function renderTopBrands(){
   const term=document.getElementById('brandSearch').value.trim().toLowerCase();
   const items=TOP_BRANDS[gender].filter(b=>b.name.toLowerCase().includes(term));
@@ -364,7 +378,7 @@ function setGender(g,silent){
     if(i<2)b.classList.toggle('on',(i===0)===(g==='women'));
   });
   document.querySelectorAll('.mtabs button')[2].classList.remove('on');
-  renderBrandList();renderTopBrands();
+  renderBrandList();renderTopBrands();loadBrandsFromApi(g);
   if(!silent)toast(g==='men'?'Мужское — раздел переключён':'Женское — раздел переключён');
 }
 function sw(b){setGender(b.textContent.trim()==='Мужское'?'men':'women')}

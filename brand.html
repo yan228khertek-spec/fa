@@ -140,8 +140,9 @@ function render(){
       `<button class="${S.category?'':'on'}" data-c="">Все<i>${total}</i></button>`
       +S.facets.categories.map(c=>`<button class="${S.category===c.name?'on':''}" data-c="${esc(c.name)}">${esc(c.name)}<i>${c.count}</i></button>`).join('')
     :'');
-  // типы показываем внутри выбранного раздела — на «Все» их слишком много
-  document.getElementById('kinds').innerHTML=S.category&&(S.facets.kinds.length>1||S.kind)?
+  // типы показываем внутри выбранного раздела; если раздел всего один — сразу
+  const oneCat=S.facets.categories.length<=1;
+  document.getElementById('kinds').innerHTML=(S.category||oneCat)&&(S.facets.kinds.length>1||S.kind)?
     `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
     +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}</button>`).join(''):'';
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');

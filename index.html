@@ -390,7 +390,27 @@ function card(p){
 }
 document.getElementById('g1').innerHTML=MS.map(card).join('');
 document.getElementById('g2').innerHTML=DS.map(card).join('');
-document.getElementById('brg').innerHTML=BRANDS.map(b=>`<a href="#" onclick="toast('Страница бренда ${b}');return false">${b}</a>`).join('');
+/* «Бренды галереи»: плитки ведут на страницу бренда, когда бренд найден в витринном API */
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
+const brandKey=n=>n.toLowerCase().replace(/[^a-zа-яё0-9]+/g,'');
+const brandSlugs={};   // нормализованное имя → адрес страницы
+const brandHref=b=>{
+  const k=brandKey(b);
+  // точное совпадение или имя из API — начало названия плитки («Seventy» → «SEVENTY VENEZIA»)
+  const hit=brandSlugs[k]||Object.keys(brandSlugs).filter(x=>x.length>=5&&k.startsWith(x)).map(x=>brandSlugs[x])[0];
+  return hit?'brand.html?slug='+encodeURIComponent(hit):null;
+};
+function drawBrands(){
+  document.getElementById('brg').innerHTML=BRANDS.map(b=>{
+    const h=brandHref(b);
+    return h?`<a href="${h}">${b}</a>`:`<a href="#" onclick="toast('Страница бренда ${b}');return false">${b}</a>`;
+  }).join('');
+}
+drawBrands();
+['men','women'].forEach(g=>fetch(API_BASE+'/api/brands?gender='+g).then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+  d.all.concat(d.top).forEach(x=>{brandSlugs[brandKey(x.name)]=x.slug});
+  drawBrands();
+}).catch(()=>{/* API недоступен — остаются плитки без ссылок */}));
 
 /* смена ракурса: наведение на десктопе, тап на телефоне */
 document.querySelectorAll('.pic').forEach(fr=>{

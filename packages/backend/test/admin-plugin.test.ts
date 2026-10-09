@@ -43,8 +43,14 @@ describe('админка брендов (HTTP)', () => {
     app = await buildApp({
       config: config(over),
       catalogReader: new MemoryCatalogReader([
-        { id: 'm1', name: 'Джемпер Diesel', skus: 4, photo: 'import_files/ab/1.jpg' },
-        { id: 'm2', name: 'Без бренда', skus: 1, photo: null },
+        {
+          id: 'm1',
+          name: 'Джемпер Diesel',
+          skus: 4,
+          photo: 'import_files/ab/1.jpg',
+          article: 'D-1',
+        },
+        { id: 'm2', name: 'Без бренда', skus: 1, photo: null, article: null },
       ]),
     });
   };
@@ -128,18 +134,12 @@ describe('админка брендов (HTTP)', () => {
     expect(file.headers['x-content-type-options']).toBe('nosniff');
     expect(file.rawPayload.equals(PNG)).toBe(true);
 
+    // карточек ещё нет — на витрине бренда пусто
     const models = await app.inject({ url: '/api/brands/diesel/models' });
     expect(models.json()).toEqual({
       brand: { name: 'Diesel', slug: 'diesel' },
-      total: 1,
-      items: [
-        {
-          id: 'm1',
-          name: 'Джемпер Diesel',
-          skus: 4,
-          photo: 'https://api.example.test/images/import_files/ab/1.jpg',
-        },
-      ],
+      total: 0,
+      items: [],
     });
     expect((await app.inject({ url: '/api/brands/nope/models' })).statusCode).toBe(404);
     expect((await app.inject({ url: '/api/brands?gender=kids' })).statusCode).toBe(400);

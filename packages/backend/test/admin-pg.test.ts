@@ -136,7 +136,7 @@ describe.skipIf(!url)('витринные бренды в PostgreSQL', () => {
     await writeImportXml(file, buildImportXml(SPEC));
     await importCatalogFile(catalog, file, 'import.xml');
     await catalog.close();
-    expect((await service.brandModels('diesel', 10, 0))?.total).toBe(2);
+    expect((await service.brandBySlug('diesel'))?.slug).toBe('diesel');
   });
 
   it('уникальность адреса и написаний → 409; бренд удаляется каскадом', async () => {

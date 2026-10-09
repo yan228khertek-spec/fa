@@ -233,25 +233,10 @@ export class BrandService {
     if (brandId === null) await this.recompute();
   }
 
-  /** Модели бренда для публичного API; null — бренда с таким адресом нет. */
-  async brandModels(
-    slug: string,
-    limit: number,
-    offset: number,
-  ): Promise<(Page<CatalogModel> & { brand: { name: string; slug: string } }) | null> {
+  /** Бренд по адресу для публичного API; null — такого нет. */
+  async brandBySlug(slug: string): Promise<{ name: string; slug: string } | null> {
     const brand = (await this.repo.listBrands()).find((b) => b.slug === slug);
-    if (!brand) return null;
-    const [models, assigned] = await Promise.all([
-      this.catalog.listModels(),
-      this.repo.listAssignments(),
-    ]);
-    const ids = new Set(assigned.filter((a) => a.brandId === brand.id).map((a) => a.modelId));
-    const mine = models.filter((m) => ids.has(m.id));
-    return {
-      brand: { name: brand.name, slug: brand.slug },
-      total: mine.length,
-      items: mine.slice(offset, offset + limit),
-    };
+    return brand ? { name: brand.name, slug: brand.slug } : null;
   }
 
   async stats(): Promise<Stats> {

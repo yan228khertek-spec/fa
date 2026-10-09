@@ -8,6 +8,7 @@ import {
   type ExchangeStatus,
   type Gender,
   type ImageKind,
+  type LiveModel,
   type NewBrand,
   type Placements,
   type SiteBrand,
@@ -119,7 +120,14 @@ export class MemorySiteBrandRepository implements SiteBrandRepository {
 
 /** Каталог из массива — для тестов и dev без БД. */
 export class MemoryCatalogReader implements CatalogReader {
-  constructor(public models: CatalogModel[] = []) {}
+  constructor(
+    public models: CatalogModel[] = [],
+    public live = new Map<string, LiveModel>(),
+  ) {}
+
+  async liveData(): Promise<Map<string, LiveModel>> {
+    return structuredClone(this.live);
+  }
 
   async listModels(): Promise<CatalogModel[]> {
     return this.models.map((m) => ({ ...m }));

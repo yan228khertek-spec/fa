@@ -126,9 +126,8 @@ describe('BrandService', () => {
 
   it('модели бренда и статистика', async () => {
     await service.createBrand({ name: 'Diesel' });
-    const res = await service.brandModels('diesel', 10, 0);
-    expect(res?.items.map((m) => m.id)).toEqual(['m1']);
-    expect(await service.brandModels('nope', 10, 0)).toBeNull();
+    expect(await service.brandBySlug('diesel')).toEqual({ name: 'Diesel', slug: 'diesel' });
+    expect(await service.brandBySlug('nope')).toBeNull();
     expect(await service.stats()).toEqual({
       models: 5,
       withoutPhoto: 4,

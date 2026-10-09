@@ -46,6 +46,8 @@ export interface BrandPatch {
 export interface CatalogModel {
   id: string;
   name: string;
+  /** Артикул товара или (если товара нет) первого SKU. */
+  article: string | null;
   skus: number;
   /** Путь первой картинки как в выгрузке 1С (import_files/…); null — фото нет. */
   photo: string | null;
@@ -107,6 +109,85 @@ export interface ExchangeStatus {
 /** Чтение staging-каталога (только чтение: писать в него может один обмен). */
 export interface CatalogReader {
   listModels(): Promise<CatalogModel[]>;
+  /** Размеры, остатки и цены моделей — только то, что есть в staging. */
+  liveData(): Promise<Map<string, LiveModel>>;
   exchangeStatus(): Promise<ExchangeStatus>;
   close(): Promise<void>;
+}
+
+// ---------- карточки товаров ----------
+
+export type CardStatus = 'draft' | 'published';
+
+export interface CardCharacteristic {
+  name: string;
+  value: string;
+}
+
+export interface CardPhoto {
+  id: number;
+  /** Имя файла в каталоге uploads; главное фото — с наименьшим sort. */
+  file: string;
+  sort: number;
+}
+
+/** Редакционная часть карточки (то, что хранится в site_cards). */
+export interface SiteCard {
+  id: number;
+  modelId: string;
+  title: string | null;
+  description: string;
+  characteristics: CardCharacteristic[];
+  status: CardStatus;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  photos: CardPhoto[];
+}
+
+export interface NewCard {
+  modelId: string;
+  title: string | null;
+  description: string;
+  characteristics: CardCharacteristic[];
+}
+
+export interface CardPatch {
+  title?: string | null;
+  description?: string;
+  characteristics?: CardCharacteristic[];
+  status?: CardStatus;
+}
+
+export interface CardRepository {
+  ready(): Promise<void>;
+  listCards(): Promise<SiteCard[]>;
+  getCard(id: number): Promise<SiteCard | null>;
+  createCard(input: NewCard): Promise<SiteCard>;
+  updateCard(id: number, patch: CardPatch): Promise<SiteCard>;
+  /** Удаляет карточку и возвращает имена её фото, чтобы убрать файлы с диска. */
+  deleteCard(id: number): Promise<string[]>;
+  addPhoto(cardId: number, file: string): Promise<CardPhoto>;
+  /** Удаляет фото и возвращает имя файла (null — фото не было). */
+  removePhoto(cardId: number, photoId: number): Promise<string | null>;
+  /** Новый порядок: ids — ровно все фото карточки; первое становится главным. */
+  reorderPhotos(cardId: number, ids: number[]): Promise<void>;
+  close(): Promise<void>;
+}
+
+/** Размер/цвет из staging и остаток из offers (null — предложений по SKU нет). */
+export interface LiveVariant {
+  id: string;
+  size: string | null;
+  color: string | null;
+  quantity: number | null;
+}
+
+/** Живые данные модели из staging: размеры, остатки, цена. Карточка их не хранит. */
+export interface LiveModel {
+  variants: LiveVariant[];
+  /** Наименьшая цена по предложениям модели; null — цен нет (offers.xml ещё не приходил). */
+  price: number | null;
+  /** Сумма остатков; null — данных об остатках нет вовсе. */
+  stock: number | null;
 }

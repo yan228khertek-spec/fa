@@ -1,240 +1,920 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>FASHION AVENUE — админка</title>
-<style>
-:root{--graphite:#1d1d1f;--red:#C8452F;--line:#e4e1dc;--muted:#8a8782;--accent:#A38768;--soft:#f5f3f0;--bg:#fff;--ok:#2f7d4f}
-*{box-sizing:border-box}
-body{margin:0;font:14px/1.45 Onest,Inter,system-ui,sans-serif;color:var(--graphite);background:var(--soft)}
-header{background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.bar{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:28px;overflow-x:auto}
-.logo{font-weight:700;letter-spacing:.14em;font-size:15px;padding:16px 0;white-space:nowrap}
-.logo small{display:block;font-weight:400;letter-spacing:.2em;font-size:9px;color:var(--muted)}
-nav{display:flex;gap:4px}
-nav button{background:none;border:0;padding:20px 14px;font:inherit;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
-nav button.on{color:var(--graphite);border-color:var(--graphite)}
-main{max-width:1200px;margin:0 auto;padding:24px 20px 80px}
-h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 14px}
-.card{background:var(--bg);border:1px solid var(--line);padding:20px;margin-bottom:20px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:var(--bg);border:1px solid var(--line);padding:16px}
-.stat b{display:block;font-size:26px;font-weight:600}.stat span{color:var(--muted);font-size:12px}
-.stat.warn b{color:var(--red)}
-button.btn,label.btn{display:inline-block;background:var(--graphite);color:#fff;border:1px solid var(--graphite);padding:9px 16px;font:inherit;cursor:pointer}
-.btn.ghost{background:none;color:var(--graphite);border-color:var(--line)}
-.btn.sm{padding:5px 10px;font-size:12px}
-.btn:disabled{opacity:.4;cursor:default}
-input[type=text],input[type=search],select,textarea{font:inherit;border:1px solid var(--line);padding:8px 10px;background:#fff;width:100%}
-input:focus,select:focus,textarea:focus{outline:1px solid var(--graphite)}
-table{width:100%;border-collapse:collapse;background:var(--bg)}
-th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;white-space:nowrap}
-tr.click{cursor:pointer}tr.click:hover{background:var(--soft)}
-.tbl{background:var(--bg);border:1px solid var(--line);overflow-x:auto}
-.thumb{width:40px;height:40px;object-fit:cover;background:var(--soft);display:block}
-.thumb.round{border-radius:50%;object-fit:contain;border:1px solid var(--line);background:#fff}
-.tag{display:inline-block;font-size:11px;padding:1px 7px;border:1px solid var(--line);margin-right:4px}
-.tag.top{background:var(--graphite);color:#fff;border-color:var(--graphite)}
-.muted{color:var(--muted)}.ok{color:var(--ok)}.err{color:var(--red)}
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>.grow{flex:1;min-width:180px}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:800px){.cols{grid-template-columns:1fr}}
-.toplist{list-style:none;margin:0 0 14px;padding:0}
-.toplist li{display:flex;align-items:center;gap:10px;border:1px solid var(--line);padding:8px;margin-bottom:6px;background:#fff}
-.toplist .nm{flex:1;font-weight:500}.toplist .num{width:18px;color:var(--muted);text-align:center}
-dialog{border:1px solid var(--graphite);padding:0;width:min(640px,94vw);max-height:92vh;overflow:auto}
-dialog::backdrop{background:rgba(0,0,0,.4)}
-.dlg{padding:24px}.dlg h3{margin:0 0 4px;font-size:16px}.dlg .sub{color:var(--muted);margin-bottom:18px}
-.fld{margin-bottom:16px}.fld>label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-.pl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.pl>div{border:1px solid var(--line);padding:12px}.pl b{display:block;margin-bottom:8px}
-.pl label{display:flex;gap:8px;align-items:center;margin-bottom:6px}
-.pl input[type=number]{width:60px;padding:4px 6px;border:1px solid var(--line)}
-.imgs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.imgbox{border:1px dashed var(--line);padding:10px;text-align:center}
-.imgbox .pv{aspect-ratio:1/1;background:var(--soft) center/cover no-repeat;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px}
-.imgbox .pv.logo{aspect-ratio:auto;height:96px;background-size:contain;background-color:#fff}
-.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--graphite);color:#fff;padding:11px 20px;z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
-.toast.on{opacity:1}
-.hint{font-size:12px;color:var(--muted);margin:6px 0 0}
-code{background:var(--soft);padding:1px 5px;font-size:12px}
-.hidden{display:none!important}
-.res-success{color:var(--ok)}.res-failure{color:var(--red)}.res-progress{color:var(--accent)}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>FASHION AVENUE — админка</title>
+    <style>
+      :root {
+        --graphite: #1d1d1f;
+        --red: #c8452f;
+        --line: #e4e1dc;
+        --muted: #8a8782;
+        --accent: #a38768;
+        --soft: #f5f3f0;
+        --bg: #fff;
+        --ok: #2f7d4f;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          14px/1.45 Onest,
+          Inter,
+          system-ui,
+          sans-serif;
+        color: var(--graphite);
+        background: var(--soft);
+      }
+      header {
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      .bar {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        overflow-x: auto;
+      }
+      .logo {
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        font-size: 15px;
+        padding: 16px 0;
+        white-space: nowrap;
+      }
+      .logo small {
+        display: block;
+        font-weight: 400;
+        letter-spacing: 0.2em;
+        font-size: 9px;
+        color: var(--muted);
+      }
+      nav {
+        display: flex;
+        gap: 4px;
+      }
+      nav button {
+        background: none;
+        border: 0;
+        padding: 20px 14px;
+        font: inherit;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+      }
+      nav button.on {
+        color: var(--graphite);
+        border-color: var(--graphite);
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 20px 80px;
+      }
+      h2 {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 0 0 14px;
+      }
+      .card {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .stat {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        padding: 16px;
+      }
+      .stat b {
+        display: block;
+        font-size: 26px;
+        font-weight: 600;
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .stat.warn b {
+        color: var(--red);
+      }
+      button.btn,
+      label.btn {
+        display: inline-block;
+        background: var(--graphite);
+        color: #fff;
+        border: 1px solid var(--graphite);
+        padding: 9px 16px;
+        font: inherit;
+        cursor: pointer;
+      }
+      .btn.ghost {
+        background: none;
+        color: var(--graphite);
+        border-color: var(--line);
+      }
+      .btn.sm {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      input[type='text'],
+      input[type='search'],
+      select,
+      textarea {
+        font: inherit;
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        background: #fff;
+        width: 100%;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 1px solid var(--graphite);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg);
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: middle;
+      }
+      th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      tr.click {
+        cursor: pointer;
+      }
+      tr.click:hover {
+        background: var(--soft);
+      }
+      .tbl {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        overflow-x: auto;
+      }
+      .thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        background: var(--soft);
+        display: block;
+      }
+      .thumb.round {
+        border-radius: 50%;
+        object-fit: contain;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        padding: 1px 7px;
+        border: 1px solid var(--line);
+        margin-right: 4px;
+      }
+      .tag.top {
+        background: var(--graphite);
+        color: #fff;
+        border-color: var(--graphite);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .ok {
+        color: var(--ok);
+      }
+      .err {
+        color: var(--red);
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .row > .grow {
+        flex: 1;
+        min-width: 180px;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 800px) {
+        .cols {
+          grid-template-columns: 1fr;
+        }
+      }
+      .toplist {
+        list-style: none;
+        margin: 0 0 14px;
+        padding: 0;
+      }
+      .toplist li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--line);
+        padding: 8px;
+        margin-bottom: 6px;
+        background: #fff;
+      }
+      .toplist .nm {
+        flex: 1;
+        font-weight: 500;
+      }
+      .toplist .num {
+        width: 18px;
+        color: var(--muted);
+        text-align: center;
+      }
+      dialog {
+        border: 1px solid var(--graphite);
+        padding: 0;
+        width: min(640px, 94vw);
+        max-height: 92vh;
+        overflow: auto;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.4);
+      }
+      .dlg {
+        padding: 24px;
+      }
+      .dlg h3 {
+        margin: 0 0 4px;
+        font-size: 16px;
+      }
+      .dlg .sub {
+        color: var(--muted);
+        margin-bottom: 18px;
+      }
+      .fld {
+        margin-bottom: 16px;
+      }
+      .fld > label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 5px;
+      }
+      .pl {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .pl > div {
+        border: 1px solid var(--line);
+        padding: 12px;
+      }
+      .pl b {
+        display: block;
+        margin-bottom: 8px;
+      }
+      .pl label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .pl input[type='number'] {
+        width: 60px;
+        padding: 4px 6px;
+        border: 1px solid var(--line);
+      }
+      .imgs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .imgbox {
+        border: 1px dashed var(--line);
+        padding: 10px;
+        text-align: center;
+      }
+      .imgbox .pv {
+        aspect-ratio: 1/1;
+        background: var(--soft) center/cover no-repeat;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .imgbox .pv.logo {
+        aspect-ratio: auto;
+        height: 96px;
+        background-size: contain;
+        background-color: #fff;
+      }
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translateX(-50%);
+        background: var(--graphite);
+        color: #fff;
+        padding: 11px 20px;
+        z-index: 20;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .toast.on {
+        opacity: 1;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 6px 0 0;
+      }
+      code {
+        background: var(--soft);
+        padding: 1px 5px;
+        font-size: 12px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .res-success {
+        color: var(--ok);
+      }
+      .res-failure {
+        color: var(--red);
+      }
+      .res-progress {
+        color: var(--accent);
+      }
 
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
-.chip{border:1px solid var(--line);background:#fff;padding:3px 10px;font:inherit;cursor:pointer;font-size:12px}
-.chip:hover{border-color:var(--graphite)}.chip i{color:var(--muted);font-style:normal;margin-left:4px}
-textarea{min-height:84px;resize:vertical}
-</style>
-</head>
-<body>
-<header><div class="bar">
-  <div class="logo">FASHION AVENUE<small>АДМИНКА</small></div>
-  <nav id="nav">
-    <button data-t="home" class="on">Обзор</button>
-    <button data-t="brands">Бренды</button>
-    <button data-t="top">Топ-бренды</button>
-    <button data-t="unmatched">Без бренда</button>
-    <button data-t="exchange">Обмен с 1С</button>
-  </nav>
-</div></header>
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0 14px;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 3px 10px;
+        font: inherit;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .chip:hover {
+        border-color: var(--graphite);
+      }
+      .chip i {
+        color: var(--muted);
+        font-style: normal;
+        margin-left: 4px;
+      }
+      textarea {
+        min-height: 84px;
+        resize: vertical;
+      }
+      .sugg {
+        position: relative;
+      }
+      .sugg .list {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        background: #fff;
+        border: 1px solid var(--graphite);
+        z-index: 8;
+        max-height: 360px;
+        overflow: auto;
+      }
+      .sugg .it {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--line);
+      }
+      .sugg .it:hover {
+        background: var(--soft);
+      }
+      .photos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .ph {
+        border: 1px solid var(--line);
+        padding: 6px;
+        background: #fff;
+        text-align: center;
+      }
+      .ph img {
+        width: 100%;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .ph .main {
+        font-size: 11px;
+        color: var(--ok);
+        height: 16px;
+      }
+      .ph .btn {
+        padding: 2px 7px;
+        font-size: 12px;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 1fr 2fr auto;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 1px 7px;
+        border: 1px solid var(--line);
+      }
+      .badge.pub {
+        color: var(--ok);
+        border-color: var(--ok);
+      }
+      .badge.hid {
+        color: var(--red);
+        border-color: var(--red);
+      }
+      .live {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: var(--soft);
+      }
+      .live b {
+        display: block;
+      }
+      .live span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <div class="logo">FASHION AVENUE<small>АДМИНКА</small></div>
+        <nav id="nav">
+          <button data-t="home" class="on">Обзор</button>
+          <button data-t="cards">Карточки</button>
+          <button data-t="brands">Бренды</button>
+          <button data-t="top">Топ-бренды</button>
+          <button data-t="unmatched">Без бренда</button>
+          <button data-t="exchange">Обмен с 1С</button>
+        </nav>
+      </div>
+    </header>
 
-<main>
-<section id="t-home">
-  <div class="stats" id="stats"></div>
-  <div class="card" id="todo"></div>
-  <div class="card">
-    <h2>Как это работает</h2>
-    <p style="margin:0 0 8px">1С отправляет каталог через «Обмен с сайтом» → данные попадают в базу. <b>Брендов в 1С нет</b> — они «зашиты» в названия позиций.</p>
-    <p style="margin:0 0 8px">Поэтому бренды ведём здесь, на сайте: у каждого есть название и написания (как бренд встречается в названиях). Модель получает бренд, если одно из написаний есть в её названии. Остальные модели видны во вкладке «Без бренда» — их можно назначить вручную.</p>
-    <p style="margin:0">Здесь же: разделы (мужское/женское), «Топ бренды», фото и логотипы. Обмен с 1С эти настройки не трогает.</p>
-  </div>
-  <div class="row">
-    <button class="btn" id="bRecompute">Пересчитать бренды моделей</button>
-    <button class="btn ghost" id="bSeed">Загрузить список брендов сайта</button>
-  </div>
-  <p class="hint">«Пересчитать» — после нового обмена с 1С. «Загрузить список» безопасно: уже существующие бренды не меняются.</p>
-</section>
+    <main>
+      <section id="t-home">
+        <div class="stats" id="stats"></div>
+        <div class="card" id="todo"></div>
+        <div class="card">
+          <h2>Как это работает</h2>
+          <p style="margin: 0 0 8px">
+            1С отправляет каталог через «Обмен с сайтом» → данные попадают в базу.
+            <b>Брендов в 1С нет</b> — они «зашиты» в названия позиций.
+          </p>
+          <p style="margin: 0 0 8px">
+            Поэтому бренды ведём здесь, на сайте: у каждого есть название и написания (как бренд
+            встречается в названиях). Модель получает бренд, если одно из написаний есть в её
+            названии. Остальные модели видны во вкладке «Без бренда» — их можно назначить вручную.
+          </p>
+          <p style="margin: 0">
+            Здесь же: разделы (мужское/женское), «Топ бренды», фото и логотипы. Обмен с 1С эти
+            настройки не трогает.
+          </p>
+        </div>
+        <div class="row">
+          <button class="btn" id="bRecompute">Пересчитать бренды моделей</button>
+          <button class="btn ghost" id="bSeed">Загрузить список брендов сайта</button>
+        </div>
+        <p class="hint">
+          «Пересчитать» — после нового обмена с 1С. «Загрузить список» безопасно: уже существующие
+          бренды не меняются.
+        </p>
+      </section>
 
-<section id="t-brands" class="hidden">
-  <div class="row" style="margin-bottom:14px">
-    <div class="grow"><input type="search" id="bq" placeholder="Поиск бренда…"></div>
-    <select id="bf" style="width:auto">
-      <option value="">Все бренды</option><option value="men">Мужское</option><option value="women">Женское</option>
-      <option value="top">Только топ</option><option value="nophoto">Топ без фото</option>
-      <option value="off">Не в разделах</option><option value="empty">Без моделей</option>
-    </select>
-    <button class="btn" id="bNew">+ Новый бренд</button>
-  </div>
-  <div class="tbl"><table><thead><tr><th></th><th>Бренд</th><th>Разделы</th><th>Моделей</th><th>Фото</th></tr></thead><tbody id="bBody"></tbody></table></div>
-</section>
+      <section id="t-cards" class="hidden">
+        <div class="card">
+          <h2>Новая карточка</h2>
+          <div class="sugg">
+            <input
+              type="search"
+              id="cs"
+              placeholder="Найти товар из 1С: название или артикул…"
+              autocomplete="off"
+            />
+            <div class="list hidden" id="csList"></div>
+          </div>
+          <p class="hint">
+            Название, размеры, цены и остатки приходят из 1С сами. Здесь добавляются фото, описание
+            и характеристики.
+          </p>
+        </div>
+        <div class="row" style="margin-bottom: 14px">
+          <div class="grow">
+            <input type="search" id="cq" placeholder="Поиск среди карточек…" />
+          </div>
+          <select id="cf" style="width: auto">
+            <option value="">Все</option>
+            <option value="draft">Черновики</option>
+            <option value="published">Опубликованные</option>
+            <option value="hidden">Скрытые правилом</option>
+          </select>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Карточка</th>
+                <th>Бренд</th>
+                <th>Цена</th>
+                <th>Остаток</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody id="cBody"></tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top: 12px">
+          <span class="muted" id="cTotal"></span
+          ><button class="btn ghost" id="cMore">Показать ещё</button>
+        </div>
+      </section>
 
-<section id="t-top" class="hidden">
-  <p class="muted" style="margin-top:0">Плитки над списком «Все бренды» на странице брендов. Порядок — как в списке; рекомендуем 5. Бренд, добавленный в топ, автоматически попадает и в список раздела.</p>
-  <div class="cols" id="topCols"></div>
-</section>
+      <section id="t-brands" class="hidden">
+        <div class="row" style="margin-bottom: 14px">
+          <div class="grow"><input type="search" id="bq" placeholder="Поиск бренда…" /></div>
+          <select id="bf" style="width: auto">
+            <option value="">Все бренды</option>
+            <option value="men">Мужское</option>
+            <option value="women">Женское</option>
+            <option value="top">Только топ</option>
+            <option value="nophoto">Топ без фото</option>
+            <option value="off">Не в разделах</option>
+            <option value="empty">Без моделей</option>
+          </select>
+          <button class="btn" id="bNew">+ Новый бренд</button>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Бренд</th>
+                <th>Разделы</th>
+                <th>Моделей</th>
+                <th>Фото</th>
+              </tr>
+            </thead>
+            <tbody id="bBody"></tbody>
+          </table>
+        </div>
+      </section>
 
-<section id="t-unmatched" class="hidden">
-  <div class="card">
-    <h2>Частые начала названий</h2>
-    <p class="hint" style="margin-top:0">Нажмите, чтобы завести бренд с таким названием; написание подставится само.</p>
-    <div class="chips" id="cands"></div>
-  </div>
-  <div class="row" style="margin-bottom:14px">
-    <div class="grow"><input type="search" id="uq" placeholder="Поиск по названию модели…"></div>
-    <span class="muted" id="uTotal"></span>
-  </div>
-  <div class="tbl"><table><thead><tr><th></th><th>Модель</th><th>SKU</th><th>Назначить бренд</th></tr></thead><tbody id="uBody"></tbody></table></div>
-  <div class="row" style="margin-top:12px"><button class="btn ghost" id="uMore">Показать ещё</button></div>
-</section>
+      <section id="t-top" class="hidden">
+        <p class="muted" style="margin-top: 0">
+          Плитки над списком «Все бренды» на странице брендов. Порядок — как в списке; рекомендуем
+          5. Бренд, добавленный в топ, автоматически попадает и в список раздела.
+        </p>
+        <div class="cols" id="topCols"></div>
+      </section>
 
-<section id="t-exchange" class="hidden">
-  <div class="card">
-    <h2>Последние загрузки каталога</h2>
-    <div class="tbl"><table><thead><tr><th>Когда</th><th>Файл</th><th>Статус</th><th>Товаров</th><th>SKU</th><th>Брендов</th><th>Картинок</th></tr></thead><tbody id="runsC"></tbody></table></div>
-  </div>
-  <div class="card">
-    <h2>Последние загрузки предложений (цены, остатки)</h2>
-    <div class="tbl"><table><thead><tr><th>Когда</th><th>Файл</th><th>Статус</th><th>Предложений</th><th>Цен</th><th>Остатков</th></tr></thead><tbody id="runsO"></tbody></table></div>
-  </div>
-  <div class="card">
-    <h2>Журнал запросов 1С</h2>
-    <div class="tbl"><table><thead><tr><th>Когда</th><th>type / mode</th><th>Файл</th><th>Байт</th><th>Результат</th><th>Подробности</th></tr></thead><tbody id="logB"></tbody></table></div>
-  </div>
-</section>
-</main>
+      <section id="t-unmatched" class="hidden">
+        <div class="card">
+          <h2>Частые начала названий</h2>
+          <p class="hint" style="margin-top: 0">
+            Нажмите, чтобы завести бренд с таким названием; написание подставится само.
+          </p>
+          <div class="chips" id="cands"></div>
+        </div>
+        <div class="row" style="margin-bottom: 14px">
+          <div class="grow">
+            <input type="search" id="uq" placeholder="Поиск по названию модели…" />
+          </div>
+          <span class="muted" id="uTotal"></span>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Модель</th>
+                <th>SKU</th>
+                <th>Назначить бренд</th>
+              </tr>
+            </thead>
+            <tbody id="uBody"></tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top: 12px">
+          <button class="btn ghost" id="uMore">Показать ещё</button>
+        </div>
+      </section>
 
-<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
-<div class="toast" id="toast"></div>
+      <section id="t-exchange" class="hidden">
+        <div class="card">
+          <h2>Последние загрузки каталога</h2>
+          <div class="tbl">
+            <table>
+              <thead>
+                <tr>
+                  <th>Когда</th>
+                  <th>Файл</th>
+                  <th>Статус</th>
+                  <th>Товаров</th>
+                  <th>SKU</th>
+                  <th>Брендов</th>
+                  <th>Картинок</th>
+                </tr>
+              </thead>
+              <tbody id="runsC"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Последние загрузки предложений (цены, остатки)</h2>
+          <div class="tbl">
+            <table>
+              <thead>
+                <tr>
+                  <th>Когда</th>
+                  <th>Файл</th>
+                  <th>Статус</th>
+                  <th>Предложений</th>
+                  <th>Цен</th>
+                  <th>Остатков</th>
+                </tr>
+              </thead>
+              <tbody id="runsO"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Журнал запросов 1С</h2>
+          <div class="tbl">
+            <table>
+              <thead>
+                <tr>
+                  <th>Когда</th>
+                  <th>type / mode</th>
+                  <th>Файл</th>
+                  <th>Байт</th>
+                  <th>Результат</th>
+                  <th>Подробности</th>
+                </tr>
+              </thead>
+              <tbody id="logB"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
 
-<script>
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-const GN={men:'Мужское',women:'Женское'};
-const dt=v=>v?new Date(v).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
-let BR=[];
+    <dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+    <div class="toast" id="toast"></div>
 
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2600)}
-/* Все изменения идут с заголовком X-FA-Admin — сервер отклоняет запросы без него (защита от CSRF). */
-async function api(url,{method='GET',json,body,type}={}){
-  const h={};
-  if(method!=='GET')h['X-FA-Admin']='1';
-  if(json!==undefined){h['Content-Type']='application/json';body=JSON.stringify(json)}
-  if(type)h['Content-Type']=type;
-  const r=await fetch('/admin/api'+url,{method,headers:h,body});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok){toast(d.error||('Ошибка '+r.status));throw new Error(d.error||r.status)}
-  return d;
-}
+    <script>
+      const $ = (s) => document.querySelector(s),
+        $$ = (s) => [...document.querySelectorAll(s)];
+      const esc = (s) =>
+        String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      const GN = { men: 'Мужское', women: 'Женское' };
+      const dt = (v) =>
+        v
+          ? new Date(v).toLocaleString('ru', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            })
+          : '—';
+      let BR = [];
 
-function tab(t){
-  $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
-  $$('main>section').forEach(s=>s.classList.toggle('hidden',s.id!=='t-'+t));
-  ({home:loadHome,brands:loadBrands,top:loadTop,unmatched:loadUnmatched,exchange:loadExchange})[t]();
-  history.replaceState(null,'','#'+t);
-}
-$('#nav').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
+      function toast(m) {
+        const t = $('#toast');
+        t.textContent = m;
+        t.classList.add('on');
+        clearTimeout(toast.t);
+        toast.t = setTimeout(() => t.classList.remove('on'), 2600);
+      }
+      /* Все изменения идут с заголовком X-FA-Admin — сервер отклоняет запросы без него (защита от CSRF). */
+      async function api(url, { method = 'GET', json, body, type } = {}) {
+        const h = {};
+        if (method !== 'GET') h['X-FA-Admin'] = '1';
+        if (json !== undefined) {
+          h['Content-Type'] = 'application/json';
+          body = JSON.stringify(json);
+        }
+        if (type) h['Content-Type'] = type;
+        const r = await fetch('/admin/api' + url, { method, headers: h, body });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          toast(d.error || 'Ошибка ' + r.status);
+          throw new Error(d.error || r.status);
+        }
+        return d;
+      }
 
-/* обзор */
-async function loadHome(){
-  const [s,brands]=await Promise.all([api('/stats'),api('/brands')]);
-  BR=brands;
-  const topNoPhoto=BR.filter(b=>(b.placements.men.top||b.placements.women.top)&&!b.photo);
-  $('#stats').innerHTML=[['Моделей в каталоге',s.models],['Брендов на сайте',s.brands],['Моделей с брендом',s.assigned],
-    ['Без бренда',s.unmatched,s.unmatched>0],['Моделей без фото',s.withoutPhoto,s.withoutPhoto>0]]
-    .map(([l,v,w])=>`<div class="stat ${w?'warn':''}"><b>${v}</b><span>${l}</span></div>`).join('');
-  const todo=[];
-  if(!s.models)todo.push('В базе ещё нет товаров — дождитесь первого обмена с 1С (вкладка «Обмен с 1С»).');
-  if(!s.brands)todo.push('Словарь брендов пуст — нажмите «Загрузить список брендов сайта».');
-  if(topNoPhoto.length)todo.push(`Топ-бренды без фото: ${topNoPhoto.map(b=>esc(b.name)).join(', ')}.`);
-  if(s.models&&s.unmatched)todo.push(`${s.unmatched} моделей без бренда — откройте «Без бренда»: добавьте написания брендов или назначьте вручную.`);
-  $('#todo').innerHTML='<h2>Что требует внимания</h2>'+(todo.length?'<ul style="margin:0;padding-left:18px">'+todo.map(t=>`<li>${t}</li>`).join('')+'</ul>':'<span class="ok">Всё в порядке</span>');
-}
-$('#bRecompute').onclick=async()=>{const r=await api('/recompute',{method:'POST'});toast(`Готово: с брендом ${r.auto+r.manual} из ${r.models}`);loadHome()};
-$('#bSeed').onclick=async()=>{const r=await api('/seed',{method:'POST'});toast(`Добавлено брендов: ${r.created.length}, уже были: ${r.skipped.length}`);loadHome()};
+      function tab(t) {
+        $$('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+        $$('main>section').forEach((s) => s.classList.toggle('hidden', s.id !== 't-' + t));
+        ({
+          home: loadHome,
+          cards: loadCards,
+          brands: loadBrands,
+          top: loadTop,
+          unmatched: loadUnmatched,
+          exchange: loadExchange,
+        })[t]();
+        history.replaceState(null, '', '#' + t);
+      }
+      $('#nav').onclick = (e) => {
+        const b = e.target.closest('button');
+        if (b) tab(b.dataset.t);
+      };
 
-/* бренды */
-async function loadBrands(){BR=await api('/brands');drawBrands()}
-const topAny=b=>b.placements.men.top||b.placements.women.top;
-function drawBrands(){
-  const q=$('#bq').value.trim().toLowerCase(),f=$('#bf').value;
-  const rows=BR.filter(b=>(b.name+' '+b.aliases.join(' ')).toLowerCase().includes(q)).filter(b=>{
-    if(f==='off')return !b.placements.men.in&&!b.placements.women.in;
-    if(f==='men'||f==='women')return b.placements[f].in;
-    if(f==='top')return topAny(b);
-    if(f==='nophoto')return topAny(b)&&!b.photo;
-    if(f==='empty')return !b.models;
-    return true});
-  $('#bBody').innerHTML=rows.map(b=>`<tr class="click" data-id="${b.id}">
-    <td>${b.logo?`<img class="thumb round" src="${esc(b.logo)}" alt="">`:'<div class="thumb round"></div>'}</td>
-    <td><b>${esc(b.name)}</b><div class="muted" style="font-size:12px">/${esc(b.slug)}${b.aliases.length?' · '+esc(b.aliases.join(', ')):''}</div></td>
-    <td>${['men','women'].map(g=>b.placements[g].in?`<span class="tag ${b.placements[g].top?'top':''}">${GN[g]}${b.placements[g].top?' · топ':''}</span>`:'').join('')||'<span class="muted">не в разделах</span>'}</td>
+      /* обзор */
+      async function loadHome() {
+        const [s, brands] = await Promise.all([api('/stats'), api('/brands')]);
+        BR = brands;
+        const topNoPhoto = BR.filter(
+          (b) => (b.placements.men.top || b.placements.women.top) && !b.photo,
+        );
+        $('#stats').innerHTML = [
+          ['Моделей в каталоге', s.models],
+          ['Брендов на сайте', s.brands],
+          ['Моделей с брендом', s.assigned],
+          ['Без бренда', s.unmatched, s.unmatched > 0],
+          ['Моделей без фото', s.withoutPhoto, s.withoutPhoto > 0],
+        ]
+          .map(
+            ([l, v, w]) =>
+              `<div class="stat ${w ? 'warn' : ''}"><b>${v}</b><span>${l}</span></div>`,
+          )
+          .join('');
+        const todo = [];
+        if (!s.models)
+          todo.push(
+            'В базе ещё нет товаров — дождитесь первого обмена с 1С (вкладка «Обмен с 1С»).',
+          );
+        if (!s.brands)
+          todo.push('Словарь брендов пуст — нажмите «Загрузить список брендов сайта».');
+        if (topNoPhoto.length)
+          todo.push(`Топ-бренды без фото: ${topNoPhoto.map((b) => esc(b.name)).join(', ')}.`);
+        if (s.models && s.unmatched)
+          todo.push(
+            `${s.unmatched} моделей без бренда — откройте «Без бренда»: добавьте написания брендов или назначьте вручную.`,
+          );
+        $('#todo').innerHTML =
+          '<h2>Что требует внимания</h2>' +
+          (todo.length
+            ? '<ul style="margin:0;padding-left:18px">' +
+              todo.map((t) => `<li>${t}</li>`).join('') +
+              '</ul>'
+            : '<span class="ok">Всё в порядке</span>');
+      }
+      $('#bRecompute').onclick = async () => {
+        const r = await api('/recompute', { method: 'POST' });
+        toast(`Готово: с брендом ${r.auto + r.manual} из ${r.models}`);
+        loadHome();
+      };
+      $('#bSeed').onclick = async () => {
+        const r = await api('/seed', { method: 'POST' });
+        toast(`Добавлено брендов: ${r.created.length}, уже были: ${r.skipped.length}`);
+        loadHome();
+      };
+
+      /* бренды */
+      async function loadBrands() {
+        BR = await api('/brands');
+        drawBrands();
+      }
+      const topAny = (b) => b.placements.men.top || b.placements.women.top;
+      function drawBrands() {
+        const q = $('#bq').value.trim().toLowerCase(),
+          f = $('#bf').value;
+        const rows = BR.filter((b) =>
+          (b.name + ' ' + b.aliases.join(' ')).toLowerCase().includes(q),
+        ).filter((b) => {
+          if (f === 'off') return !b.placements.men.in && !b.placements.women.in;
+          if (f === 'men' || f === 'women') return b.placements[f].in;
+          if (f === 'top') return topAny(b);
+          if (f === 'nophoto') return topAny(b) && !b.photo;
+          if (f === 'empty') return !b.models;
+          return true;
+        });
+        $('#bBody').innerHTML =
+          rows
+            .map(
+              (b) => `<tr class="click" data-id="${b.id}">
+    <td>${b.logo ? `<img class="thumb round" src="${esc(b.logo)}" alt="">` : '<div class="thumb round"></div>'}</td>
+    <td><b>${esc(b.name)}</b><div class="muted" style="font-size:12px">/${esc(b.slug)}${b.aliases.length ? ' · ' + esc(b.aliases.join(', ')) : ''}</div></td>
+    <td>${['men', 'women'].map((g) => (b.placements[g].in ? `<span class="tag ${b.placements[g].top ? 'top' : ''}">${GN[g]}${b.placements[g].top ? ' · топ' : ''}</span>` : '')).join('') || '<span class="muted">не в разделах</span>'}</td>
     <td>${b.models}</td>
-    <td>${b.photo?'<span class="ok">✓</span>':'<span class="muted">—</span>'}</td></tr>`).join('')
-    ||'<tr><td colspan="5" class="muted">Ничего не найдено</td></tr>';
-}
-$('#bq').oninput=drawBrands;$('#bf').onchange=drawBrands;
-$('#bBody').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)openBrand(+tr.dataset.id)};
-$('#bNew').onclick=()=>openBrand(0);
+    <td>${b.photo ? '<span class="ok">✓</span>' : '<span class="muted">—</span>'}</td></tr>`,
+            )
+            .join('') || '<tr><td colspan="5" class="muted">Ничего не найдено</td></tr>';
+      }
+      $('#bq').oninput = drawBrands;
+      $('#bf').onchange = drawBrands;
+      $('#bBody').onclick = (e) => {
+        const tr = e.target.closest('tr[data-id]');
+        if (tr) openBrand(+tr.dataset.id);
+      };
+      $('#bNew').onclick = () => openBrand(0);
 
-function openBrand(id,preset){
-  const b=id?BR.find(x=>x.id===id):{id:0,name:preset||'',slug:'',aliases:[],photo:null,logo:null,models:0,placements:{men:{in:false,top:false,sort:0},women:{in:false,top:false,sort:0}}};
-  if(!b)return;
-  const pl=g=>{const p=b.placements[g];return `<div><b>${GN[g]}</b>
-    <label><input type="checkbox" data-g="${g}" data-k="in" ${p.in?'checked':''}> Показывать в списке «Все бренды»</label>
-    <label><input type="checkbox" data-g="${g}" data-k="top" ${p.top?'checked':''}> Показывать в «Топ бренды»</label>
-    <label>Порядок в топе <input type="number" min="0" data-g="${g}" data-k="sort" value="${p.sort||0}"></label></div>`};
-  const img=(k,title,hint,cls)=>`<div class="imgbox"><div class="pv ${cls}" style="${b[k]?`background-image:url('${esc(b[k])}')`:''}">${b[k]?'':'нет'}</div>
+      function openBrand(id, preset) {
+        const b = id
+          ? BR.find((x) => x.id === id)
+          : {
+              id: 0,
+              name: preset || '',
+              slug: '',
+              aliases: [],
+              photo: null,
+              logo: null,
+              models: 0,
+              placements: {
+                men: { in: false, top: false, sort: 0 },
+                women: { in: false, top: false, sort: 0 },
+              },
+            };
+        if (!b) return;
+        const pl = (g) => {
+          const p = b.placements[g];
+          return `<div><b>${GN[g]}</b>
+    <label><input type="checkbox" data-g="${g}" data-k="in" ${p.in ? 'checked' : ''}> Показывать в списке «Все бренды»</label>
+    <label><input type="checkbox" data-g="${g}" data-k="top" ${p.top ? 'checked' : ''}> Показывать в «Топ бренды»</label>
+    <label>Порядок в топе <input type="number" min="0" data-g="${g}" data-k="sort" value="${p.sort || 0}"></label></div>`;
+        };
+        const img = (
+          k,
+          title,
+          hint,
+          cls,
+        ) => `<div class="imgbox"><div class="pv ${cls}" style="${b[k] ? `background-image:url('${esc(b[k])}')` : ''}">${b[k] ? '' : 'нет'}</div>
     <label class="btn ghost sm">${title}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden data-up="${k}"></label>
-    ${b[k]?`<button class="btn ghost sm" data-rm="${k}">Убрать</button>`:''}<div class="hint">${hint}</div></div>`;
-  const images=id?`<div class="fld"><label>Фото и логотип для плитки «Топ бренды»</label><div class="imgs">
-      ${img('photo','Загрузить фото','Квадрат, от 800×800; JPEG/PNG/WebP, до 8 МБ','')}
-      ${img('logo','Загрузить логотип','PNG/WebP на прозрачном фоне','logo')}</div></div>`
-    :'<p class="hint">Фото и логотип можно загрузить после создания бренда.</p>';
-  $('#dlgBody').innerHTML=`<h3>${id?esc(b.name):'Новый бренд'}</h3><div class="sub">${id?`Моделей: ${b.models}`:'Заполните название и, если нужно, написания'}</div>
+    ${b[k] ? `<button class="btn ghost sm" data-rm="${k}">Убрать</button>` : ''}<div class="hint">${hint}</div></div>`;
+        const images = id
+          ? `<div class="fld"><label>Фото и логотип для плитки «Топ бренды»</label><div class="imgs">
+      ${img('photo', 'Загрузить фото', 'Квадрат, от 800×800; JPEG/PNG/WebP, до 8 МБ', '')}
+      ${img('logo', 'Загрузить логотип', 'PNG/WebP на прозрачном фоне', 'logo')}</div></div>`
+          : '<p class="hint">Фото и логотип можно загрузить после создания бренда.</p>';
+        $('#dlgBody').innerHTML =
+          `<h3>${id ? esc(b.name) : 'Новый бренд'}</h3><div class="sub">${id ? `Моделей: ${b.models}` : 'Заполните название и, если нужно, написания'}</div>
     <div class="fld"><label>Название на сайте</label><input type="text" id="fName" maxlength="120" value="${esc(b.name)}"></div>
     <div class="fld"><label>Написания в названиях товаров (по одному в строке; название бренда учитывается само)</label>
       <textarea id="fAliases" placeholder="Например: Shumacher">${esc(b.aliases.join('\n'))}</textarea>
@@ -244,119 +924,468 @@ function openBrand(id,preset){
     <div class="fld"><label>Адрес страницы бренда: /brands/…</label>
       <input type="text" id="fSlug" maxlength="80" value="${esc(b.slug)}" placeholder="по умолчанию — из названия"></div>
     <div class="row" style="justify-content:space-between;margin-top:20px">
-      <div>${id?'<button class="btn ghost" id="fDel">Удалить бренд</button>':''}</div>
+      <div>${id ? '<button class="btn ghost" id="fDel">Удалить бренд</button>' : ''}</div>
       <div class="row"><button class="btn ghost" id="fClose">Закрыть</button><button class="btn" id="fSave">Сохранить</button></div></div>`;
-  const dlg=$('#dlg');if(!dlg.open)dlg.showModal();
-  $('#fClose').onclick=()=>dlg.close();
-  $('#fSave').onclick=async()=>{
-    const placements={men:{},women:{}};
-    $$('#dlgBody [data-g]').forEach(i=>{const p=placements[i.dataset.g],k=i.dataset.k;p[k]=i.type==='checkbox'?i.checked:Math.max(0,+i.value||0)});
-    const payload={name:$('#fName').value,aliases:$('#fAliases').value.split('\n').filter(s=>s.trim()),placements};
-    const slug=$('#fSlug').value.trim();
-    if(slug&&slug!==b.slug)payload.slug=slug;
-    let saved;
-    try{saved=await api(id?'/brands/'+id:'/brands',{method:id?'PUT':'POST',json:payload})}catch{return}
-    toast('Сохранено');await refresh();
-    if(!id){dlg.close();if(preset)loadUnmatched();}else openBrand(saved.id);
-  };
-  if(id){
-    $('#fDel').onclick=async()=>{
-      if(!confirm(`Удалить бренд «${b.name}»? Привязки моделей к нему пропадут.`))return;
-      await api('/brands/'+id,{method:'DELETE'});dlg.close();toast('Удалено');await refresh()};
-    $$('#dlgBody [data-up]').forEach(inp=>inp.onchange=async()=>{
-      const f=inp.files[0];if(!f)return;
-      try{await api(`/brands/${id}/image/${inp.dataset.up}`,{method:'POST',body:f,type:'application/octet-stream'})}catch{inp.value='';return}
-      toast('Загружено');await refresh();openBrand(id)});
-    $$('#dlgBody [data-rm]').forEach(btn=>btn.onclick=async()=>{
-      await api(`/brands/${id}/image/${btn.dataset.rm}`,{method:'DELETE'});await refresh();openBrand(id)});
-  }
-}
-async function refresh(){BR=await api('/brands');
-  if(!$('#t-brands').classList.contains('hidden'))drawBrands();
-  if(!$('#t-top').classList.contains('hidden'))loadTop(true);
-  if(!$('#t-unmatched').classList.contains('hidden'))loadUnmatched()}
+        const dlg = $('#dlg');
+        if (!dlg.open) dlg.showModal();
+        $('#fClose').onclick = () => dlg.close();
+        $('#fSave').onclick = async () => {
+          const placements = { men: {}, women: {} };
+          $$('#dlgBody [data-g]').forEach((i) => {
+            const p = placements[i.dataset.g],
+              k = i.dataset.k;
+            p[k] = i.type === 'checkbox' ? i.checked : Math.max(0, +i.value || 0);
+          });
+          const payload = {
+            name: $('#fName').value,
+            aliases: $('#fAliases')
+              .value.split('\n')
+              .filter((s) => s.trim()),
+            placements,
+          };
+          const slug = $('#fSlug').value.trim();
+          if (slug && slug !== b.slug) payload.slug = slug;
+          let saved;
+          try {
+            saved = await api(id ? '/brands/' + id : '/brands', {
+              method: id ? 'PUT' : 'POST',
+              json: payload,
+            });
+          } catch {
+            return;
+          }
+          toast('Сохранено');
+          await refresh();
+          if (!id) {
+            dlg.close();
+            if (preset) loadUnmatched();
+          } else openBrand(saved.id);
+        };
+        if (id) {
+          $('#fDel').onclick = async () => {
+            if (!confirm(`Удалить бренд «${b.name}»? Привязки моделей к нему пропадут.`)) return;
+            await api('/brands/' + id, { method: 'DELETE' });
+            dlg.close();
+            toast('Удалено');
+            await refresh();
+          };
+          $$('#dlgBody [data-up]').forEach(
+            (inp) =>
+              (inp.onchange = async () => {
+                const f = inp.files[0];
+                if (!f) return;
+                try {
+                  await api(`/brands/${id}/image/${inp.dataset.up}`, {
+                    method: 'POST',
+                    body: f,
+                    type: 'application/octet-stream',
+                  });
+                } catch {
+                  inp.value = '';
+                  return;
+                }
+                toast('Загружено');
+                await refresh();
+                openBrand(id);
+              }),
+          );
+          $$('#dlgBody [data-rm]').forEach(
+            (btn) =>
+              (btn.onclick = async () => {
+                await api(`/brands/${id}/image/${btn.dataset.rm}`, { method: 'DELETE' });
+                await refresh();
+                openBrand(id);
+              }),
+          );
+        }
+      }
+      async function refresh() {
+        BR = await api('/brands');
+        if (!$('#t-brands').classList.contains('hidden')) drawBrands();
+        if (!$('#t-top').classList.contains('hidden')) loadTop(true);
+        if (!$('#t-unmatched').classList.contains('hidden')) loadUnmatched();
+      }
 
-/* топ-бренды */
-let TOP={men:[],women:[]};
-async function loadTop(keep){
-  if(!keep)BR=await api('/brands');
-  for(const g of ['men','women'])
-    TOP[g]=BR.filter(b=>b.placements[g].top).sort((a,b)=>a.placements[g].sort-b.placements[g].sort||a.name.localeCompare(b.name)).map(b=>b.id);
-  drawTop();
-}
-function drawTop(){
-  $('#topCols').innerHTML=['men','women'].map(g=>{
-    const avail=BR.filter(b=>!TOP[g].includes(b.id));
-    return `<div class="card" data-g="${g}"><h2>${GN[g]} · ${TOP[g].length}</h2>
-      <ul class="toplist">${TOP[g].map((id,i)=>{const b=BR.find(x=>x.id===id);return `<li data-id="${id}">
-        <span class="num">${i+1}</span>
-        ${b.photo?`<img class="thumb" src="${esc(b.photo)}" alt="">`:'<div class="thumb"></div>'}
-        <span class="nm">${esc(b.name)}${b.photo?'':' <span class="err" style="font-size:12px">· нет фото</span>'}</span>
-        <button class="btn ghost sm" data-a="up" ${i?'':'disabled'}>↑</button>
-        <button class="btn ghost sm" data-a="down" ${i<TOP[g].length-1?'':'disabled'}>↓</button>
+      /* карточки */
+      const HR = {
+        draft: 'черновик',
+        'no-photo': 'нет фото',
+        gone: 'товара нет в 1С',
+        'no-stock': 'нет остатка',
+      };
+      const money = (v) => (v == null ? '—' : new Intl.NumberFormat('ru').format(v) + ' ₽');
+      let CD = { items: [], total: 0 };
+      const cbadge = (c) =>
+        c.status === 'published'
+          ? c.visible
+            ? '<span class="badge pub">на сайте</span>'
+            : `<span class="badge hid">скрыта: ${HR[c.hiddenReason]}</span>`
+          : '<span class="badge">черновик</span>';
+      async function loadCards(more) {
+        const offset = more ? CD.items.length : 0;
+        const r = await api(
+          `/cards?status=${$('#cf').value}&q=${encodeURIComponent($('#cq').value.trim())}&limit=50&offset=${offset}`,
+        );
+        CD = { items: more ? CD.items.concat(r.items) : r.items, total: r.total };
+        $('#cTotal').textContent = `Карточек: ${CD.total}`;
+        $('#cBody').innerHTML =
+          CD.items
+            .map(
+              (c) => `<tr class="click" data-id="${c.id}">
+    <td>${c.photos[0] ? `<img class="thumb" loading="lazy" src="${esc(c.photos[0].url)}" alt="">` : '<div class="thumb"></div>'}</td>
+    <td><b>${esc(c.title || c.model?.name || c.modelId)}</b><div class="muted" style="font-size:12px">${esc(c.model?.article || '')}</div></td>
+    <td>${esc(c.model?.brand?.name || '—')}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
+            )
+            .join('') ||
+          '<tr><td colspan="6" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
+        $('#cMore').classList.toggle('hidden', CD.items.length >= CD.total);
+      }
+      $('#cq').oninput = () => {
+        clearTimeout($('#cq').t);
+        $('#cq').t = setTimeout(() => loadCards(), 300);
+      };
+      $('#cf').onchange = () => loadCards();
+      $('#cMore').onclick = () => loadCards(true);
+      $('#cBody').onclick = (e) => {
+        const tr = e.target.closest('tr[data-id]');
+        if (tr) openCard(+tr.dataset.id);
+      };
+      $('#cs').oninput = () => {
+        clearTimeout($('#cs').t);
+        $('#cs').t = setTimeout(async () => {
+          const q = $('#cs').value.trim(),
+            box = $('#csList');
+          if (q.length < 2) {
+            box.classList.add('hidden');
+            return;
+          }
+          const r = await api('/cards/search?q=' + encodeURIComponent(q));
+          box.innerHTML =
+            r
+              .map(
+                (
+                  m,
+                ) => `<div class="it" data-m="${esc(m.id)}" data-c="${m.cardId || ''}"><b>${esc(m.name)}</b>
+    <div class="muted" style="font-size:12px">${esc(m.article || 'без артикула')}${m.brand ? ' · ' + esc(m.brand.name) : ''}${m.cardId ? ' · <span class="ok">карточка уже есть</span>' : ''}</div></div>`,
+              )
+              .join('') || '<div class="it muted">Ничего не найдено</div>';
+          box.classList.remove('hidden');
+        }, 250);
+      };
+      $('#csList').onclick = async (e) => {
+        const it = e.target.closest('.it[data-m]');
+        if (!it) return;
+        $('#csList').classList.add('hidden');
+        $('#cs').value = '';
+        if (it.dataset.c) return openCard(+it.dataset.c);
+        const c = await api('/cards', { method: 'POST', json: { modelId: it.dataset.m } });
+        toast('Карточка создана (черновик)');
+        loadCards();
+        openCard(c.id);
+      };
+      async function openCard(id) {
+        let c;
+        try {
+          c = await api('/cards/' + id);
+        } catch {
+          return;
+        }
+        const m = c.model;
+        const photos = c.photos
+          .map(
+            (p, i) => `<div class="ph" data-p="${p.id}"><img src="${esc(p.url)}" alt="">
+    <div class="main">${i === 0 ? '★ главное' : ''}</div>
+    <button class="btn ghost" data-a="left" ${i ? '' : 'disabled'}>←</button>
+    <button class="btn ghost" data-a="right" ${i < c.photos.length - 1 ? '' : 'disabled'}>→</button>
+    ${i ? '<button class="btn ghost" data-a="main">★</button>' : ''}
+    <button class="btn ghost" data-a="del">✕</button></div>`,
+          )
+          .join('');
+        const kv = (c.characteristics.length ? c.characteristics : [])
+          .map(
+            (x) =>
+              `<div class="kv"><input type="text" maxlength="100" placeholder="Название" value="${esc(x.name)}"><input type="text" maxlength="500" placeholder="Значение" value="${esc(x.value)}"><button class="btn ghost sm" data-a="kvdel">✕</button></div>`,
+          )
+          .join('');
+        const live = m
+          ? `<div class="live"><div><b>${esc(m.article || '—')}</b><span>Артикул</span></div><div><b>${esc(m.brand?.name || '—')}</b><span>Бренд</span></div>
+    <div><b>${money(m.price)}</b><span>Цена из 1С</span></div><div><b>${m.stock ?? '—'}</b><span>Остаток</span></div>
+    <div><b>${m.variants.map((v) => esc([v.size, v.color].filter(Boolean).join(' ')) || '—').join(', ') || '—'}</b><span>Размеры / цвета</span></div></div>`
+          : '<p class="err">Этого товара больше нет в 1С — карточка скрыта с сайта.</p>';
+        $('#dlgBody').innerHTML =
+          `<h3>${esc(c.title || m?.name || c.modelId)} ${cbadge(c)}</h3><div class="sub">${esc(m?.name || '')}</div>${live}
+    <div class="fld"><label>Название на сайте (пусто — как в 1С)</label><input type="text" id="kTitle" maxlength="200" value="${esc(c.title || '')}"></div>
+    <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
+      <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
+      <p class="hint">JPEG, PNG, WebP или AVIF до 8 МБ. Для публикации нужно хотя бы одно фото.</p></div>
+    <div class="fld"><label>Описание</label><textarea id="kDesc" style="min-height:140px">${esc(c.description)}</textarea></div>
+    <div class="fld"><label>Характеристики</label><div id="kKv">${kv}</div><button class="btn ghost sm" id="kAddKv">+ Добавить строку</button></div>
+    <div class="row" style="justify-content:space-between;margin-top:20px">
+      <button class="btn ghost" id="kDel">Удалить карточку</button>
+      <div class="row"><button class="btn ghost" id="kClose">Закрыть</button>
+        <button class="btn ghost" id="kSave">Сохранить</button>
+        ${c.status === 'published' ? '<button class="btn ghost" id="kUnpub">Снять с сайта</button>' : '<button class="btn" id="kPub">Опубликовать</button>'}</div></div>`;
+        const dlg = $('#dlg');
+        if (!dlg.open) dlg.showModal();
+        const fields = () => ({
+          title: $('#kTitle').value,
+          description: $('#kDesc').value,
+          characteristics: $$('#kKv .kv')
+            .map((r) => {
+              const i = r.querySelectorAll('input');
+              return { name: i[0].value, value: i[1].value };
+            })
+            .filter((x) => x.name.trim() || x.value.trim()),
+        });
+        const save = async (extra) => {
+          try {
+            await api('/cards/' + id, { method: 'PUT', json: { ...fields(), ...extra } });
+          } catch {
+            return false;
+          }
+          return true;
+        };
+        const reload = () => {
+          openCard(id);
+          if (!$('#t-cards').classList.contains('hidden')) loadCards();
+        };
+        $('#kClose').onclick = () => dlg.close();
+        $('#kAddKv').onclick = () => {
+          const d = document.createElement('div');
+          d.className = 'kv';
+          d.innerHTML =
+            '<input type="text" maxlength="100" placeholder="Название"><input type="text" maxlength="500" placeholder="Значение"><button class="btn ghost sm" data-a="kvdel">✕</button>';
+          $('#kKv').append(d);
+        };
+        $('#kKv').onclick = (e) => {
+          if (e.target.dataset.a === 'kvdel') e.target.closest('.kv').remove();
+        };
+        $('#kSave').onclick = async () => {
+          if (await save({})) {
+            toast('Сохранено');
+            reload();
+          }
+        };
+        if ($('#kPub'))
+          $('#kPub').onclick = async () => {
+            if (await save({ status: 'published' })) {
+              toast('Опубликовано — карточка уже на сайте');
+              reload();
+            }
+          };
+        if ($('#kUnpub'))
+          $('#kUnpub').onclick = async () => {
+            if (await save({ status: 'draft' })) {
+              toast('Снято с сайта');
+              reload();
+            }
+          };
+        $('#kDel').onclick = async () => {
+          if (!confirm('Удалить карточку и её фото? Товар в 1С не изменится.')) return;
+          await api('/cards/' + id, { method: 'DELETE' });
+          dlg.close();
+          toast('Удалено');
+          loadCards();
+        };
+        $('#kUp').onchange = async (e) => {
+          for (const f of e.target.files) {
+            try {
+              await api(`/cards/${id}/photos`, {
+                method: 'POST',
+                body: f,
+                type: 'application/octet-stream',
+              });
+            } catch {
+              break;
+            }
+          }
+          toast('Фото загружены');
+          await save({});
+          reload();
+        };
+        $('#kPh').onclick = async (e) => {
+          const b = e.target.closest('button[data-a]');
+          if (!b) return;
+          const pid = +b.closest('.ph').dataset.p,
+            ids = c.photos.map((p) => p.id),
+            i = ids.indexOf(pid),
+            a = b.dataset.a;
+          if (a === 'del') {
+            await api(`/cards/${id}/photos/${pid}`, { method: 'DELETE' });
+            return reload();
+          }
+          if (a === 'left' && i > 0) [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]];
+          if (a === 'right' && i < ids.length - 1) [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]];
+          if (a === 'main') {
+            ids.splice(i, 1);
+            ids.unshift(pid);
+          }
+          await api(`/cards/${id}/photos/order`, { method: 'PUT', json: { ids } });
+          reload();
+        };
+      }
+
+      /* топ-бренды */
+      let TOP = { men: [], women: [] };
+      async function loadTop(keep) {
+        if (!keep) BR = await api('/brands');
+        for (const g of ['men', 'women'])
+          TOP[g] = BR.filter((b) => b.placements[g].top)
+            .sort(
+              (a, b) => a.placements[g].sort - b.placements[g].sort || a.name.localeCompare(b.name),
+            )
+            .map((b) => b.id);
+        drawTop();
+      }
+      function drawTop() {
+        $('#topCols').innerHTML = ['men', 'women']
+          .map((g) => {
+            const avail = BR.filter((b) => !TOP[g].includes(b.id));
+            return `<div class="card" data-g="${g}"><h2>${GN[g]} · ${TOP[g].length}</h2>
+      <ul class="toplist">${
+        TOP[g]
+          .map((id, i) => {
+            const b = BR.find((x) => x.id === id);
+            return `<li data-id="${id}">
+        <span class="num">${i + 1}</span>
+        ${b.photo ? `<img class="thumb" src="${esc(b.photo)}" alt="">` : '<div class="thumb"></div>'}
+        <span class="nm">${esc(b.name)}${b.photo ? '' : ' <span class="err" style="font-size:12px">· нет фото</span>'}</span>
+        <button class="btn ghost sm" data-a="up" ${i ? '' : 'disabled'}>↑</button>
+        <button class="btn ghost sm" data-a="down" ${i < TOP[g].length - 1 ? '' : 'disabled'}>↓</button>
         <button class="btn ghost sm" data-a="edit">Фото</button>
-        <button class="btn ghost sm" data-a="del">✕</button></li>`}).join('')||'<li class="muted">Пусто</li>'}</ul>
-      <div class="row"><select class="grow" data-add><option value="">+ Добавить бренд…</option>${avail.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select>
-      <button class="btn" data-a="save">Сохранить</button></div></div>`}).join('');
-}
-$('#topCols').onclick=async e=>{
-  const btn=e.target.closest('button[data-a]');if(!btn)return;
-  const g=btn.closest('.card').dataset.g,li=btn.closest('li'),a=btn.dataset.a;
-  if(a==='save'){await api('/top/'+g,{method:'PUT',json:{ids:TOP[g]}});toast('Сохранено — сайт обновится сразу');BR=await api('/brands');return loadTop(true)}
-  const id=+li.dataset.id,i=TOP[g].indexOf(id);
-  if(a==='up'&&i>0)[TOP[g][i-1],TOP[g][i]]=[TOP[g][i],TOP[g][i-1]];
-  if(a==='down'&&i<TOP[g].length-1)[TOP[g][i+1],TOP[g][i]]=[TOP[g][i],TOP[g][i+1]];
-  if(a==='del')TOP[g].splice(i,1);
-  if(a==='edit'){openBrand(id);return}
-  drawTop();
-};
-$('#topCols').onchange=e=>{
-  const s=e.target.closest('[data-add]');if(!s||!s.value)return;
-  TOP[s.closest('.card').dataset.g].push(+s.value);drawTop()};
-$('#dlg').addEventListener('close',()=>{if(!$('#t-top').classList.contains('hidden'))loadTop(true)});
+        <button class="btn ghost sm" data-a="del">✕</button></li>`;
+          })
+          .join('') || '<li class="muted">Пусто</li>'
+      }</ul>
+      <div class="row"><select class="grow" data-add><option value="">+ Добавить бренд…</option>${avail.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select>
+      <button class="btn" data-a="save">Сохранить</button></div></div>`;
+          })
+          .join('');
+      }
+      $('#topCols').onclick = async (e) => {
+        const btn = e.target.closest('button[data-a]');
+        if (!btn) return;
+        const g = btn.closest('.card').dataset.g,
+          li = btn.closest('li'),
+          a = btn.dataset.a;
+        if (a === 'save') {
+          await api('/top/' + g, { method: 'PUT', json: { ids: TOP[g] } });
+          toast('Сохранено — сайт обновится сразу');
+          BR = await api('/brands');
+          return loadTop(true);
+        }
+        const id = +li.dataset.id,
+          i = TOP[g].indexOf(id);
+        if (a === 'up' && i > 0) [TOP[g][i - 1], TOP[g][i]] = [TOP[g][i], TOP[g][i - 1]];
+        if (a === 'down' && i < TOP[g].length - 1)
+          [TOP[g][i + 1], TOP[g][i]] = [TOP[g][i], TOP[g][i + 1]];
+        if (a === 'del') TOP[g].splice(i, 1);
+        if (a === 'edit') {
+          openBrand(id);
+          return;
+        }
+        drawTop();
+      };
+      $('#topCols').onchange = (e) => {
+        const s = e.target.closest('[data-add]');
+        if (!s || !s.value) return;
+        TOP[s.closest('.card').dataset.g].push(+s.value);
+        drawTop();
+      };
+      $('#dlg').addEventListener('close', () => {
+        if (!$('#t-cards').classList.contains('hidden')) loadCards();
+        if (!$('#t-top').classList.contains('hidden')) loadTop(true);
+      });
 
-/* без бренда */
-let UN={items:[],total:0};
-async function loadUnmatched(more){
-  if(!BR.length||!more)BR=await api('/brands');
-  const offset=more?UN.items.length:0;
-  const r=await api(`/unmatched?q=${encodeURIComponent($('#uq').value.trim())}&limit=50&offset=${offset}`);
-  UN={items:more?UN.items.concat(r.items):r.items,total:r.total};
-  $('#cands').innerHTML=r.candidates.map(c=>`<button class="chip" data-w="${esc(c.word)}">${esc(c.word)}<i>${c.count}</i></button>`).join('')||'<span class="muted">Подсказок нет</span>';
-  $('#uTotal').textContent=`Без бренда: ${UN.total}`;
-  const opts=BR.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
-  $('#uBody').innerHTML=UN.items.map(m=>`<tr data-m="${esc(m.id)}">
-    <td>${m.photo?`<img class="thumb" loading="lazy" src="${esc(m.photo)}" alt="">`:'<div class="thumb"></div>'}</td>
+      /* без бренда */
+      let UN = { items: [], total: 0 };
+      async function loadUnmatched(more) {
+        if (!BR.length || !more) BR = await api('/brands');
+        const offset = more ? UN.items.length : 0;
+        const r = await api(
+          `/unmatched?q=${encodeURIComponent($('#uq').value.trim())}&limit=50&offset=${offset}`,
+        );
+        UN = { items: more ? UN.items.concat(r.items) : r.items, total: r.total };
+        $('#cands').innerHTML =
+          r.candidates
+            .map(
+              (c) =>
+                `<button class="chip" data-w="${esc(c.word)}">${esc(c.word)}<i>${c.count}</i></button>`,
+            )
+            .join('') || '<span class="muted">Подсказок нет</span>';
+        $('#uTotal').textContent = `Без бренда: ${UN.total}`;
+        const opts = BR.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+        $('#uBody').innerHTML =
+          UN.items
+            .map(
+              (m) => `<tr data-m="${esc(m.id)}">
+    <td>${m.photo ? `<img class="thumb" loading="lazy" src="${esc(m.photo)}" alt="">` : '<div class="thumb"></div>'}</td>
     <td>${esc(m.name)}</td><td>${m.skus}</td>
-    <td><select data-assign style="min-width:180px"><option value="">— выбрать —</option>${opts}</select></td></tr>`).join('')
-    ||'<tr><td colspan="4" class="muted">Все модели с брендом</td></tr>';
-  $('#uMore').classList.toggle('hidden',UN.items.length>=UN.total);
-}
-$('#uq').oninput=()=>{clearTimeout($('#uq').t);$('#uq').t=setTimeout(()=>loadUnmatched(),300)};
-$('#uMore').onclick=()=>loadUnmatched(true);
-$('#cands').onclick=e=>{const c=e.target.closest('[data-w]');if(!c)return;
-  const w=c.dataset.w.replace(/\b\p{L}/gu,x=>x.toUpperCase());openBrand(0,w)};
-$('#uBody').onchange=async e=>{
-  const s=e.target.closest('[data-assign]');if(!s||!s.value)return;
-  await api(`/models/${encodeURIComponent(s.closest('tr').dataset.m)}/brand`,{method:'PUT',json:{brandId:+s.value}});
-  toast('Назначено');loadUnmatched()};
+    <td><select data-assign style="min-width:180px"><option value="">— выбрать —</option>${opts}</select></td></tr>`,
+            )
+            .join('') || '<tr><td colspan="4" class="muted">Все модели с брендом</td></tr>';
+        $('#uMore').classList.toggle('hidden', UN.items.length >= UN.total);
+      }
+      $('#uq').oninput = () => {
+        clearTimeout($('#uq').t);
+        $('#uq').t = setTimeout(() => loadUnmatched(), 300);
+      };
+      $('#uMore').onclick = () => loadUnmatched(true);
+      $('#cands').onclick = (e) => {
+        const c = e.target.closest('[data-w]');
+        if (!c) return;
+        const w = c.dataset.w.replace(/\b\p{L}/gu, (x) => x.toUpperCase());
+        openBrand(0, w);
+      };
+      $('#uBody').onchange = async (e) => {
+        const s = e.target.closest('[data-assign]');
+        if (!s || !s.value) return;
+        await api(`/models/${encodeURIComponent(s.closest('tr').dataset.m)}/brand`, {
+          method: 'PUT',
+          json: { brandId: +s.value },
+        });
+        toast('Назначено');
+        loadUnmatched();
+      };
 
-/* обмен с 1С */
-const stat=s=>`<span class="res-${esc(s)}">${esc(s)}</span>`;
-async function loadExchange(){
-  const x=await api('/exchange');
-  $('#runsC').innerHTML=x.catalogRuns.map(r=>`<tr><td>${dt(r.started_at)}</td><td>${esc(r.filename)}${r.only_changes?' <span class="tag">изменения</span>':''}</td>
-    <td>${stat(r.status)}${r.error?`<div class="err" style="font-size:12px">${esc(r.error)}</div>`:''}</td><td>${r.products}</td><td>${r.variants}</td><td>${r.brands}</td><td>${r.images}</td></tr>`).join('')
-    ||'<tr><td colspan="7" class="muted">Загрузок ещё не было</td></tr>';
-  $('#runsO').innerHTML=x.offersRuns.map(r=>`<tr><td>${dt(r.started_at)}</td><td>${esc(r.filename)}${r.only_changes?' <span class="tag">изменения</span>':''}</td>
-    <td>${stat(r.status)}${r.error?`<div class="err" style="font-size:12px">${esc(r.error)}</div>`:''}</td><td>${r.offers}</td><td>${r.prices}</td><td>${r.stocks}</td></tr>`).join('')
-    ||'<tr><td colspan="6" class="muted">Загрузок ещё не было</td></tr>';
-  $('#logB').innerHTML=x.log.map(r=>`<tr><td>${dt(r.at)}</td><td>${esc(r.type)} / ${esc(r.mode)}</td><td>${esc(r.filename||'')}</td>
-    <td>${r.bodyBytes||''}</td><td>${stat(r.result)}</td><td class="muted">${esc(r.detail||'')}</td></tr>`).join('')
-    ||'<tr><td colspan="6" class="muted">Запросов от 1С ещё не было</td></tr>';
-}
+      /* обмен с 1С */
+      const stat = (s) => `<span class="res-${esc(s)}">${esc(s)}</span>`;
+      async function loadExchange() {
+        const x = await api('/exchange');
+        $('#runsC').innerHTML =
+          x.catalogRuns
+            .map(
+              (
+                r,
+              ) => `<tr><td>${dt(r.started_at)}</td><td>${esc(r.filename)}${r.only_changes ? ' <span class="tag">изменения</span>' : ''}</td>
+    <td>${stat(r.status)}${r.error ? `<div class="err" style="font-size:12px">${esc(r.error)}</div>` : ''}</td><td>${r.products}</td><td>${r.variants}</td><td>${r.brands}</td><td>${r.images}</td></tr>`,
+            )
+            .join('') || '<tr><td colspan="7" class="muted">Загрузок ещё не было</td></tr>';
+        $('#runsO').innerHTML =
+          x.offersRuns
+            .map(
+              (
+                r,
+              ) => `<tr><td>${dt(r.started_at)}</td><td>${esc(r.filename)}${r.only_changes ? ' <span class="tag">изменения</span>' : ''}</td>
+    <td>${stat(r.status)}${r.error ? `<div class="err" style="font-size:12px">${esc(r.error)}</div>` : ''}</td><td>${r.offers}</td><td>${r.prices}</td><td>${r.stocks}</td></tr>`,
+            )
+            .join('') || '<tr><td colspan="6" class="muted">Загрузок ещё не было</td></tr>';
+        $('#logB').innerHTML =
+          x.log
+            .map(
+              (
+                r,
+              ) => `<tr><td>${dt(r.at)}</td><td>${esc(r.type)} / ${esc(r.mode)}</td><td>${esc(r.filename || '')}</td>
+    <td>${r.bodyBytes || ''}</td><td>${stat(r.result)}</td><td class="muted">${esc(r.detail || '')}</td></tr>`,
+            )
+            .join('') || '<tr><td colspan="6" class="muted">Запросов от 1С ещё не было</td></tr>';
+      }
 
-tab(['home','brands','top','unmatched','exchange'].includes(location.hash.slice(1))?location.hash.slice(1):'home');
-</script>
-</body>
+      tab(
+        ['home', 'cards', 'brands', 'top', 'unmatched', 'exchange'].includes(location.hash.slice(1))
+          ? location.hash.slice(1)
+          : 'home',
+      );
+    </script>
+  </body>
 </html>

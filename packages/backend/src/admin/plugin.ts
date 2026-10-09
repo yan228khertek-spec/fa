@@ -1,12 +1,13 @@
-import { randomBytes } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AdminConfig } from '../config.js';
 import { FailureLimiter, checkAdminAuth } from './auth.js';
-import { sniffImage } from './media.js';
+import { registerCardRoutes } from './cards-routes.js';
+import type { CardService } from './cards.js';
+import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
 import { seedBrands } from './seed.js';
 import type { BrandService } from './service.js';
 import { AdminError, type Gender } from './types.js';
@@ -14,11 +15,9 @@ import { AdminError, type Gender } from './types.js';
 export interface AdminPluginOptions {
   admin: AdminConfig;
   service: BrandService;
+  cards: CardService;
 }
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-/** Имена файлов, которые создаём сами; только такие отдаём и удаляем. */
-const OWN_FILE_RE = /^[a-f0-9]{16}\.(?:jpg|png|webp|avif)$/;
 const MIME: Record<string, string> = {
   jpg: 'image/jpeg',
   png: 'image/png',
@@ -34,19 +33,6 @@ function gender(v: unknown): Gender {
   throw new AdminError('gender: men или women');
 }
 
-function id(raw: string, what = 'бренда'): number {
-  const n = Number(raw);
-  if (!Number.isInteger(n) || n <= 0) throw new AdminError(`Некорректный id ${what}`);
-  return n;
-}
-
-function page(q: { limit?: string; offset?: string }, max: number, dflt: number) {
-  return {
-    limit: Math.min(Math.max(Math.trunc(Number(q.limit ?? dflt)) || dflt, 1), max),
-    offset: Math.max(Math.trunc(Number(q.offset ?? 0)) || 0, 0),
-  };
-}
-
 /**
  * Витринный слой брендов: публичное API для сайта + админка (HTML и JSON API).
  *
@@ -58,7 +44,7 @@ function page(q: { limit?: string; offset?: string }, max: number, dflt: number)
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service } = opts;
+  const { admin, service, cards } = opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -67,6 +53,11 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
   const uploadUrl = (f: string | null): string | null => (f ? `${base}/uploads/${f}` : null);
   const modelPhoto = (p: string | null): string | null =>
     p ? `${imagesBase.replace(/\/+$/, '')}/${p.replace(/^\/+/, '')}` : null;
+
+  const publicItem = <T extends { photo: string | null }>(c: T) => ({
+    ...c,
+    photo: uploadUrl(c.photo),
+  });
 
   // ---------- публичная часть ----------
   await app.register(async (pub) => {
@@ -90,18 +81,32 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     pub.get('/api/brands/:slug/models', async (req, reply) => {
       const { slug } = req.params as { slug: string };
       const { limit, offset } = page(req.query as { limit?: string; offset?: string }, 100, 24);
-      const res = await service.brandModels(slug, limit, offset);
-      if (!res) return reply.code(404).send({ error: 'Бренд не найден' });
+      const brand = await service.brandBySlug(slug);
+      if (!brand) return reply.code(404).send({ error: 'Бренд не найден' });
+      const res = await cards.publicList({ brandSlug: slug, limit, offset });
       reply.header('cache-control', 'public, max-age=60');
+      return { brand, total: res.total, items: res.items.map(publicItem) };
+    });
+
+    pub.get('/api/cards', async (req, reply) => {
+      const { limit, offset } = page(req.query as { limit?: string; offset?: string }, 100, 24);
+      const res = await cards.publicList({ limit, offset });
+      reply.header('cache-control', 'public, max-age=30');
+      return { total: res.total, items: res.items.map(publicItem) };
+    });
+
+    pub.get('/api/cards/:id', async (req, reply) => {
+      const raw = Number((req.params as { id: string }).id);
+      const card = Number.isInteger(raw) && raw > 0 ? await cards.publicCard(raw) : null;
+      if (!card) return reply.code(404).send({ error: 'Не найдено' });
+      reply.header('cache-control', 'public, max-age=30');
       return {
-        brand: res.brand,
-        total: res.total,
-        items: res.items.map((m) => ({
-          id: m.id,
-          name: m.name,
-          skus: m.skus,
-          photo: modelPhoto(m.photo),
-        })),
+        ...publicItem(card),
+        article: card.article,
+        description: card.description,
+        characteristics: card.characteristics,
+        photos: card.photos.map((f) => uploadUrl(f)),
+        sizes: card.sizes,
       };
     });
 
@@ -214,23 +219,18 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     adm.put('/admin/api/brands/:id', async (req) =>
       dto(
         await service.updateBrand(
-          id((req.params as { id: string }).id),
+          parseId((req.params as { id: string }).id),
           (req.body ?? {}) as Record<string, unknown>,
         ),
       ),
     );
 
-    const removeOwnFile = async (name: string | null): Promise<void> => {
-      if (name && OWN_FILE_RE.test(name))
-        await unlink(path.join(uploadsDir, name)).catch(() => undefined);
-    };
-
     adm.delete('/admin/api/brands/:id', async (req) => {
-      const brandId = id((req.params as { id: string }).id);
+      const brandId = parseId((req.params as { id: string }).id);
       const brand = (await service.repo.listBrands()).find((b) => b.id === brandId);
       await service.repo.deleteBrand(brandId);
-      await removeOwnFile(brand?.photo ?? null);
-      await removeOwnFile(brand?.logo ?? null);
+      await removeOwnFile(uploadsDir, brand?.photo ?? null);
+      await removeOwnFile(uploadsDir, brand?.logo ?? null);
       return { ok: true };
     });
 
@@ -250,32 +250,25 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
 
     adm.post('/admin/api/brands/:id/image/:kind', async (req) => {
       const { id: rawId, kind } = req.params as { id: string; kind: string };
-      const brandId = id(rawId);
+      const brandId = parseId(rawId);
       if (kind !== 'photo' && kind !== 'logo') throw new AdminError('kind: photo или logo');
-      const buf = req.body;
-      if (!Buffer.isBuffer(buf) || buf.length === 0) throw new AdminError('Файл не передан');
-      // Тип — по сигнатуре, а не по заявленному Content-Type.
-      const ext = sniffImage(buf);
-      if (!ext) throw new AdminError('Нужна картинка JPEG, PNG, WebP или AVIF');
-
-      const filename = `${randomBytes(8).toString('hex')}.${ext}`;
-      await writeFile(path.join(uploadsDir, filename), buf, { flag: 'wx' });
+      const filename = await saveImage(uploadsDir, req.body);
       let old: string | null;
       try {
         old = await service.repo.setImage(brandId, kind, filename);
       } catch (err) {
-        await removeOwnFile(filename); // бренда нет — не оставляем сироту
+        await removeOwnFile(uploadsDir, filename); // бренда нет — не оставляем сироту
         throw err;
       }
-      await removeOwnFile(old);
+      await removeOwnFile(uploadsDir, old);
       return dto(await viewOf(brandId));
     });
 
     adm.delete('/admin/api/brands/:id/image/:kind', async (req) => {
       const { id: rawId, kind } = req.params as { id: string; kind: string };
-      const brandId = id(rawId);
+      const brandId = parseId(rawId);
       if (kind !== 'photo' && kind !== 'logo') throw new AdminError('kind: photo или logo');
-      await removeOwnFile(await service.repo.setImage(brandId, kind, null));
+      await removeOwnFile(uploadsDir, await service.repo.setImage(brandId, kind, null));
       return dto(await viewOf(brandId));
     });
 
@@ -301,6 +294,8 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       await service.assignModel(modelId, brandId as number | null);
       return { ok: true };
     });
+
+    registerCardRoutes(adm, { cards, uploadsDir, uploadUrl, modelPhoto });
 
     adm.post('/admin/api/recompute', async () => service.recompute());
     adm.post('/admin/api/seed', async () => {

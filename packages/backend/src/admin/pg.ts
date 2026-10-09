@@ -11,6 +11,7 @@ import {
   type ExchangeStatus,
   type Gender,
   type ImageKind,
+  type LiveModel,
   type NewBrand,
   type Placements,
   type SiteBrand,
@@ -332,15 +333,16 @@ export class PgCatalogReader implements CatalogReader {
     const { rows } = await this.pool.query<{
       id: string;
       name: string;
+      article: string | null;
       skus: number;
       photo: string | null;
     }>(
       `WITH names AS (
-         SELECT DISTINCT ON (id) id, name FROM (
-           SELECT source_id AS id, name, 0 AS prio FROM products
+         SELECT DISTINCT ON (id) id, name, article FROM (
+           SELECT source_id AS id, name, article, 0 AS prio FROM products
             WHERE source = $1 AND NOT is_deleted
            UNION ALL
-           SELECT product_source_id, name, 1 FROM product_variants
+           SELECT product_source_id, name, article, 1 FROM product_variants
             WHERE source = $1 AND NOT is_deleted AND name IS NOT NULL
          ) n ORDER BY id, prio, name
        ), skus AS (
@@ -353,14 +355,63 @@ export class PgCatalogReader implements CatalogReader {
              FROM product_images_meta WHERE source = $1
          ) i ORDER BY model, own DESC, sort_order, path
        )
-       SELECT names.id, names.name, coalesce(skus.n, 0) AS skus, photos.path AS photo
+       SELECT names.id, names.name, names.article, coalesce(skus.n, 0) AS skus, photos.path AS photo
          FROM names
          LEFT JOIN skus ON skus.id = names.id
          LEFT JOIN photos ON photos.model = names.id
         ORDER BY names.name, names.id`,
       [SOURCE],
     );
-    return rows.map((r) => ({ id: r.id, name: r.name, skus: r.skus, photo: r.photo }));
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      article: r.article,
+      skus: r.skus,
+      photo: r.photo,
+    }));
+  }
+
+  async liveData(): Promise<Map<string, LiveModel>> {
+    const out = new Map<string, LiveModel>();
+    const variants = await this.rowsOrEmpty<{
+      model: string;
+      id: string;
+      size: string | null;
+      color: string | null;
+    }>(
+      `SELECT product_source_id AS model, source_id AS id, size, color FROM product_variants
+        WHERE source = '${SOURCE}' AND NOT is_deleted ORDER BY product_source_id, source_id`,
+    );
+    // offers_* может не существовать (offers.xml ещё не приходил) — тогда остатков и цен нет.
+    const offers = await this.rowsOrEmpty<{
+      id: string;
+      quantity: string | null;
+      price: string | null;
+    }>(
+      `SELECT o.source_id AS id, s.q::text AS quantity, p.price::text AS price
+         FROM offers o
+         LEFT JOIN (SELECT offer_source_id, sum(quantity) AS q FROM offer_stocks
+                     WHERE source = '${SOURCE}' GROUP BY offer_source_id) s
+           ON s.offer_source_id = o.source_id
+         LEFT JOIN (SELECT offer_source_id, min(value) AS price FROM offer_prices
+                     WHERE source = '${SOURCE}' GROUP BY offer_source_id) p
+           ON p.offer_source_id = o.source_id
+        WHERE o.source = '${SOURCE}' AND NOT coalesce(o.is_deleted, false)`,
+    );
+    const byOffer = new Map(offers.map((o) => [o.id, o]));
+    for (const v of variants) {
+      const offer = byOffer.get(v.id);
+      const model = out.get(v.model) ?? { variants: [], price: null, stock: null };
+      const quantity = offer ? Number(offer.quantity ?? 0) : null;
+      model.variants.push({ id: v.id, size: v.size, color: v.color, quantity });
+      if (quantity !== null) model.stock = (model.stock ?? 0) + quantity;
+      if (offer?.price != null) {
+        const price = Number(offer.price);
+        model.price = model.price === null ? price : Math.min(model.price, price);
+      }
+      out.set(v.model, model);
+    }
+    return out;
   }
 
   /** Каждую таблицу читаем отдельно: offers_* может не существовать, пока не пришёл offers.xml. */

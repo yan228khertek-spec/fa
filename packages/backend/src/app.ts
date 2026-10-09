@@ -13,9 +13,12 @@ import { MemoryOffersRepository } from './offers/memory.js';
 import { PgOffersRepository } from './offers/pg.js';
 import { adminPlugin } from './admin/plugin.js';
 import { BrandService } from './admin/service.js';
+import { CardService } from './admin/cards.js';
+import { MemoryCardRepository } from './admin/cards-memory.js';
+import { PgCardRepository } from './admin/cards-pg.js';
 import { MemoryCatalogReader, MemorySiteBrandRepository } from './admin/memory.js';
 import { PgCatalogReader, PgSiteBrandRepository } from './admin/pg.js';
-import type { CatalogReader, SiteBrandRepository } from './admin/types.js';
+import type { CardRepository, CatalogReader, SiteBrandRepository } from './admin/types.js';
 
 export interface BuildAppOptions {
   config?: AppConfig;
@@ -25,6 +28,8 @@ export interface BuildAppOptions {
   /** Витринные бренды (миграция 004) и чтение staging-каталога для админки. */
   siteBrands?: SiteBrandRepository;
   catalogReader?: CatalogReader;
+  /** Карточки товаров витрины (миграция 005). */
+  cardRepo?: CardRepository;
 }
 
 export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -56,6 +61,10 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     opts.catalogReader ??
     (config.databaseUrl ? new PgCatalogReader(config.databaseUrl) : new MemoryCatalogReader());
 
+  const cardRepo =
+    opts.cardRepo ??
+    (config.databaseUrl ? new PgCardRepository(config.databaseUrl) : new MemoryCardRepository());
+
   const app = Fastify({
     logger: !config.quiet,
     // Глобальный лимит тела маленький: большие тела легальны только в
@@ -70,9 +79,11 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(exchangePlugin, { config, logSink, catalog, offers, jobs });
 
   if (config.admin) {
+    const service = new BrandService(siteBrands, catalogReader);
     await app.register(adminPlugin, {
       admin: config.admin,
-      service: new BrandService(siteBrands, catalogReader),
+      service,
+      cards: new CardService(cardRepo, catalogReader, service),
     });
   }
 
@@ -82,6 +93,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     await catalog.close();
     await offers.close();
     await siteBrands.close();
+    await cardRepo.close();
     await catalogReader.close();
     await logSink.close();
   });

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { SITE_CARDS_DDL } from '../src/admin/cards-schema.js';
 import { SITE_BRANDS_DDL } from '../src/admin/schema.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -32,5 +33,20 @@ describe('миграция 004 и SITE_BRANDS_DDL', () => {
     }
     expect(SITE_BRANDS_DDL).not.toMatch(/\bDROP\b/i);
     expect(SITE_BRANDS_DDL).not.toMatch(/REFERENCES\s+(brands|products|product_variants)\b/);
+  });
+});
+
+describe('миграция 005 и SITE_CARDS_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/005', async () => {
+    const file = await readFile(path.join(root, 'migrations', '005_site_cards.sql'), 'utf8');
+    expect(normalize(SITE_CARDS_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и не ссылается на staging', () => {
+    for (const t of ['site_cards', 'site_card_photos']) {
+      expect(SITE_CARDS_DDL).toContain(`CREATE TABLE IF NOT EXISTS ${t} (`);
+    }
+    expect(SITE_CARDS_DDL).not.toMatch(/\bDROP\b/i);
+    expect(SITE_CARDS_DDL).not.toMatch(/REFERENCES\s+(products|product_variants|offers)\b/);
   });
 });

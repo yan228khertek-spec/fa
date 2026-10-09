@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
 <meta name="theme-color" content="#000000">
-<title>Бренды — FASHION AVENUE, Омск</title>
+<title>Бренд — FASHION AVENUE, Омск</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -75,50 +75,49 @@ header.hidden{transform:translateY(-100%)}
 .mfoot .l{display:flex;align-items:center;gap:11px;font-size:15px;letter-spacing:.02em;text-transform:uppercase}
 .mfoot .r{font-size:15px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;cursor:pointer}
 
-/* ═════ СТРАНИЦА БРЕНДОВ ═════ */
-.brands-main{max-width:1600px;margin:0 auto;padding:calc(106px + 24px) 12px 60px}
-.brands-main h1{font-size:22px;font-weight:700;margin-bottom:18px;text-transform:uppercase;letter-spacing:.05em}
-#brandSearch{width:100%;max-width:480px;padding:14px 18px;margin-bottom:32px;border:1px solid var(--line);
-  border-radius:0;font-family:var(--ff);font-size:15px;outline:none;background:var(--bg);transition:border-color .2s}
-#brandSearch:focus{border-color:var(--graphite)}
+/* ═════ СТРАНИЦА БРЕНДА ═════ */
+.bp{max-width:1600px;margin:0 auto;padding:calc(106px + 20px) 12px 60px}
+.crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
+.crumbs a:hover{color:var(--graphite)}
+.bp h1{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:center}
+.bp-count{text-align:center;color:var(--muted);font-size:13px;margin:8px 0 24px;min-height:20px}
+.bp-body{display:block}
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -12px 14px;padding:0 12px;border-bottom:1px solid var(--line)}
+.cats::-webkit-scrollbar{display:none}
+.cats button{padding:10px 14px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.cats button.on{color:var(--graphite);border-color:var(--graphite)}
+.cats button i{font-style:normal;font-weight:400;color:var(--muted);margin-left:5px;font-size:11px}
+.kinds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.kinds:empty{display:none}
+.chip{border:1px solid var(--line2);padding:8px 14px;font-size:12.5px;letter-spacing:.04em;transition:.15s}
+.chip:hover{border-color:var(--graphite)}
+.chip.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 10px}
+.pc{display:block}
+.pc-photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:12px}
+.pc-photo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .5s ease}
+.pc:hover .pc-photo img{transform:scale(1.03)}
+.pc-brand{margin-top:12px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.pc-title{margin-top:3px;font-size:13px;line-height:1.35;color:#3a3936;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-price{margin-top:6px;font-size:13.5px;font-weight:500}
+.bp-state{text-align:center;color:var(--muted);padding:56px 0}
+.more[hidden]{display:none}
+.more{display:block;margin:34px auto 0;padding:15px 38px;border:1px solid var(--graphite);
+  font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.more:hover{background:var(--graphite);color:#fff}
+@media(min-width:700px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 16px}}
 @media(min-width:900px){
-  .brands-main{padding:calc(118px + 40px) 24px 80px}
-  .brands-main h1{font-size:28px;margin-bottom:24px}
+  .bp{padding:calc(118px + 30px) 24px 80px}
+  .bp h1{font-size:34px}
+  .bp-body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0 48px;align-items:start}
+  .cats{flex-direction:column;gap:0;overflow:visible;margin:0;padding:0;border:0;position:sticky;top:130px}
+  .cats button{text-align:left;padding:12px 0;font-size:13px;border:0;margin:0}
+  .cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
 }
-
-/* топ-бренды: плитки с фото */
-.top-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:8px 0 14px}
-.brgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px;margin-bottom:40px}
-.tb{display:block;color:inherit}
-.tb-photo{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--soft);
-  display:flex;align-items:center;justify-content:center}
-.tb-photo>img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}
-.tb:hover .tb-photo>img{transform:scale(1.04)}
-.tb-ph{font-size:clamp(18px,2.4vw,28px);overflow-wrap:anywhere;font-weight:300;letter-spacing:.06em;color:rgba(255,255,255,.85);text-align:center;padding:0 8px;line-height:1.1}
-.tb-logo{position:absolute;left:10px;bottom:10px;width:44px;height:44px;border-radius:50%;background:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.tb-logo img{width:70%;height:70%;object-fit:contain}
-.tb-logo span{font-size:13px;font-weight:700;color:var(--graphite)}
-.tb-name{margin-top:10px;font-size:13px;font-weight:500;line-height:1.3}
-@media(min-width:600px){.brgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 14px}}
-@media(min-width:900px){.brgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:28px 16px}.tb-logo{width:48px;height:48px}}
-
-/* список «Все бренды» */
-.brands-list{margin-top:64px}
-.brands-list-title{font-size:17px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  text-align:center;margin-bottom:28px;color:var(--red)}
-.brands-alpha{font-size:15px;font-weight:500;text-transform:uppercase;text-align:center;margin:28px 0 12px;color:var(--red)}
-.brands-grid{display:grid;grid-template-columns:1fr;column-gap:40px}
-.brand-item{display:flex;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
-.brand-fav{width:24px;height:24px;display:grid;place-items:center;margin-right:16px;flex-shrink:0;
-  color:var(--graphite);transition:opacity .2s}
-.brand-fav:hover{opacity:.6}
-.brand-fav.on svg{fill:var(--red);stroke:var(--red)}
-.brand-link{flex:1;font-size:15px;letter-spacing:.02em;text-transform:uppercase;transition:opacity .2s}
-.brand-link:hover{opacity:.6}
-.brands-empty{text-align:center;color:var(--muted);padding:32px 0}
-@media(min-width:768px){.brands-grid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:900px){.brands-list-title{font-size:22px}}
+@media(min-width:1280px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 /* ═════ COOKIE ═════ */
 .cookie{position:fixed;left:0;right:0;bottom:0;z-index:98;background:#fff;border-top:1px solid var(--line);
@@ -218,21 +217,19 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
   </div>
 </div>
 
-<main class="brands-main">
-  <h1>Бренды</h1>
-  <input type="text" id="brandSearch" placeholder="Поиск бренда (например: Diesel)..." autocomplete="off">
-
-  <!-- топ-бренды -->
-  <section id="topBrands">
-    <h2 class="top-title">Топ бренды</h2>
-    <div class="brgrid" id="brandsGrid"></div>
-  </section>
-
-  <!-- список «Все бренды» -->
-  <section class="brands-list">
-    <h2 class="brands-list-title" id="brandsListTitle">Все бренды</h2>
-    <div id="brandsList"></div>
-  </section>
+<main class="bp">
+  <div class="crumbs"><a href="brands.html">Бренды</a> / <span id="crumb">…</span></div>
+  <h1 id="bName">&nbsp;</h1>
+  <div class="bp-count" id="bCount"></div>
+  <div class="bp-body">
+    <nav class="cats" id="cats" aria-label="Разделы"></nav>
+    <div>
+      <div class="kinds" id="kinds"></div>
+      <div class="pgrid" id="pgrid"></div>
+      <div class="bp-state" id="state">Загружаем товары…</div>
+      <button class="more" id="more" hidden>Показать ещё</button>
+    </div>
+  </div>
 </main>
 
 <footer><div class="wrap">
@@ -261,147 +258,106 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ───── БРЕНДЫ ПО ПОЛУ ───── */
-const BRANDS_BY_GENDER={
-  men:[
-    "Aeronautica Militare","BLCV","Bogner","Bosideng","Daniele Fiesoli","Diesel","Digel",
-    "Doucal's","Emporio Armani","ICE Play","JNBY","Karl Lagerfeld","Limitato","Odri",
-    "Seventy","TRANSIT"
-  ],
-  women:[
-    "Aeronautica Militare","Alma en Pena","Alysi","Annette Görtz","Beatrice.b","Biancalancia",
-    "BLCV","Bogner","By Malene Birger","Canadian","Charmline","D.Exterior","Diego M","Diesel",
-    "Dorothee Schumacher","Doucal's","Elena Iachi","Eleventy","Emporio Armani","ICE Play","JNBY",
-    "Karl Lagerfeld","Le Coeur TWINSET","Lidea","Limitato","Liu Jo","Luisa Cerano",
-    "Marina Rinaldi","Maryan Mehlhorn","Max Mara Leisure","MAX&MOI","Miss Sixty","MSGM","Nissa",
-    "One Teaspoon","OSKA","Persona by Marina Rinaldi","Pinko","Plinio Visona","Secrets",
-    "Seventy","Sfizio","Stefanel","TRANSIT","Uvelina","Watercult"
-  ]
-};
-let gender='women';
-const favBrands=new Set();
-const HEART='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20s-7-4.6-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.4 12 20 12 20z"/></svg>';
-const esc=s=>s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+/* ───── СТРАНИЦА БРЕНДА: товары бренда из витринного API, фильтры «раздел» и «тип» ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
+const PAGE=24;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const plural=(n,a,b,c)=>{const m=n%100,d=n%10;return (m>10&&m<15)?c:d===1?a:(d>1&&d<5)?b:c};
 
-/* ───── ТОП-БРЕНДЫ ─────
-   Позже этот объект приходит из API (админка: бренд → «Топ», пол, порядок, фото, логотип).
-   photo/logo — URL картинок. Пока null → показывается заглушка. */
-const TOP_BRANDS={
-  men:[
-    {name:'Aeronautica Militare',photo:null,logo:null,hue:215},
-    {name:'Hannes Roether',photo:null,logo:null,hue:25},
-    {name:'Diesel',photo:null,logo:null,hue:5},
-    {name:'Transit',photo:null,logo:null,hue:150},
-    {name:'Bogner',photo:null,logo:null,hue:200}
-  ],
-  women:[
-    {name:'Dorothee Schumacher',photo:null,logo:null,hue:330},
-    {name:'Miss Sixty',photo:null,logo:null,hue:350},
-    {name:'Annette Görtz',photo:null,logo:null,hue:30},
-    {name:'D.Exterior',photo:null,logo:null,hue:170},
-    {name:'Seventy',photo:null,logo:null,hue:260}
-  ]
-};
-const initials=n=>n.split(/[\s.]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-/* ───── ДАННЫЕ ИЗ АДМИНКИ (API). Если API недоступен — остаются данные выше ───── */
-const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда (витринное API); '' — если сайт и API на одном домене
-const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;  // API отдаёт абсолютные ссылки при заданном PUBLIC_BASE_URL
-const BRAND_SLUG={};   // имя бренда → адрес страницы (приходит из API)
-const brandHref=n=>BRAND_SLUG[n]?'brand.html?slug='+encodeURIComponent(BRAND_SLUG[n]):null;
-const hueOf=n=>[...n].reduce((h,c)=>(h*31+c.charCodeAt(0))%360,7);
-async function loadBrandsFromApi(g){
+const q=new URLSearchParams(location.search);
+const S={slug:q.get('slug')||'',category:q.get('category')||'',kind:q.get('kind')||'',
+  items:[],total:0,facets:{categories:[],kinds:[]},brand:null,loading:false,seq:0};
+
+function syncUrl(){
+  const p=new URLSearchParams();
+  p.set('slug',S.slug);
+  if(S.category)p.set('category',S.category);
+  if(S.kind)p.set('kind',S.kind);
+  history.replaceState(null,'','?'+p.toString());
+}
+
+async function load(reset){
+  if(!S.slug){showState('Бренд не указан. Выберите его на странице «Бренды».');return}
+  const my=++S.seq;
+  S.loading=true;
+  if(reset){S.items=[];document.getElementById('more').hidden=true;showState('Загружаем товары…')}
+  const url=`${API_BASE}/api/brands/${encodeURIComponent(S.slug)}/models?limit=${PAGE}&offset=${S.items.length}`
+    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'');
   try{
-    const r=await fetch(API_BASE+'/api/brands?gender='+g);
+    const r=await fetch(url);
+    if(my!==S.seq)return;
+    if(r.status===404){showState('Такого бренда нет');document.getElementById('bName').textContent='';return}
     if(!r.ok)throw 0;
     const d=await r.json();
-    BRANDS_BY_GENDER[g]=d.all.map(b=>b.name);
-    d.all.concat(d.top).forEach(x=>{BRAND_SLUG[x.name]=x.slug});
-    TOP_BRANDS[g]=d.top.map(t=>({name:t.name,slug:t.slug,hue:hueOf(t.name),
-      photo:abs(t.photo),logo:abs(t.logo)}));
-    if(g===gender){renderBrandList();renderTopBrands()}
-  }catch(e){/* API недоступен — остаются встроенные данные */}
+    if(my!==S.seq)return;
+    S.brand=d.brand;S.total=d.total;S.facets=d.facets;
+    S.items=S.items.concat(d.items);
+    // выбранный фильтр мог исчезнуть (товар раскупили) — сбрасываем и грузим заново
+    if(S.category&&!d.facets.categories.some(c=>c.name===S.category)){S.category='';S.kind='';return load(true)}
+    if(S.kind&&!d.facets.kinds.some(k=>k.name===S.kind)){S.kind='';return load(true)}
+    render();
+  }catch(e){
+    if(my===S.seq)showState('Не удалось загрузить товары. Попробуйте обновить страницу.');
+  }finally{if(my===S.seq)S.loading=false}
 }
-function renderTopBrands(){
-  const term=document.getElementById('brandSearch').value.trim().toLowerCase();
-  const items=TOP_BRANDS[gender].filter(b=>b.name.toLowerCase().includes(term));
-  document.getElementById('topBrands').style.display=items.length?'':'none';
-  document.getElementById('brandsGrid').innerHTML=items.map(b=>`
-    <a href="${esc(brandHref(b.name)||'#')}" class="tb" data-name="${esc(b.name)}">
-      <div class="tb-photo"${b.photo?'':` style="background:linear-gradient(145deg,hsl(${b.hue},18%,58%),hsl(${b.hue},22%,32%))"`}>
-        ${b.photo?`<img src="${esc(b.photo)}" alt="${esc(b.name)}" loading="lazy">`:`<div class="tb-ph">${esc(b.name)}</div>`}
-        <div class="tb-logo">${b.logo?`<img src="${esc(b.logo)}" alt="">`:`<span>${esc(initials(b.name))}</span>`}</div>
-      </div>
-      <div class="tb-name">${esc(b.name)}</div>
-    </a>`).join('');
+
+function showState(t){
+  const el=document.getElementById('state');el.textContent=t;el.hidden=false;
+  if(!S.items.length)document.getElementById('pgrid').innerHTML='';
 }
-document.getElementById('brandsGrid').addEventListener('click',e=>{
-  const c=e.target.closest('.tb');
-  if(c&&!brandHref(c.dataset.name)){e.preventDefault();toast('Страница бренда '+c.dataset.name)}
+
+function render(){
+  const name=S.brand.name;
+  document.title=name+' — FASHION AVENUE, Омск';
+  document.getElementById('bName').textContent=name;
+  document.getElementById('crumb').textContent=name;
+  document.getElementById('bCount').textContent=S.total+' '+plural(S.total,'товар','товара','товаров');
+  const total=S.facets.categories.reduce((a,c)=>a+c.count,0);
+  document.getElementById('cats').innerHTML=
+    (S.facets.categories.length>1||S.category?
+      `<button class="${S.category?'':'on'}" data-c="">Все<i>${total}</i></button>`
+      +S.facets.categories.map(c=>`<button class="${S.category===c.name?'on':''}" data-c="${esc(c.name)}">${esc(c.name)}<i>${c.count}</i></button>`).join('')
+    :'');
+  // типы показываем внутри выбранного раздела — на «Все» их слишком много
+  document.getElementById('kinds').innerHTML=S.category&&(S.facets.kinds.length>1||S.kind)?
+    `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
+    +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}</button>`).join(''):'';
+  document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
+  document.getElementById('state').hidden=S.items.length>0;
+  if(!S.items.length)showState('В этом разделе пока нет товаров');
+  document.getElementById('more').hidden=S.items.length>=S.total;
+  syncUrl();
+}
+
+function card(i){
+  const img=abs(i.photo);
+  return `<a class="pc" href="#" data-id="${i.id}">
+    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}</div>
+    <div class="pc-brand">${esc(i.brand?.name||S.brand.name)}</div>
+    <div class="pc-title">${esc(i.title)}</div>
+    ${i.price!=null?`<div class="pc-price">${rub(i.price)}</div>`:''}
+  </a>`;
+}
+
+document.getElementById('cats').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-c]');if(!b)return;
+  S.category=b.dataset.c;S.kind='';load(true);
+});
+document.getElementById('kinds').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-k]');if(!b)return;
+  S.kind=b.dataset.k;load(true);
+});
+document.getElementById('more').addEventListener('click',()=>{if(!S.loading)load(false)});
+document.getElementById('pgrid').addEventListener('click',e=>{
+  const c=e.target.closest('.pc');
+  if(c){e.preventDefault();toast('Страница товара — скоро')}
 });
 
-function renderBrandList(){
-  const f=document.getElementById('brandSearch').value.trim().toLowerCase();
-  const list=BRANDS_BY_GENDER[gender]
-    .filter(n=>n.toLowerCase().includes(f))
-    .sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
-  document.getElementById('brandsListTitle').textContent=
-    'Все бренды · '+(gender==='men'?'мужское':'женское');
-  const groups={};
-  list.forEach(n=>(groups[n[0].toUpperCase()]??=[]).push(n));
-  const html=Object.keys(groups).sort().map(l=>`
-    <div class="brands-alpha">${l}</div>
-    <div class="brands-grid">${groups[l].map(n=>`
-      <div class="brand-item">
-        <button class="brand-fav ${favBrands.has(gender+'|'+n)?'on':''}" aria-label="В избранное"
-          data-key="${esc(gender+'|'+n)}">${HEART}</button>
-        <a href="${esc(brandHref(n)||'#')}" class="brand-link" data-name="${esc(n)}">${esc(n)}</a>
-      </div>`).join('')}
-    </div>`).join('');
-  document.getElementById('brandsList').innerHTML=
-    html||'<p class="brands-empty">Ничего не найдено</p>';
-}
-
-/* делегирование кликов: избранное и переход на страницу бренда */
-document.getElementById('brandsList').addEventListener('click',e=>{
-  const fav=e.target.closest('.brand-fav');
-  if(fav){
-    const k=fav.dataset.key;
-    favBrands.has(k)?favBrands.delete(k):favBrands.add(k);
-    fav.classList.toggle('on');
-    return;
-  }
-  const link=e.target.closest('.brand-link');
-  if(link&&!brandHref(link.dataset.name)){e.preventDefault();toast('Страница бренда '+link.dataset.name)}
-});
-
-/* ───── ПЕРЕКЛЮЧАТЕЛЬ ПОЛА (шапка + меню синхронно) ───── */
-function setGender(g,silent){
-  gender=g;
-  document.querySelectorAll('.gender button').forEach((b,i)=>b.classList.toggle('on',(i===0)===(g==='men')));
-  document.querySelectorAll('.mtabs button').forEach((b,i)=>{
-    if(i<2)b.classList.toggle('on',(i===0)===(g==='women'));
-  });
-  document.querySelectorAll('.mtabs button')[2].classList.remove('on');
-  renderBrandList();renderTopBrands();loadBrandsFromApi(g);
-  if(!silent)toast(g==='men'?'Мужское — раздел переключён':'Женское — раздел переключён');
-}
-function sw(b){setGender(b.textContent.trim()==='Мужское'?'men':'women')}
-function mtab(b){
-  const t=b.textContent.trim();
-  if(t==='Женщины')setGender('women');
-  else if(t==='Мужчины')setGender('men');
-  else{
-    [...b.parentNode.children].forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');toast('Парфюмерия — раздел переключён');
-  }
-}
-
-/* ───── ПОИСК: фильтрует логотипы и список ───── */
-document.getElementById('brandSearch').addEventListener('input',e=>{
-  const term=e.target.value.trim().toLowerCase();
-  renderTopBrands();
-  renderBrandList();
-});
+/* ───── ШАПКА/МЕНЮ: на странице бренда пол не влияет на выдачу ───── */
+function sw(b){document.querySelectorAll('.gender button').forEach(x=>x.classList.toggle('on',x===b))}
+function mtab(b){[...b.parentNode.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')}
 
 /* ───── МЕНЮ, COOKIE, TOAST ───── */
 function openMenu(){
@@ -430,8 +386,6 @@ setTimeout(()=>{
   document.getElementById('cookie').classList.add('on');
   document.getElementById('cdim').classList.add('on');
 },700);
-
-/* ───── ШАПКА: прячется при скролле вниз, появляется при скролле вверх ───── */
 (function(){
   const header=document.querySelector('header');
   let lastY=0;
@@ -444,7 +398,7 @@ setTimeout(()=>{
   },{passive:true});
 })();
 
-setGender('women',true);
+load(true);
 </script>
 </body>
 </html>

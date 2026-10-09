@@ -31,7 +31,7 @@
     <div class="mgrp">
       <a class="mlink" href="#" onclick="closeMenu();return false">Новинки</a>
       <a class="mlink" href="#" onclick="closeMenu();return false">Осень — зима 2026<sup>новое</sup></a>
-      <a class="mlink red" href="#" onclick="closeMenu();return false">Распродажа</a>
+      <a class="mlink red" href="catalog.html?sale=1">Распродажа</a>
     </div>
     <div class="mgrp">
       <a class="mcap" href="brands.html" style="display:block">Бренды</a>
@@ -44,15 +44,15 @@
     </div>
     <div class="mgrp">
       <div class="mcap">Каталог</div>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Верхняя одежда</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Трикотаж</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Платья</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Рубашки | блузы</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Джинсы | брюки</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Юбки</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Футболки | лонгсливы</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Обувь</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Сумки | аксессуары</a>
+      <a class="mlink" href="catalog.html?category=Одежда">Верхняя одежда</a>
+      <a class="mlink" href="catalog.html?category=Одежда">Трикотаж</a>
+      <a class="mlink" href="catalog.html?category=Одежда&amp;kind=Платье">Платья</a>
+      <a class="mlink" href="catalog.html?category=Одежда">Рубашки | блузы</a>
+      <a class="mlink" href="catalog.html?category=Одежда">Джинсы | брюки</a>
+      <a class="mlink" href="catalog.html?category=Одежда&amp;kind=Юбка">Юбки</a>
+      <a class="mlink" href="catalog.html?category=Одежда">Футболки | лонгсливы</a>
+      <a class="mlink" href="catalog.html?category=Обувь">Обувь</a>
+      <a class="mlink" href="catalog.html?category=Сумки">Сумки | аксессуары</a>
     </div>
     <div class="mgrp">
       <div class="mcap">Галерея</div>
@@ -73,7 +73,7 @@
     <div><b>Fashion Avenue</b>
       <p>Галерея моды в центре Омска. Избранные бренды Италии, Германии и Франции.</p>
       <p>Омск, ул. Маршала Жукова, 65<br>+7 (3812) 390-007</p></div>
-    <div><b>Каталог</b><a href="#">Одежда</a><a href="#">Обувь</a><a href="#">Парфюмерия</a><a href="#">Аксессуары</a><a href="brands.html">Бренды</a><a href="#" style="color:var(--red)">Распродажа</a></div>
+    <div><b>Каталог</b><a href="catalog.html?category=Одежда">Одежда</a><a href="catalog.html?category=Обувь">Обувь</a><a href="catalog.html?category=Сумки">Сумки</a><a href="catalog.html?category=Парфюмерия">Парфюмерия</a><a href="catalog.html?category=Аксессуары">Аксессуары</a><a href="brands.html">Бренды</a><a href="catalog.html?sale=1" style="color:var(--red)">Распродажа</a></div>
     <div><b>Покупателям</b><a href="#">Доставка</a><a href="#">Оплата</a><a href="#">Обмен и возврат</a><a href="#">Клуб FA LOVERS</a></div>
     <div><b>Галерея</b><a href="#">О нас</a><a href="brands.html">Бренды</a><a href="#">Контакты</a><a href="#">Telegram</a></div>
   </div>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#000000">
+<title>Каталог — FASHION AVENUE, Омск</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ═════ КАТАЛОГ: товары по разделам ═════ */
+.bp{max-width:1600px;margin:0 auto;padding:calc(106px + 20px) 12px 60px}
+.crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
+.crumbs a:hover{color:var(--graphite)}
+.bp h1{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:center}
+.bp-count{text-align:center;color:var(--muted);font-size:13px;margin:8px 0 24px;min-height:20px}
+.bp-body{display:block}
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -12px 14px;padding:0 12px;border-bottom:1px solid var(--line)}
+.cats::-webkit-scrollbar{display:none}
+.cats button{padding:10px 14px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.cats button.on{color:var(--graphite);border-color:var(--graphite)}
+.cats button i{font-style:normal;font-weight:400;color:var(--muted);margin-left:5px;font-size:11px}
+.kinds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.kinds:empty{display:none}
+.chip{border:1px solid var(--line2);padding:8px 14px;font-size:12.5px;letter-spacing:.04em;transition:.15s}
+.chip:hover{border-color:var(--graphite)}
+.chip.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 10px}
+.pc{display:block}
+.pc-photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:12px}
+.pc-photo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .5s ease}
+.pc:hover .pc-photo img{transform:scale(1.03)}
+.pc-brand{margin-top:12px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.pc-title{margin-top:3px;font-size:13px;line-height:1.35;color:#3a3936;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-price{margin-top:6px;font-size:13.5px;font-weight:500}
+.bp-state{text-align:center;color:var(--muted);padding:56px 0}
+.more[hidden]{display:none}
+.more{display:block;margin:34px auto 0;padding:15px 38px;border:1px solid var(--graphite);
+  font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.more:hover{background:var(--graphite);color:#fff}
+@media(min-width:700px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 16px}}
+@media(min-width:900px){
+  .bp{padding:calc(118px + 30px) 24px 80px}
+  .bp h1{font-size:34px}
+  .bp-body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0 48px;align-items:start}
+  .cats{flex-direction:column;gap:0;overflow:visible;margin:0;padding:0;border:0;position:sticky;top:130px}
+  .cats button{text-align:left;padding:12px 0;font-size:13px;border:0;margin:0}
+  .cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
+}
+@media(min-width:1280px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+</style>
+</head>
+<body>
+
+<script src="assets/site.js"></script>
+
+<main class="bp">
+  <div class="crumbs"><a href="catalog.html">Каталог</a> / <span id="crumb">…</span></div>
+  <h1 id="bName">Каталог</h1>
+  <div class="bp-count" id="bCount"></div>
+  <div class="bp-body">
+    <nav class="cats" id="cats" aria-label="Разделы"></nav>
+    <div>
+      <div class="kinds" id="kinds"></div>
+      <div class="pgrid" id="pgrid"></div>
+      <div class="bp-state" id="state">Загружаем товары…</div>
+      <button class="more" id="more" hidden>Показать ещё</button>
+    </div>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<script>
+/* ───── КАТАЛОГ: все товары витрины, раздел задаётся ?category=, фильтр «тип» — ?kind= ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
+const PAGE=24;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const plural=(n,a,b,c)=>{const m=n%100,d=n%10;return (m>10&&m<15)?c:d===1?a:(d>1&&d<5)?b:c};
+
+const q=new URLSearchParams(location.search);
+const S={sale:q.get('sale')==='1',category:q.get('category')||'',kind:q.get('kind')||'',
+  items:[],total:0,facets:{categories:[],kinds:[]},loading:false,seq:0};
+
+function syncUrl(){
+  const p=new URLSearchParams();
+  if(S.sale)p.set('sale','1');
+  if(S.category)p.set('category',S.category);
+  if(S.kind)p.set('kind',S.kind);
+  history.replaceState(null,'','?'+p.toString());
+}
+
+async function load(reset){
+  if(S.sale){render();showState('Распродажа скоро откроется. Загляните в разделы каталога.');return}
+  const my=++S.seq;
+  S.loading=true;
+  if(reset){S.items=[];document.getElementById('more').hidden=true;showState('Загружаем товары…')}
+  const url=`${API_BASE}/api/cards?limit=${PAGE}&offset=${S.items.length}`
+    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'');
+  try{
+    const r=await fetch(url);
+    if(my!==S.seq)return;
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    if(my!==S.seq)return;
+    S.total=d.total;S.facets=d.facets;
+    S.items=S.items.concat(d.items);
+    // тип мог исчезнуть (товар раскупили) — сбрасываем и грузим заново; пустой раздел показываем как есть
+    if(S.kind&&!d.facets.kinds.some(k=>k.name===S.kind)){S.kind='';return load(true)}
+    render();
+  }catch(e){
+    if(my===S.seq)showState('Не удалось загрузить товары. Попробуйте обновить страницу.');
+  }finally{if(my===S.seq)S.loading=false}
+}
+
+function showState(t){
+  const el=document.getElementById('state');el.textContent=t;el.hidden=false;
+  if(!S.items.length)document.getElementById('pgrid').innerHTML='';
+}
+
+function render(){
+  const name=S.sale?'Распродажа':(S.category||'Все товары');
+  document.title=name+' — Каталог — FASHION AVENUE, Омск';
+  document.getElementById('bName').textContent=name;
+  document.getElementById('crumb').textContent=name;
+  document.getElementById('bCount').textContent=S.sale?'':S.total+' '+plural(S.total,'товар','товара','товаров');
+  const total=S.facets.categories.reduce((a,c)=>a+c.count,0);
+  document.getElementById('cats').innerHTML=
+    (S.facets.categories.length>1||S.category?
+      `<button class="${S.category?'':'on'}" data-c="">Все<i>${total}</i></button>`
+      +S.facets.categories.map(c=>`<button class="${S.category===c.name?'on':''}" data-c="${esc(c.name)}">${esc(c.name)}<i>${c.count}</i></button>`).join('')
+    :'');
+  // типы показываем внутри выбранного раздела; если раздел всего один — сразу
+  const oneCat=S.facets.categories.length<=1;
+  document.getElementById('kinds').innerHTML=(S.category||oneCat)&&(S.facets.kinds.length>1||S.kind)?
+    `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
+    +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}</button>`).join(''):'';
+  document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
+  document.getElementById('state').hidden=S.items.length>0;
+  if(!S.items.length)showState(S.sale?'Распродажа скоро откроется. Загляните в разделы каталога.':'В этом разделе пока нет товаров');
+  document.getElementById('more').hidden=S.items.length>=S.total;
+  syncUrl();
+}
+
+function card(i){
+  const img=abs(i.photo);
+  return `<a class="pc" href="product.html?id=${i.id}">
+    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}</div>
+    <div class="pc-brand">${esc(i.brand?.name||'')}</div>
+    <div class="pc-title">${esc(i.title)}</div>
+    ${i.price!=null?`<div class="pc-price">${rub(i.price)}</div>`:''}
+  </a>`;
+}
+
+document.getElementById('cats').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-c]');if(!b)return;
+  S.category=b.dataset.c;S.kind='';load(true);
+});
+document.getElementById('kinds').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-k]');if(!b)return;
+  S.kind=b.dataset.k;load(true);
+});
+document.getElementById('more').addEventListener('click',()=>{if(!S.loading)load(false)});
+load(true);
+</script>
+</body>
+</html>

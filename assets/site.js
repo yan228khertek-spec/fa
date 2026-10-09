@@ -93,6 +93,11 @@
 
 <div class="toast" id="toast"></div>`;
 
+  // Ответ на cookie-баннер помним до закрытия вкладки. Чтобы помнить дольше, замените sessionStorage на localStorage.
+  var STORE = 'fa_cookie_answer';
+  function cookieAnswered(){ try { return !!sessionStorage.getItem(STORE); } catch (e) { return false; } }
+  function rememberCookieAnswer(m){ try { sessionStorage.setItem(STORE, m); } catch (e) {} }
+
   var me = document.currentScript;
   me.insertAdjacentHTML('beforebegin', HEADER);
 
@@ -100,7 +105,8 @@
     var slot = document.querySelector('[data-site-footer]');
     if (slot) slot.outerHTML = FOOTER;
     else document.body.insertAdjacentHTML('beforeend', FOOTER);
-    // cookie-баннер: показываем после загрузки
+    // cookie-баннер: показываем после загрузки, если выбор ещё не сделан в этой сессии
+    if (cookieAnswered()) return;
     setTimeout(function(){
       var c = document.getElementById('cookie'), d = document.getElementById('cdim');
       if (c) c.classList.add('on');
@@ -121,6 +127,7 @@
     document.body.style.overflow = '';
   };
   window.ck = function(m){
+    rememberCookieAnswer(m);
     document.getElementById('cookie').classList.remove('on');
     document.getElementById('cdim').classList.remove('on');
     window.toast(m);

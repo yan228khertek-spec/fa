@@ -1,3 +1,4 @@
+import { CATEGORIES, categoryOf, kindOf, type Category } from './category.js';
 import { normalizeText } from './matcher.js';
 import type { BrandService, Page } from './service.js';
 import {
@@ -53,6 +54,14 @@ export interface PublicCardItem {
   photo: string | null;
   price: number | null;
   inStock: boolean | null;
+  /** Раздел витрины и вид изделия — определяются по названию из 1С. */
+  category: Category;
+  kind: string;
+}
+
+export interface PublicCardFacets {
+  categories: { name: Category; count: number }[];
+  kinds: { name: string; count: number }[];
 }
 
 export interface PublicCardDetail extends PublicCardItem {
@@ -291,20 +300,47 @@ export class CardService {
       photo: x.card.photos[0]?.file ?? null,
       price: m.price,
       inStock: stock === null ? null : stock > 0,
+      category: categoryOf(m.name),
+      kind: kindOf(m.name),
     };
   }
 
+  /**
+   * Витрина: только видимые карточки. Фильтры — бренд, раздел, вид изделия.
+   * facets считаются по тому, что осталось после фильтра бренда (разделы) и раздела (виды),
+   * чтобы меню показывало, что реально можно выбрать.
+   */
   async publicList(opts: {
     brandSlug?: string;
+    category?: string;
+    kind?: string;
     limit: number;
     offset: number;
-  }): Promise<Page<PublicCardItem>> {
-    const rows = (await this.visibleCards()).filter(
-      (x) => !opts.brandSlug || x.view.model?.brand?.slug === opts.brandSlug,
-    );
+  }): Promise<Page<PublicCardItem> & { facets: PublicCardFacets }> {
+    const byBrand = (await this.visibleCards())
+      .filter((x) => !opts.brandSlug || x.view.model?.brand?.slug === opts.brandSlug)
+      .map((x) => this.item(x));
+    const count = <T extends string>(names: T[]) => {
+      const m = new Map<T, number>();
+      for (const n of names) m.set(n, (m.get(n) ?? 0) + 1);
+      return m;
+    };
+    const catCounts = count(byBrand.map((i) => i.category));
+    const inCategory = byBrand.filter((i) => !opts.category || i.category === opts.category);
+    const kindCounts = count(inCategory.filter((i) => i.kind).map((i) => i.kind));
+    const rows = inCategory.filter((i) => !opts.kind || i.kind === opts.kind);
     return {
       total: rows.length,
-      items: rows.slice(opts.offset, opts.offset + opts.limit).map((x) => this.item(x)),
+      items: rows.slice(opts.offset, opts.offset + opts.limit),
+      facets: {
+        categories: CATEGORIES.filter((c) => catCounts.has(c)).map((name) => ({
+          name,
+          count: catCounts.get(name)!,
+        })),
+        kinds: [...kindCounts]
+          .map(([name, c]) => ({ name, count: c }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ru')),
+      },
     };
   }
 

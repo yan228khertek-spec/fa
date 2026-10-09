@@ -85,16 +85,29 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const { limit, offset } = page(req.query as { limit?: string; offset?: string }, 100, 24);
       const brand = await service.brandBySlug(slug);
       if (!brand) return reply.code(404).send({ error: 'Бренд не найден' });
-      const res = await cards.publicList({ brandSlug: slug, limit, offset });
+      const { category, kind } = req.query as { category?: string; kind?: string };
+      const res = await cards.publicList({
+        brandSlug: slug,
+        category: category?.slice(0, 40),
+        kind: kind?.slice(0, 60),
+        limit,
+        offset,
+      });
       reply.header('cache-control', 'public, max-age=60');
-      return { brand, total: res.total, items: res.items.map(publicItem) };
+      return { brand, total: res.total, facets: res.facets, items: res.items.map(publicItem) };
     });
 
     pub.get('/api/cards', async (req, reply) => {
       const { limit, offset } = page(req.query as { limit?: string; offset?: string }, 100, 24);
-      const res = await cards.publicList({ limit, offset });
+      const { category, kind } = req.query as { category?: string; kind?: string };
+      const res = await cards.publicList({
+        category: category?.slice(0, 40),
+        kind: kind?.slice(0, 60),
+        limit,
+        offset,
+      });
       reply.header('cache-control', 'public, max-age=30');
-      return { total: res.total, items: res.items.map(publicItem) };
+      return { total: res.total, facets: res.facets, items: res.items.map(publicItem) };
     });
 
     pub.get('/api/cards/:id', async (req, reply) => {

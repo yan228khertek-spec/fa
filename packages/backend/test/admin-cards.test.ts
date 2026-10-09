@@ -117,7 +117,11 @@ describe('карточки товаров (HTTP)', () => {
 
     const early = await put(url, { status: 'published' });
     expect(early.statusCode).toBe(409);
-    expect((await app.inject({ url: '/api/cards' })).json()).toEqual({ total: 0, items: [] });
+    expect((await app.inject({ url: '/api/cards' })).json()).toEqual({
+      total: 0,
+      facets: { categories: [], kinds: [] },
+      items: [],
+    });
 
     const first = (await upload(card.id, png(1))).json();
     const second = (await upload(card.id, png(2))).json();
@@ -239,6 +243,53 @@ describe('карточки товаров (HTTP)', () => {
     expect(
       (await app.inject({ url: `/admin/api/cards/${card.id}`, headers: auth })).statusCode,
     ).toBe(404);
+  });
+
+  it('витрина бренда: разделы и виды изделий, фильтры', async () => {
+    catalog.models.push(
+      { id: 'm3', name: 'Туфли Diesel чёрные', skus: 1, photo: null, article: 'D-3' },
+      { id: 'm4', name: 'Джинсы Diesel синие', skus: 1, photo: null, article: 'D-4' },
+    );
+    await post('/admin/api/brands', { name: 'Diesel' });
+    for (const modelId of ['m1', 'm3', 'm4']) {
+      const c = (await post('/admin/api/cards', { modelId })).json();
+      await upload(c.id, png(7));
+      await put(`/admin/api/cards/${c.id}`, { status: 'published' });
+    }
+    const all = (await app.inject({ url: '/api/brands/diesel/models' })).json();
+    expect(all.total).toBe(3);
+    expect(all.facets.categories).toEqual([
+      { name: 'Одежда', count: 2 },
+      { name: 'Обувь', count: 1 },
+    ]);
+    expect(all.items.map((i: { kind: string }) => i.kind).sort()).toEqual([
+      'Джемпер',
+      'Джинсы',
+      'Туфли',
+    ]);
+
+    const clothes = (
+      await app.inject({
+        url: '/api/brands/diesel/models?category=' + encodeURIComponent('Одежда'),
+      })
+    ).json();
+    expect(clothes.total).toBe(2);
+    expect(clothes.facets.kinds).toEqual([
+      { name: 'Джемпер', count: 1 },
+      { name: 'Джинсы', count: 1 },
+    ]);
+    expect(clothes.facets.categories).toHaveLength(2); // разделы не сужаются своим же фильтром
+
+    const jeans = (
+      await app.inject({
+        url: `/api/brands/diesel/models?category=${encodeURIComponent('Одежда')}&kind=${encodeURIComponent('Джинсы')}`,
+      })
+    ).json();
+    expect(jeans.items).toHaveLength(1);
+    expect(jeans.items[0]).toMatchObject({ category: 'Одежда', kind: 'Джинсы' });
+
+    const none = (await app.inject({ url: '/api/brands/diesel/models?category=Сумки' })).json();
+    expect(none).toMatchObject({ total: 0, items: [] });
   });
 
   it('«Взять фото из 1С»: копирует, не дублирует, не выходит за каталог выгрузки', async () => {

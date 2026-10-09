@@ -304,7 +304,8 @@ const TOP_BRANDS={
 };
 const initials=n=>n.split(/[\s.]+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 /* ───── ДАННЫЕ ИЗ АДМИНКИ (API). Если API недоступен — остаются данные выше ───── */
-const API_BASE='';   // '' — если сайт и API на одном домене; иначе 'https://api.ваш-домен.ru'
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда (витринное API); '' — если сайт и API на одном домене
+const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;  // API отдаёт абсолютные ссылки при заданном PUBLIC_BASE_URL
 const hueOf=n=>[...n].reduce((h,c)=>(h*31+c.charCodeAt(0))%360,7);
 async function loadBrandsFromApi(g){
   try{
@@ -313,7 +314,7 @@ async function loadBrandsFromApi(g){
     const d=await r.json();
     BRANDS_BY_GENDER[g]=d.all.map(b=>b.name);
     TOP_BRANDS[g]=d.top.map(t=>({name:t.name,slug:t.slug,hue:hueOf(t.name),
-      photo:t.photo?API_BASE+t.photo:null,logo:t.logo?API_BASE+t.logo:null}));
+      photo:abs(t.photo),logo:abs(t.logo)}));
     if(g===gender){renderBrandList();renderTopBrands()}
   }catch(e){/* API недоступен — остаются встроенные данные */}
 }

@@ -34,7 +34,7 @@
       <a class="mlink red" href="#" onclick="closeMenu();return false">Распродажа</a>
     </div>
     <div class="mgrp">
-      <div class="mcap">Бренды</div>
+      <a class="mcap" href="brands.html" style="display:block">Бренды</a>
       <a class="mlink" href="#" onclick="closeMenu();return false">Miss Sixty</a>
       <a class="mlink" href="#" onclick="closeMenu();return false">Diesel</a>
       <a class="mlink" href="#" onclick="closeMenu();return false">Annette Görtz</a>
@@ -73,7 +73,7 @@
     <div><b>Fashion Avenue</b>
       <p>Галерея моды в центре Омска. Избранные бренды Италии, Германии и Франции.</p>
       <p>Омск, ул. Маршала Жукова, 65<br>+7 (3812) 390-007</p></div>
-    <div><b>Каталог</b><a href="#">Одежда</a><a href="#">Обувь</a><a href="#">Парфюмерия</a><a href="#">Аксессуары</a><a href="#" style="color:var(--red)">Распродажа</a></div>
+    <div><b>Каталог</b><a href="#">Одежда</a><a href="#">Обувь</a><a href="#">Парфюмерия</a><a href="#">Аксессуары</a><a href="brands.html">Бренды</a><a href="#" style="color:var(--red)">Распродажа</a></div>
     <div><b>Покупателям</b><a href="#">Доставка</a><a href="#">Оплата</a><a href="#">Обмен и возврат</a><a href="#">Клуб FA LOVERS</a></div>
     <div><b>Галерея</b><a href="#">О нас</a><a href="brands.html">Бренды</a><a href="#">Контакты</a><a href="#">Telegram</a></div>
   </div>

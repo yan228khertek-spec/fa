@@ -154,7 +154,7 @@ function render(){
 
 function card(i){
   const img=abs(i.photo);
-  return `<a class="pc" href="#" data-id="${i.id}">
+  return `<a class="pc" href="product.html?id=${i.id}">
     <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}</div>
     <div class="pc-brand">${esc(i.brand?.name||S.brand.name)}</div>
     <div class="pc-title">${esc(i.title)}</div>
@@ -171,12 +171,6 @@ document.getElementById('kinds').addEventListener('click',e=>{
   S.kind=b.dataset.k;load(true);
 });
 document.getElementById('more').addEventListener('click',()=>{if(!S.loading)load(false)});
-document.getElementById('pgrid').addEventListener('click',e=>{
-  const c=e.target.closest('.pc');
-  if(c){e.preventDefault();toast('Страница товара — скоро')}
-});
-
-
 load(true);
 </script>
 </body>

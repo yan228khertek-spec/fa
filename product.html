@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#000000">
+<title>Товар — FASHION AVENUE, Омск</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ═════ СТРАНИЦА ТОВАРА ═════ */
+.pp{max-width:1400px;margin:0 auto;padding:calc(106px + 20px) 12px 60px}
+.crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
+.crumbs a:hover{color:var(--graphite)}
+.pp-body{display:block}
+.gal{min-width:0}
+.gal-main{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;background:var(--soft)}
+.gal-main::-webkit-scrollbar{display:none}
+.gal-main figure{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;margin:0;color:var(--muted);font-size:12px}
+.gal-main img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.gal-thumbs{display:flex;gap:8px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.gal-thumbs::-webkit-scrollbar{display:none}
+.gal-thumbs[hidden]{display:none}
+.gal-thumbs button{flex:0 0 64px;aspect-ratio:3/4;background:var(--soft);border:1px solid transparent;padding:0;opacity:.6}
+.gal-thumbs button.on{border-color:var(--graphite);opacity:1}
+.gal-thumbs img{width:100%;height:100%;object-fit:cover}
+.info{margin-top:22px}
+.pp-brand{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.pp-brand a:hover{text-decoration:underline;text-underline-offset:4px}
+.info h1{font-size:22px;font-weight:600;line-height:1.25;margin-top:8px}
+.pp-art{margin-top:6px;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.pp-price{margin-top:16px;font-size:22px;font-weight:600}
+.pp-price.na{font-size:14px;font-weight:400;color:var(--muted)}
+.pp-stock{margin-top:6px;font-size:13px;color:var(--muted)}
+.pp-stock.out{color:#a33}
+.pp-sec{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.pp-sec h2{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+.sizes{display:flex;flex-wrap:wrap;gap:8px}
+.sz{min-width:46px;padding:10px 12px;border:1px solid var(--line2);font-size:13px;text-align:center}
+.sz.off{color:#b5b3ad;text-decoration:line-through;background:var(--soft)}
+.sz small{display:block;font-size:10.5px;color:var(--muted);text-decoration:none}
+.desc{font-size:14px;line-height:1.6;color:#3a3936;white-space:pre-line}
+.chars{width:100%;border-collapse:collapse;font-size:13.5px}
+.chars td{padding:8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.chars td:first-child{color:var(--muted);width:42%;padding-right:12px}
+.pp-note{margin-top:26px;padding:14px 16px;background:var(--soft);font-size:13px;line-height:1.5;color:#3a3936}
+.pp-state{text-align:center;color:var(--muted);padding:80px 0}
+.pp-state a{text-decoration:underline;text-underline-offset:4px;color:var(--graphite)}
+@media(min-width:900px){
+  .pp{padding:calc(118px + 30px) 24px 80px}
+  .pp-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0 56px;align-items:start}
+  .gal{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:start}
+  .gal-main{order:2}
+  .gal-thumbs{order:1;flex-direction:column;margin:0;overflow:visible}
+  .gal-thumbs button{flex:none;width:72px}
+  .info{margin-top:0;position:sticky;top:130px}
+  .info h1{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<script src="assets/site.js"></script>
+
+<main class="pp">
+  <div class="crumbs" id="crumbs"><a href="brands.html">Бренды</a></div>
+  <div class="pp-state" id="state">Загружаем товар…</div>
+  <div class="pp-body" id="body" hidden>
+    <div class="gal">
+      <div class="gal-main" id="galMain"></div>
+      <div class="gal-thumbs" id="galThumbs"></div>
+    </div>
+    <div class="info">
+      <div class="pp-brand" id="pBrand"></div>
+      <h1 id="pTitle"></h1>
+      <div class="pp-art" id="pArt"></div>
+      <div class="pp-price" id="pPrice"></div>
+      <div class="pp-stock" id="pStock"></div>
+      <div class="pp-sec" id="secSizes" hidden><h2>Размеры</h2><div class="sizes" id="sizes"></div></div>
+      <div class="pp-sec" id="secDesc" hidden><h2>Описание</h2><div class="desc" id="desc"></div></div>
+      <div class="pp-sec" id="secChars" hidden><h2>Характеристики</h2><table class="chars" id="chars"></table></div>
+      <div class="pp-note">Наличие, размеры и примерку уточняйте в бутике FASHION AVENUE, Омск.</div>
+    </div>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<script>
+/* ───── СТРАНИЦА ТОВАРА: карточка из витринного API /api/cards/:id ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const $=id=>document.getElementById(id);
+
+function fail(msg){
+  $('state').innerHTML=esc(msg)+'<br><br><a href="brands.html">Все бренды</a>';
+  $('state').hidden=false;$('body').hidden=true;
+}
+
+function gallery(photos,title){
+  const list=photos.map(abs);
+  $('galMain').innerHTML=list.length
+    ?list.map((u,i)=>`<figure><img src="${esc(u)}" alt="${esc(title)}" ${i?'loading="lazy"':''}></figure>`).join('')
+    :'<figure>Нет фото</figure>';
+  const th=$('galThumbs');
+  th.hidden=list.length<2;
+  th.innerHTML=list.map((u,i)=>`<button data-i="${i}" class="${i?'':'on'}" aria-label="Фото ${i+1}"><img src="${esc(u)}" alt=""></button>`).join('');
+  const main=$('galMain');
+  th.onclick=e=>{const b=e.target.closest('button[data-i]');if(!b)return;
+    main.scrollTo({left:main.clientWidth*b.dataset.i,behavior:'smooth'})};
+  main.onscroll=()=>{
+    const i=Math.round(main.scrollLeft/main.clientWidth);
+    th.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('on',k===i));
+  };
+}
+
+function render(c){
+  const brand=c.brand;
+  document.title=c.title+(brand?' — '+brand.name:'')+' — FASHION AVENUE, Омск';
+  $('crumbs').innerHTML='<a href="brands.html">Бренды</a>'
+    +(brand?' / <a href="brand.html?slug='+encodeURIComponent(brand.slug)+'">'+esc(brand.name)+'</a>':'')
+    +' / <span>'+esc(c.title)+'</span>';
+  $('pBrand').innerHTML=brand?'<a href="brand.html?slug='+encodeURIComponent(brand.slug)+'">'+esc(brand.name)+'</a>':'';
+  $('pTitle').textContent=c.title;
+  $('pArt').textContent=c.article?'Артикул: '+c.article:'';
+  const p=$('pPrice');
+  p.textContent=c.price!=null?rub(c.price):'Цену уточняйте в бутике';
+  p.classList.toggle('na',c.price==null);
+  const st=$('pStock');
+  st.textContent=c.inStock===true?'В наличии':c.inStock===false?'Нет в наличии':'';
+  st.classList.toggle('out',c.inStock===false);
+  gallery(c.photos||[],c.title);
+
+  const sizes=(c.sizes||[]).filter(s=>s.size||s.color);
+  $('secSizes').hidden=!sizes.length;
+  $('sizes').innerHTML=sizes.map(s=>`<div class="sz ${s.inStock===false?'off':''}">${esc(s.size||'—')}${s.color?'<small>'+esc(s.color)+'</small>':''}</div>`).join('');
+  $('secDesc').hidden=!c.description;
+  $('desc').textContent=c.description||'';
+  const ch=c.characteristics||[];
+  $('secChars').hidden=!ch.length;
+  $('chars').innerHTML=ch.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.value)}</td></tr>`).join('');
+  $('state').hidden=true;$('body').hidden=false;
+}
+
+(async()=>{
+  const id=Number(new URLSearchParams(location.search).get('id'));
+  if(!Number.isInteger(id)||id<1)return fail('Товар не найден');
+  try{
+    const r=await fetch(API_BASE+'/api/cards/'+id);
+    if(r.status===404)return fail('Товар не найден или снят с продажи');
+    if(!r.ok)throw new Error(r.status);
+    render(await r.json());
+  }catch(e){fail('Не удалось загрузить товар. Попробуйте обновить страницу.')}
+})();
+</script>
+</body>
+</html>

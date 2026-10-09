@@ -1188,6 +1188,21 @@
           toast('Удалено');
           loadCards();
         };
+        $('#kFrom1c').onclick = async () => {
+          let r;
+          try {
+            r = await api(`/cards/${id}/photos/from-1c`, { method: 'POST' });
+          } catch {
+            return;
+          }
+          toast(
+            r.import.found
+              ? `Из 1С добавлено: ${r.import.added}, пропущено: ${r.import.skipped}`
+              : 'В выгрузке 1С для этой модели фото нет',
+          );
+          await save({});
+          reload();
+        };
         $('#kUp').onchange = async (e) => {
           for (const f of e.target.files) {
             try {

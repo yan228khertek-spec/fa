@@ -81,6 +81,11 @@ describe('админка брендов (HTTP)', () => {
     expect(ui.statusCode).toBe(200);
     expect(ui.headers['content-type']).toContain('text/html');
     expect(ui.body).toContain('FASHION AVENUE');
+    // каждая кнопка диалога карточки должна иметь обработчик в странице
+    for (const id of ['kFrom1c', 'kUp', 'kSave', 'kClose', 'kDel', 'kAddKv']) {
+      expect(ui.body).toContain(`id="${id}"`);
+      expect(ui.body).toMatch(new RegExp(`\\$\\('#${id}'\\)\\.on(click|change)`));
+    }
   });
 
   it('без ADMIN_LOGIN/ADMIN_PASSWORD админки нет, публичное API есть', async () => {

@@ -22,7 +22,9 @@
 .cats button{padding:10px 14px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
 .cats button.on{color:var(--graphite);border-color:var(--graphite)}
-.cats button i{font-style:normal;font-weight:400;color:var(--muted);margin-left:5px;font-size:11px}
+.cats a{padding:10px 14px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.cats a.on{color:var(--graphite);border-color:var(--graphite)}
+.cats a i,.cats button i{font-style:normal;font-weight:400;color:var(--muted);margin-left:5px;font-size:11px}
 .kinds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
 .kinds:empty{display:none}
 .chip{border:1px solid var(--line2);padding:8px 14px;font-size:12.5px;letter-spacing:.04em;transition:.15s}
@@ -50,7 +52,8 @@
   .bp-body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0 48px;align-items:start}
   .cats{flex-direction:column;gap:0;overflow:visible;margin:0;padding:0;border:0;position:sticky;top:130px}
   .cats button{text-align:left;padding:12px 0;font-size:13px;border:0;margin:0}
-  .cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
+  .cats a{text-align:left;padding:12px 0;border:0;margin:0}
+  .cats a.on,.cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
 }
 @media(min-width:1280px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
@@ -132,17 +135,20 @@ function render(){
   document.getElementById('bName').textContent=name;
   document.getElementById('crumb').textContent=name;
   document.getElementById('bCount').textContent=S.sale?'':S.total+' '+plural(S.total,'товар','товара','товаров');
-  const total=S.facets.categories.reduce((a,c)=>a+c.count,0);
-  document.getElementById('cats').innerHTML=
-    (S.facets.categories.length>1||S.category?
-      `<button class="${S.category?'':'on'}" data-c="">Все<i>${total}</i></button>`
-      +S.facets.categories.map(c=>`<button class="${S.category===c.name?'on':''}" data-c="${esc(c.name)}">${esc(c.name)}<i>${c.count}</i></button>`).join('')
-    :'');
-  // типы показываем внутри выбранного раздела; если раздел всего один — сразу
-  const oneCat=S.facets.categories.length<=1;
-  document.getElementById('kinds').innerHTML=(S.category||oneCat)&&(S.facets.kinds.length>1||S.kind)?
-    `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
-    +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}</button>`).join(''):'';
+  // слева: внутри раздела — его типы (туфли, лоферы…), на общей странице — разделы
+  const nav=document.getElementById('cats');
+  if(S.category){
+    const t=S.facets.kinds.reduce((a,k)=>a+k.count,0);
+    nav.innerHTML=S.facets.kinds.length||S.kind?
+      `<button class="${S.kind?'':'on'}" data-k="">Все<i>${t}</i></button>`
+      +S.facets.kinds.map(k=>`<button class="${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}<i>${k.count}</i></button>`).join(''):'';
+  }else{
+    const t=S.facets.categories.reduce((a,c)=>a+c.count,0);
+    nav.innerHTML=S.facets.categories.length>1?
+      `<a href="catalog.html" class="on">Все<i>${t}</i></a>`
+      +S.facets.categories.map(c=>`<a href="catalog.html?category=${encodeURIComponent(c.name)}">${esc(c.name)}<i>${c.count}</i></a>`).join(''):'';
+  }
+  document.getElementById('kinds').innerHTML='';
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
   document.getElementById('state').hidden=S.items.length>0;
   if(!S.items.length)showState(S.sale?'Распродажа скоро откроется. Загляните в разделы каталога.':'В этом разделе пока нет товаров');
@@ -161,10 +167,6 @@ function card(i){
 }
 
 document.getElementById('cats').addEventListener('click',e=>{
-  const b=e.target.closest('button[data-c]');if(!b)return;
-  S.category=b.dataset.c;S.kind='';load(true);
-});
-document.getElementById('kinds').addEventListener('click',e=>{
   const b=e.target.closest('button[data-k]');if(!b)return;
   S.kind=b.dataset.k;load(true);
 });

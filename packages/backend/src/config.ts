@@ -1,3 +1,16 @@
+/** Витринный слой брендов и админка (миграция 004). */
+export interface AdminConfig {
+  /** Basic auth админки. Пусто — админка выключена, публичное API брендов работает. */
+  login: string;
+  password: string;
+  /** Каталог для загруженных фото и логотипов брендов (в проде — volume). */
+  uploadsDir: string;
+  /** Публичный адрес бэкенда (https://…), чтобы API отдавало абсолютные ссылки; пусто — относительные. */
+  publicBaseUrl: string;
+  /** Откуда сайт берёт фото товаров из 1С; по умолчанию `${publicBaseUrl}/images/` (план A2). */
+  imagesBaseUrl: string;
+}
+
 export interface AppConfig {
   port: number;
   host: string;
@@ -19,6 +32,10 @@ export interface AppConfig {
   databaseUrl: string | undefined;
   /** Отключает логгер (тесты). */
   quiet: boolean;
+  /** Админка брендов; не задано — модуль не подключается (старые тесты и dev без неё). */
+  admin?: AdminConfig;
+  /** За reverse-proxy (Caddy): брать адрес клиента из X-Forwarded-For. */
+  trustProxy?: boolean;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -33,5 +50,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     unpackLimit: Number(env.EXCHANGE_UNPACK_LIMIT ?? 2 * 1024 * 1024 * 1024),
     databaseUrl: env.DATABASE_URL || undefined,
     quiet: env.NODE_ENV === 'test',
+    admin: {
+      login: env.ADMIN_LOGIN ?? '',
+      password: env.ADMIN_PASSWORD ?? '',
+      uploadsDir: env.ADMIN_UPLOADS_DIR ?? 'uploads',
+      publicBaseUrl: env.PUBLIC_BASE_URL ?? '',
+      imagesBaseUrl: env.IMAGES_BASE_URL ?? '',
+    },
+    trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
   };
 }

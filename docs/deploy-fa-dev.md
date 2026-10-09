@@ -98,3 +98,30 @@ docker compose -f docker-compose.prod.yml up -d --build
 - Запуск вручную; расписание — после успешной пробной выгрузки.
 
 Диагностика при ошибках обмена: журнал запросов — таблица `exchange_log` (`docker compose … exec db psql -U fa fa -c "SELECT * FROM exchange_log ORDER BY id DESC LIMIT 20"`), access-лог Caddy, логи backend (`docker compose … logs backend`).
+
+## 6. Админка брендов (`/admin`)
+
+Подробности — `docs/admin-brands.md`. Выкатка на уже работающий сервер:
+
+```bash
+ssh user1@45.132.178.101
+cd ~/fa
+git pull
+nano .env     # дописать (шаблон — в .env.production.example):
+              #   ADMIN_LOGIN=fa-admin
+              #   ADMIN_PASSWORD=<openssl rand -base64 18>
+              #   PUBLIC_BASE_URL=https://1c-dev.avenuefashion.online
+docker compose -f docker-compose.prod.yml up -d --build backend
+docker compose -f docker-compose.prod.yml ps
+```
+
+Миграция `004_site_brands.sql` применится сама при старте backend (если задан `ADMIN_LOGIN`) или при первом обращении к API. Пересборка backend не трогает
+БД и spool, но на время рестарта (несколько секунд) приёмник недоступен — не выкатывать во время сеанса обмена с 1С.
+
+Проверка:
+
+- [ ] `curl -s https://1c-dev.avenuefashion.online/api/brands?gender=men` → `{"gender":"men","top":[],"all":[]}`.
+- [ ] `https://1c-dev.avenuefashion.online/admin` просит логин/пароль, после входа открывается «Обзор».
+- [ ] В «Обзоре» нажать «Загрузить список брендов сайта» → API отдаёт 5 топ-брендов и список по разделам.
+- [ ] Загрузить фото одному бренду → `photo` в API — рабочая ссылка `https://…/uploads/<16 hex>.<ext>`.
+- [ ] Volume `uploads` включён в план бэкапов.

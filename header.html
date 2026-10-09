@@ -1,0 +1,48 @@
+<header>
+    <div class="bar">
+        <button class="burger" onclick="openMenu()" aria-label="Меню">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 6h18M3 12h18M3 18h18"/>
+            </svg>
+        </button>
+        <a class="logo" href="index.html">
+            FASHION AVENUE
+            <small>ГАЛЕРЕЯ МОДЫ · ОМСК</small>
+        </a>
+        <div class="icons">
+            <span onclick="toast('Поиск')">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m21 21-4.3-4.3"/>
+                </svg>
+            </span>
+            <span onclick="toast('Корзина')">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                    <path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+            </span>
+        </div>
+    </div>
+</header>
+
+<div class="menu" id="menu">
+    <div class="mtop">
+        <button onclick="closeMenu()"></button>
+    </div>
+    <div class="mscroll">
+        <a class="mlink" href="index.html" onclick="closeMenu()">Новинки</a>
+        <a class="mlink" href="brands.html" onclick="closeMenu()">Бренды</a>
+        <a class="mlink" href="#" onclick="toast('Одежда');return false">Одежда</a>
+        <a class="mlink" href="#" onclick="toast('Обувь');return false">Обувь</a>
+        <a class="mlink" href="#" onclick="toast('Аксессуары');return false">Аксессуары</a>
+        <a class="mlink" href="#" onclick="toast('Распродажа');return false" style="color:var(--red)">Распродажа</a>
+        <a class="mlink" href="#" onclick="toast('Клуб FA LOVERS');return false">Клуб FA LOVERS</a>
+        <a class="mlink" href="#" onclick="toast('Персональный шопинг');return false">Персональный шопинг</a>
+        <a class="mlink" href="#" onclick="toast('Доставка и оплата');return false">Доставка и оплата</a>
+        <a class="mlink" href="#" onclick="toast('Обмен и возврат');return false">Обмен и возврат</a>
+        <a class="mlink" href="#" onclick="toast('О нас');return false">О нас</a>
+        <a class="mlink" href="#" onclick="toast('Контакты');return false">Контакты</a>
+    </div>
+</div>
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>

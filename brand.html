@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#000000">
+<title>Бренд — FASHION AVENUE, Омск</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --graphite:#000; --bg:#fff; --soft:#F2F1EF; --line:#E7E5E2; --line2:#CFCCC8;
+  --muted:#8A8780; --accent:#A38768; --red:#C8452F;
+  --ff:'Cera Pro','Onest',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  --sb:env(safe-area-inset-bottom,0px); --st:env(safe-area-inset-top,0px);
+  --sl:env(safe-area-inset-left,0px); --sr:env(safe-area-inset-right,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--graphite);font-family:var(--ff);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:rgba(0,0,0,.05)}
+a{color:inherit;text-decoration:none}
+button,input{font-family:inherit;font-size:16px}
+button{cursor:pointer;border:none;background:none;color:inherit}
+img{display:block;max-width:100%}
+.wrap{padding:0 calc(12px + var(--sl)) 0 calc(12px + var(--sr))}
+@media(min-width:900px){.wrap{max-width:1600px;margin:0 auto;padding:0 24px}}
+
+/* ═════ ШАПКА ═════ */
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);
+  border-bottom:1px solid var(--line);transition:transform .3s ease;padding-top:var(--st)}
+header.hidden{transform:translateY(-100%)}
+.bar{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;height:72px;position:relative;
+  padding:0 calc(6px + var(--sl)) 0 calc(6px + var(--sr))}
+.ic{width:48px;height:48px;display:grid;place-items:center;color:#000;position:relative}
+.burger{display:block;width:20px;height:14px;position:relative}
+.burger i,.burger i::before,.burger i::after{position:absolute;left:0;width:20px;height:1.6px;background:#000;content:''}
+.burger i{top:6px}.burger i::before{top:-6px}.burger i::after{top:6px}
+.logo{position:absolute;left:50%;transform:translateX(-50%);font-weight:700;font-size:26px;letter-spacing:.07em;white-space:nowrap;text-align:center}
+.logo small{display:block;font-size:7.5px;font-weight:400;letter-spacing:.36em;color:var(--muted);margin-top:2px}
+.right{display:flex;margin-left:auto}
+.right .n{position:absolute;top:8px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#000;color:#fff;
+  font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.gender{display:flex;background:#fff}
+.gender button{flex:1;min-height:46px;font-size:14.5px;font-weight:500;color:var(--muted);position:relative}
+.gender button.on{color:var(--graphite)}
+.gender button.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--graphite)}
+@media(max-width:760px){.bar{height:60px}.logo{font-size:18px;letter-spacing:.1em}.logo small{font-size:6.5px;letter-spacing:.22em}}
+
+/* ═════ МЕНЮ ═════ */
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:95;opacity:0;visibility:hidden;
+  transition:opacity .3s ease,visibility .3s}
+.menu-overlay.on{opacity:1;visibility:visible}
+.menu{position:fixed;top:0;left:0;bottom:0;width:320px;max-width:88vw;background:#fff;z-index:96;display:flex;flex-direction:column;
+  transform:translateX(-100%);visibility:hidden;transition:transform .3s ease,visibility .3s;box-shadow:4px 0 20px rgba(0,0,0,.1)}
+.menu.on{transform:translateX(0);visibility:visible}
+.mtop{display:flex;align-items:center;height:52px;padding:0 8px;padding-top:var(--st);flex:none}
+.mtop button{width:44px;height:44px;display:grid;place-items:center;font-size:24px;color:#000}
+.mtabs{display:flex;gap:22px;padding:6px 18px 0;flex:none;overflow-x:auto;scrollbar-width:none}
+.mtabs::-webkit-scrollbar{display:none}
+.mtabs button{font-size:15px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:#B4B1AC;
+  padding:6px 0 10px;white-space:nowrap;position:relative}
+.mtabs button.on{color:#000}
+.mtabs button.on::after{content:'';position:absolute;left:0;right:0;bottom:4px;height:1.5px;background:#000}
+.mscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 18px calc(24px + var(--sb))}
+.mgrp{margin-bottom:26px}
+.mcap{font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:#000;margin-bottom:14px}
+.mlink{display:block;font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:#000;padding:5px 0}
+.mlink sup{font-size:8.5px;letter-spacing:.08em;vertical-align:super;margin-left:1px}
+.mlink.red{color:var(--red)}
+.mlink:active{opacity:.5}
+.mfoot{flex:none;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px calc(14px + var(--sb));background:#fff}
+.mfoot .l{display:flex;align-items:center;gap:11px;font-size:15px;letter-spacing:.02em;text-transform:uppercase}
+.mfoot .r{font-size:15px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;cursor:pointer}
+
+/* ═════ СТРАНИЦА БРЕНДА ═════ */
+.bp{max-width:1600px;margin:0 auto;padding:calc(106px + 20px) 12px 60px}
+.crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
+.crumbs a:hover{color:var(--graphite)}
+.bp h1{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:center}
+.bp-count{text-align:center;color:var(--muted);font-size:13px;margin:8px 0 24px;min-height:20px}
+.bp-body{display:block}
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -12px 14px;padding:0 12px;border-bottom:1px solid var(--line)}
+.cats::-webkit-scrollbar{display:none}
+.cats button{padding:10px 14px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.cats button.on{color:var(--graphite);border-color:var(--graphite)}
+.cats button i{font-style:normal;font-weight:400;color:var(--muted);margin-left:5px;font-size:11px}
+.kinds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.kinds:empty{display:none}
+.chip{border:1px solid var(--line2);padding:8px 14px;font-size:12.5px;letter-spacing:.04em;transition:.15s}
+.chip:hover{border-color:var(--graphite)}
+.chip.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 10px}
+.pc{display:block}
+.pc-photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:12px}
+.pc-photo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .5s ease}
+.pc:hover .pc-photo img{transform:scale(1.03)}
+.pc-brand{margin-top:12px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.pc-title{margin-top:3px;font-size:13px;line-height:1.35;color:#3a3936;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-price{margin-top:6px;font-size:13.5px;font-weight:500}
+.bp-state{text-align:center;color:var(--muted);padding:56px 0}
+.more[hidden]{display:none}
+.more{display:block;margin:34px auto 0;padding:15px 38px;border:1px solid var(--graphite);
+  font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.more:hover{background:var(--graphite);color:#fff}
+@media(min-width:700px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 16px}}
+@media(min-width:900px){
+  .bp{padding:calc(118px + 30px) 24px 80px}
+  .bp h1{font-size:34px}
+  .bp-body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0 48px;align-items:start}
+  .cats{flex-direction:column;gap:0;overflow:visible;margin:0;padding:0;border:0;position:sticky;top:130px}
+  .cats button{text-align:left;padding:12px 0;font-size:13px;border:0;margin:0}
+  .cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
+}
+@media(min-width:1280px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* ═════ COOKIE ═════ */
+.cookie{position:fixed;left:0;right:0;bottom:0;z-index:98;background:#fff;border-top:1px solid var(--line);
+  padding:22px 18px calc(20px + var(--sb));box-shadow:0 -18px 44px rgba(0,0,0,.14);display:none}
+.cookie.on{display:block}
+.cookie p{font-size:14px;line-height:1.55;margin-bottom:18px}
+.cookie p a{border:1px solid var(--graphite);padding:2px 7px;font-weight:600;white-space:nowrap;display:inline-block}
+.cookie .b{display:block;width:100%;min-height:52px;background:var(--graphite);color:#fff;font-size:12.5px;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px;line-height:52px;text-align:center}
+.cookie .b.line{background:#fff;color:var(--graphite);border:1px solid var(--graphite)}
+.cookie .b:last-child{margin-bottom:0}
+@media(min-width:900px){.cookie{padding:30px 40px 34px}.cookie p{max-width:900px;margin:0 auto 22px}
+  .cookie .btns{display:flex;gap:12px;max-width:900px;margin:0 auto}.cookie .b{margin-bottom:0}}
+.cdim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:97;display:none}
+.cdim.on{display:block}
+
+/* ═════ ПОДВАЛ ═════ */
+footer{border-top:1px solid var(--line);margin-top:44px;padding:30px 0 calc(34px + var(--sb));font-size:13px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+footer b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:11px}
+footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
+.legal{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.6}
+@media(min-width:900px){.fg{grid-template-columns:1.6fr repeat(3,1fr);gap:34px}}
+
+.toast{position:fixed;left:14px;right:14px;bottom:calc(16px + var(--sb));background:var(--graphite);color:#fff;padding:14px 18px;
+  font-size:13px;text-align:center;z-index:99;opacity:0;transform:translateY(60px);transition:.28s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+@media(min-width:900px){.toast{left:50%;right:auto;transform:translate(-50%,60px);max-width:420px}.toast.on{transform:translate(-50%,0)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <button class="ic" onclick="openMenu()" aria-label="Меню"><span class="burger"><i></i></span></button>
+    <a class="logo" href="#">FASHION AVENUE<small>ГАЛЕРЕЯ МОДЫ · ОМСК</small></a>
+    <div class="right">
+      <button class="ic" onclick="toast('Поиск по каталогу')" aria-label="Поиск"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+      <button class="ic" onclick="toast('Корзина')" aria-label="Корзина"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="n" id="cnt" style="display:none">0</span></button>
+    </div>
+  </div>
+  <div class="gender">
+    <button onclick="sw(this)">Мужское</button>
+    <button class="on" onclick="sw(this)">Женское</button>
+  </div>
+</header>
+
+<!-- МЕНЮ -->
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+<div class="menu" id="menu">
+  <div class="mtop"><button onclick="closeMenu()" aria-label="Закрыть">‹</button></div>
+  <div class="mtabs">
+    <button class="on" onclick="mtab(this)">Женщины</button>
+    <button onclick="mtab(this)">Мужчины</button>
+    <button onclick="mtab(this)">Парфюмерия</button>
+  </div>
+  <div class="mscroll">
+    <div class="mgrp">
+      <a class="mlink" href="#" onclick="closeMenu();return false">Новинки</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Осень — зима 2026<sup>новое</sup></a>
+      <a class="mlink red" href="#" onclick="closeMenu();return false">Распродажа</a>
+    </div>
+    <div class="mgrp">
+      <div class="mcap">Бренды</div>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Miss Sixty</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Diesel</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Annette Görtz</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Marina Rinaldi</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Karl Lagerfeld</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Все бренды</a>
+    </div>
+    <div class="mgrp">
+      <div class="mcap">Каталог</div>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Верхняя одежда</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Трикотаж</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Платья</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Рубашки | блузы</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Джинсы | брюки</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Юбки</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Футболки | лонгсливы</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Обувь</a>
+      <a class="mlink" href="#" onclick="closeMenu();return false">Сумки | аксессуары</a>
+    </div>
+    <div class="mgrp">
+      <div class="mcap">Галерея</div>
+      <a class="mlink" href="#" onclick="toast('Персональный шопинг');return false">Персональный шопинг<sup>новое</sup></a>
+      <a class="mlink" href="#" onclick="toast('Клуб FA LOVERS');return false">Клуб FA LOVERS</a>
+      <a class="mlink" href="#" onclick="toast('Доставка и оплата');return false">Доставка и оплата</a>
+      <a class="mlink" href="#" onclick="toast('Обмен и возврат');return false">Обмен и возврат</a>
+      <a class="mlink" href="#" onclick="toast('Раздел «О нас»');return false">О нас</a>
+    </div>
+  </div>
+  <div class="mfoot">
+    <span class="l"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Профиль</span>
+    <span class="r" onclick="toast('Чат с менеджером')">Чат</span>
+  </div>
+</div>
+
+<main class="bp">
+  <div class="crumbs"><a href="brands.html">Бренды</a> / <span id="crumb">…</span></div>
+  <h1 id="bName">&nbsp;</h1>
+  <div class="bp-count" id="bCount"></div>
+  <div class="bp-body">
+    <nav class="cats" id="cats" aria-label="Разделы"></nav>
+    <div>
+      <div class="kinds" id="kinds"></div>
+      <div class="pgrid" id="pgrid"></div>
+      <div class="bp-state" id="state">Загружаем товары…</div>
+      <button class="more" id="more" hidden>Показать ещё</button>
+    </div>
+  </div>
+</main>
+
+<footer><div class="wrap">
+  <div class="fg">
+    <div><b>Fashion Avenue</b>
+      <p>Галерея моды в центре Омска. Избранные бренды Италии, Германии и Франции.</p>
+      <p>Омск, ул. Маршала Жукова, 65<br>+7 (3812) 390-007</p></div>
+    <div><b>Каталог</b><a href="#">Одежда</a><a href="#">Обувь</a><a href="#">Парфюмерия</a><a href="#">Аксессуары</a><a href="#" style="color:var(--red)">Распродажа</a></div>
+    <div><b>Покупателям</b><a href="#">Доставка</a><a href="#">Оплата</a><a href="#">Обмен и возврат</a><a href="#">Клуб FA LOVERS</a></div>
+    <div><b>Галерея</b><a href="#">О нас</a><a href="#">Бренды</a><a href="#">Контакты</a><a href="#">Telegram</a></div>
+  </div>
+  <div class="legal">© 2026 Fashion Avenue · Политика конфиденциальности · Согласие на обработку персональных данных · Публичная оферта<br>Персональные данные обрабатываются на серверах в России в соответствии с 152-ФЗ</div>
+</div></footer>
+
+<!-- COOKIE -->
+<div class="cdim" id="cdim"></div>
+<div class="cookie" id="cookie">
+  <p>Мы используем собственные и сторонние файлы cookie, чтобы понимать, как используется наш магазин, улучшать его работу и подбирать для вас содержимое. Вы можете принять их все, отклонить необязательные или настроить по своему усмотрению. Подробнее — <a href="#" onclick="toast('Политика использования cookie');return false">Политика cookie</a></p>
+  <div class="btns">
+    <button class="b" onclick="ck('Все файлы cookie приняты')">Принять все cookie</button>
+    <button class="b" onclick="ck('Необязательные cookie отклонены')">Отклонить необязательные</button>
+    <button class="b line" onclick="toast('Настройки cookie по категориям')">Настройки cookie</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ───── СТРАНИЦА БРЕНДА: товары бренда из витринного API, фильтры «раздел» и «тип» ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
+const PAGE=24;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const plural=(n,a,b,c)=>{const m=n%100,d=n%10;return (m>10&&m<15)?c:d===1?a:(d>1&&d<5)?b:c};
+
+const q=new URLSearchParams(location.search);
+const S={slug:q.get('slug')||'',category:q.get('category')||'',kind:q.get('kind')||'',
+  items:[],total:0,facets:{categories:[],kinds:[]},brand:null,loading:false,seq:0};
+
+function syncUrl(){
+  const p=new URLSearchParams();
+  p.set('slug',S.slug);
+  if(S.category)p.set('category',S.category);
+  if(S.kind)p.set('kind',S.kind);
+  history.replaceState(null,'','?'+p.toString());
+}
+
+async function load(reset){
+  if(!S.slug){showState('Бренд не указан. Выберите его на странице «Бренды».');return}
+  const my=++S.seq;
+  S.loading=true;
+  if(reset){S.items=[];document.getElementById('more').hidden=true;showState('Загружаем товары…')}
+  const url=`${API_BASE}/api/brands/${encodeURIComponent(S.slug)}/models?limit=${PAGE}&offset=${S.items.length}`
+    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'');
+  try{
+    const r=await fetch(url);
+    if(my!==S.seq)return;
+    if(r.status===404){showState('Такого бренда нет');document.getElementById('bName').textContent='';return}
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    if(my!==S.seq)return;
+    S.brand=d.brand;S.total=d.total;S.facets=d.facets;
+    S.items=S.items.concat(d.items);
+    // выбранный фильтр мог исчезнуть (товар раскупили) — сбрасываем и грузим заново
+    if(S.category&&!d.facets.categories.some(c=>c.name===S.category)){S.category='';S.kind='';return load(true)}
+    if(S.kind&&!d.facets.kinds.some(k=>k.name===S.kind)){S.kind='';return load(true)}
+    render();
+  }catch(e){
+    if(my===S.seq)showState('Не удалось загрузить товары. Попробуйте обновить страницу.');
+  }finally{if(my===S.seq)S.loading=false}
+}
+
+function showState(t){
+  const el=document.getElementById('state');el.textContent=t;el.hidden=false;
+  if(!S.items.length)document.getElementById('pgrid').innerHTML='';
+}
+
+function render(){
+  const name=S.brand.name;
+  document.title=name+' — FASHION AVENUE, Омск';
+  document.getElementById('bName').textContent=name;
+  document.getElementById('crumb').textContent=name;
+  document.getElementById('bCount').textContent=S.total+' '+plural(S.total,'товар','товара','товаров');
+  const total=S.facets.categories.reduce((a,c)=>a+c.count,0);
+  document.getElementById('cats').innerHTML=
+    (S.facets.categories.length>1||S.category?
+      `<button class="${S.category?'':'on'}" data-c="">Все<i>${total}</i></button>`
+      +S.facets.categories.map(c=>`<button class="${S.category===c.name?'on':''}" data-c="${esc(c.name)}">${esc(c.name)}<i>${c.count}</i></button>`).join('')
+    :'');
+  // типы показываем внутри выбранного раздела — на «Все» их слишком много
+  document.getElementById('kinds').innerHTML=S.category&&(S.facets.kinds.length>1||S.kind)?
+    `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
+    +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}</button>`).join(''):'';
+  document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
+  document.getElementById('state').hidden=S.items.length>0;
+  if(!S.items.length)showState('В этом разделе пока нет товаров');
+  document.getElementById('more').hidden=S.items.length>=S.total;
+  syncUrl();
+}
+
+function card(i){
+  const img=abs(i.photo);
+  return `<a class="pc" href="#" data-id="${i.id}">
+    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}</div>
+    <div class="pc-brand">${esc(i.brand?.name||S.brand.name)}</div>
+    <div class="pc-title">${esc(i.title)}</div>
+    ${i.price!=null?`<div class="pc-price">${rub(i.price)}</div>`:''}
+  </a>`;
+}
+
+document.getElementById('cats').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-c]');if(!b)return;
+  S.category=b.dataset.c;S.kind='';load(true);
+});
+document.getElementById('kinds').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-k]');if(!b)return;
+  S.kind=b.dataset.k;load(true);
+});
+document.getElementById('more').addEventListener('click',()=>{if(!S.loading)load(false)});
+document.getElementById('pgrid').addEventListener('click',e=>{
+  const c=e.target.closest('.pc');
+  if(c){e.preventDefault();toast('Страница товара — скоро')}
+});
+
+/* ───── ШАПКА/МЕНЮ: на странице бренда пол не влияет на выдачу ───── */
+function sw(b){document.querySelectorAll('.gender button').forEach(x=>x.classList.toggle('on',x===b))}
+function mtab(b){[...b.parentNode.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')}
+
+/* ───── МЕНЮ, COOKIE, TOAST ───── */
+function openMenu(){
+  document.getElementById('menu').classList.add('on');
+  document.getElementById('menuOverlay').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeMenu(){
+  document.getElementById('menu').classList.remove('on');
+  document.getElementById('menuOverlay').classList.remove('on');
+  document.body.style.overflow='';
+}
+function ck(m){
+  document.getElementById('cookie').classList.remove('on');
+  document.getElementById('cdim').classList.remove('on');
+  toast(m);
+}
+let tt;
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+setTimeout(()=>{
+  document.getElementById('cookie').classList.add('on');
+  document.getElementById('cdim').classList.add('on');
+},700);
+(function(){
+  const header=document.querySelector('header');
+  let lastY=0;
+  addEventListener('scroll',()=>{
+    const y=scrollY;
+    if(y>lastY&&y>80)header.classList.add('hidden');
+    else if(y<lastY)header.classList.remove('hidden');
+    if(y<=0)header.classList.remove('hidden');
+    lastY=y;
+  },{passive:true});
+})();
+
+load(true);
+</script>
+</body>
+</html>

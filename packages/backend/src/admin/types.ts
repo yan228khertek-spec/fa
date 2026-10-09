@@ -111,6 +111,8 @@ export interface CatalogReader {
   listModels(): Promise<CatalogModel[]>;
   /** Размеры, остатки и цены моделей — только то, что есть в staging. */
   liveData(): Promise<Map<string, LiveModel>>;
+  /** Пути фото модели из выгрузки 1С (по порядку, без повторов). */
+  modelImages(modelId: string): Promise<string[]>;
   exchangeStatus(): Promise<ExchangeStatus>;
   close(): Promise<void>;
 }

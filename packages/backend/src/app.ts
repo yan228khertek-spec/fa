@@ -1,3 +1,4 @@
+import path from 'node:path';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { loadConfig, type AppConfig } from './config.js';
 import { exchangePlugin } from './exchange/plugin.js';
@@ -84,6 +85,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       admin: config.admin,
       service,
       cards: new CardService(cardRepo, catalogReader, service),
+      unpackedDir: path.join(config.spoolDir, 'unpacked'),
     });
   }
 

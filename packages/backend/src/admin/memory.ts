@@ -123,7 +123,12 @@ export class MemoryCatalogReader implements CatalogReader {
   constructor(
     public models: CatalogModel[] = [],
     public live = new Map<string, LiveModel>(),
+    public images = new Map<string, string[]>(),
   ) {}
+
+  async modelImages(modelId: string): Promise<string[]> {
+    return [...(this.images.get(modelId) ?? [])];
+  }
 
   async liveData(): Promise<Map<string, LiveModel>> {
     return structuredClone(this.live);

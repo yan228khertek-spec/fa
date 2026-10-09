@@ -1117,6 +1117,7 @@
     <div class="fld"><label>Название на сайте (пусто — как в 1С)</label><input type="text" id="kTitle" maxlength="200" value="${esc(c.title || '')}"></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
+      <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
       <p class="hint">JPEG, PNG, WebP или AVIF до 8 МБ. Для публикации нужно хотя бы одно фото.</p></div>
     <div class="fld"><label>Описание</label><textarea id="kDesc" style="min-height:140px">${esc(c.description)}</textarea></div>
     <div class="fld"><label>Характеристики</label><div id="kKv">${kv}</div><button class="btn ghost sm" id="kAddKv">+ Добавить строку</button></div>

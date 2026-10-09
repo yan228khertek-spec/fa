@@ -371,6 +371,19 @@ export class PgCatalogReader implements CatalogReader {
     }));
   }
 
+  async modelImages(modelId: string): Promise<string[]> {
+    const { rows } = await this.pool.query<{ path: string }>(
+      `SELECT path FROM (
+         SELECT DISTINCT ON (path) path, (owner_kind = 'product') AS own, sort_order
+           FROM product_images_meta
+          WHERE source = $1 AND split_part(owner_source_id, '#', 1) = $2
+          ORDER BY path
+       ) i ORDER BY own DESC, sort_order, path`,
+      [SOURCE, modelId],
+    );
+    return rows.map((r) => r.path);
+  }
+
   async liveData(): Promise<Map<string, LiveModel>> {
     const out = new Map<string, LiveModel>();
     const variants = await this.rowsOrEmpty<{

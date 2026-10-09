@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
@@ -239,6 +239,38 @@ describe('карточки товаров (HTTP)', () => {
     expect(
       (await app.inject({ url: `/admin/api/cards/${card.id}`, headers: auth })).statusCode,
     ).toBe(404);
+  });
+
+  it('«Взять фото из 1С»: копирует, не дублирует, не выходит за каталог выгрузки', async () => {
+    const unpacked = path.join(dir, 'spool', 'unpacked', 'import_files', 'ab');
+    await mkdir(unpacked, { recursive: true });
+    await writeFile(path.join(unpacked, 'a.jpg'), png(1));
+    await writeFile(path.join(unpacked, 'b.jpg'), png(2));
+    await writeFile(path.join(unpacked, 'text.jpg'), 'не картинка');
+    await writeFile(path.join(dir, 'secret.png'), png(9));
+    catalog.images.set('m1', [
+      'import_files/ab/a.jpg',
+      'import_files/ab/b.jpg',
+      'import_files/ab/text.jpg',
+      'import_files/ab/missing.jpg',
+      '../../secret.png',
+    ]);
+    const card = (await post('/admin/api/cards', { modelId: 'm1' })).json();
+    const url = `/admin/api/cards/${card.id}/photos/from-1c`;
+
+    const first = await post(url);
+    expect(first.statusCode).toBe(200);
+    expect(first.json().import).toEqual({ found: 5, added: 2, skipped: 2 });
+    expect(first.json().photos).toHaveLength(2);
+
+    const again = await post(url); // повтор ничего не добавляет
+    expect(again.json().import).toMatchObject({ added: 0 });
+    expect(again.json().photos).toHaveLength(2);
+
+    const none = (await post('/admin/api/cards', { modelId: 'm2' })).json();
+    const empty = await post(`/admin/api/cards/${none.id}/photos/from-1c`);
+    expect(empty.json().import).toEqual({ found: 0, added: 0, skipped: 0 });
+    expect((await post('/admin/api/cards/999/photos/from-1c')).statusCode).toBe(404);
   });
 
   it('валидация полей', async () => {

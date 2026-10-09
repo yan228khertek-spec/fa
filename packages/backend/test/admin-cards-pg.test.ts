@@ -178,6 +178,30 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
     expect(left.rowCount).toBe(0); // фото удалены каскадом
   });
 
+  it('фото модели из выгрузки 1С собираются по всем SKU без повторов', async () => {
+    const withImages: ImportSpec = {
+      products: [
+        { id: 'm1#a', name: 'Джемпер Diesel красный, 46', images: ['import_files/aa/1.jpg'] },
+        {
+          id: 'm1#b',
+          name: 'Джемпер Diesel красный, 48',
+          images: ['import_files/aa/1.jpg', 'import_files/aa/2.jpg'],
+        },
+        { id: 'm2#a', name: 'Платье без бренда, 42' },
+      ],
+    };
+    const catalog = new PgCatalogRepository(url as string);
+    const file = path.join(dir, 'import2.xml');
+    await writeImportXml(file, buildImportXml(withImages));
+    await importCatalogFile(catalog, file, 'import2.xml');
+    await catalog.close();
+    expect((await reader.modelImages('m1')).sort()).toEqual([
+      'import_files/aa/1.jpg',
+      'import_files/aa/2.jpg',
+    ]);
+    expect(await reader.modelImages('m2')).toEqual([]);
+  });
+
   it('автокомплит ищет по названию staging', async () => {
     const hits = await cards.search('платье');
     expect(hits.map((h) => h.id)).toEqual(['m2']);

@@ -322,6 +322,13 @@ export class CardService {
     };
   }
 
+  /** Пути фото модели в выгрузке 1С (для кнопки «Взять фото из 1С»). */
+  async sourceImages(cardId: number): Promise<string[]> {
+    const card = await this.repo.getCard(cardId);
+    if (!card) throw new AdminError('Карточка не найдена', 404);
+    return this.catalog.modelImages(card.modelId);
+  }
+
   async photoCount(cardId: number): Promise<number> {
     const card = await this.repo.getCard(cardId);
     if (!card) throw new AdminError('Карточка не найдена', 404);

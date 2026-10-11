@@ -144,7 +144,7 @@ function render(){
       +S.facets.kinds.map(k=>`<button class="${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(faKind(k.name))}<i>${k.count}</i></button>`).join(''):'';
   }else{
     const t=S.facets.categories.reduce((a,c)=>a+c.count,0);
-    nav.innerHTML=S.facets.categories.length>1?
+    nav.innerHTML=S.facets.categories.length?
       `<a href="catalog.html" class="on">Все<i>${t}</i></a>`
       +S.facets.categories.map(c=>`<a href="catalog.html?category=${encodeURIComponent(c.name)}">${esc(c.name)}<i>${c.count}</i></a>`).join(''):'';
   }

@@ -54,6 +54,7 @@ export class MemorySiteBrandRepository implements SiteBrandRepository {
       photo: null,
       logo: null,
       placements: structuredClone(input.placements),
+      home: input.home,
     };
     this.brands.set(brand.id, brand);
     return clone(brand);
@@ -66,6 +67,7 @@ export class MemorySiteBrandRepository implements SiteBrandRepository {
     if (patch.slug !== undefined) b.slug = patch.slug;
     if (patch.aliases !== undefined) b.aliases = [...patch.aliases];
     if (patch.placements !== undefined) b.placements = structuredClone(patch.placements);
+    if (patch.home !== undefined) b.home = patch.home;
     return clone(b);
   }
 

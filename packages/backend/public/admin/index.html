@@ -862,7 +862,7 @@
               (b) => `<tr class="click" data-id="${b.id}">
     <td>${b.logo ? `<img class="thumb round" src="${esc(b.logo)}" alt="">` : '<div class="thumb round"></div>'}</td>
     <td><b>${esc(b.name)}</b><div class="muted" style="font-size:12px">/${esc(b.slug)}${b.aliases.length ? ' · ' + esc(b.aliases.join(', ')) : ''}</div></td>
-    <td>${['men', 'women'].map((g) => (b.placements[g].in ? `<span class="tag ${b.placements[g].top ? 'top' : ''}">${GN[g]}${b.placements[g].top ? ' · топ' : ''}</span>` : '')).join('') || '<span class="muted">не в разделах</span>'}</td>
+    <td>${['men', 'women'].map((g) => (b.placements[g].in ? `<span class="tag ${b.placements[g].top ? 'top' : ''}">${GN[g]}${b.placements[g].top ? ' · топ' : ''}</span>` : '')).join('') || '<span class="muted">не в разделах</span>'}${b.home ? ' <span class="tag top">на главной</span>' : ''}</td>
     <td>${b.models}</td>
     <td>${b.photo ? '<span class="ok">✓</span>' : '<span class="muted">—</span>'}</td></tr>`,
             )
@@ -887,6 +887,7 @@
               photo: null,
               logo: null,
               models: 0,
+              home: false,
               placements: {
                 men: { in: false, top: false, sort: 0 },
                 women: { in: false, top: false, sort: 0 },
@@ -920,6 +921,8 @@
       <textarea id="fAliases" placeholder="Например: Shumacher">${esc(b.aliases.join('\n'))}</textarea>
       <p class="hint">Ищутся как целые слова, без учёта регистра и диакритики. Чем длиннее совпадение, тем оно главнее.</p></div>
     <div class="fld"><label>Где показывать</label><div class="pl">${pl('men')}${pl('women')}</div></div>
+    <div class="fld"><label><input type="checkbox" id="fHome" ${b.home ? 'checked' : ''}> Показывать на главной странице</label>
+      <p class="hint">На главной появится блок с последними опубликованными карточками бренда (до 4 штук; одновременно показываются не более трёх брендов). Бренд без опубликованных карточек в блок не попадает.</p></div>
     ${images}
     <div class="fld"><label>Адрес страницы бренда: /brands/…</label>
       <input type="text" id="fSlug" maxlength="80" value="${esc(b.slug)}" placeholder="по умолчанию — из названия"></div>
@@ -942,6 +945,7 @@
               .value.split('\n')
               .filter((s) => s.trim()),
             placements,
+            home: $('#fHome').checked,
           };
           const slug = $('#fSlug').value.trim();
           if (slug && slug !== b.slug) payload.slug = slug;

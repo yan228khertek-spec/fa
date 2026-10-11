@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { SOURCE } from '../db/upsert.js';
+import { SITE_BRAND_HOME_DDL } from './home-schema.js';
 import { SITE_BRANDS_DDL } from './schema.js';
 import {
   AdminError,
@@ -24,6 +25,7 @@ interface BrandRow {
   name: string;
   photo_file: string | null;
   logo_file: string | null;
+  show_on_home: boolean;
 }
 
 function conflict(err: unknown): never {
@@ -110,17 +112,20 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
 
   ready(): Promise<void> {
     // Миграция идемпотентна (CREATE … IF NOT EXISTS); при неудаче пробуем заново.
-    this.prepared ??= this.pool.query(SITE_BRANDS_DDL).catch((err: unknown) => {
-      this.prepared = undefined;
-      throw err;
-    });
+    this.prepared ??= this.pool
+      .query(SITE_BRANDS_DDL)
+      .then(() => this.pool.query(SITE_BRAND_HOME_DDL))
+      .catch((err: unknown) => {
+        this.prepared = undefined;
+        throw err;
+      });
     return this.prepared.then(() => undefined);
   }
 
   private async brandsWhere(where: string, params: unknown[]): Promise<SiteBrand[]> {
     await this.ready();
     const { rows } = await this.pool.query<BrandRow>(
-      `SELECT id::text, slug, name, photo_file, logo_file FROM site_brands ${where} ORDER BY name, id`,
+      `SELECT id::text, slug, name, photo_file, logo_file, show_on_home FROM site_brands ${where} ORDER BY name, id`,
       params,
     );
     if (!rows.length) return [];
@@ -155,6 +160,7 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
         photo: r.photo_file,
         logo: r.logo_file,
         placements,
+        home: r.show_on_home,
       };
     });
   }
@@ -174,8 +180,8 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
     try {
       const id = await inTx(this.pool, async (c) => {
         const { rows } = await c.query<{ id: string }>(
-          'INSERT INTO site_brands (slug, name) VALUES ($1, $2) RETURNING id::text',
-          [input.slug, input.name],
+          'INSERT INTO site_brands (slug, name, show_on_home) VALUES ($1, $2, $3) RETURNING id::text',
+          [input.slug, input.name, input.home],
         );
         const newId = Number(rows[0]!.id);
         await writeAliases(c, newId, input.aliases);
@@ -193,9 +199,10 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
     try {
       await inTx(this.pool, async (c) => {
         const { rowCount } = await c.query(
-          `UPDATE site_brands SET name = coalesce($2, name), slug = coalesce($3, slug), updated_at = now()
+          `UPDATE site_brands SET name = coalesce($2, name), slug = coalesce($3, slug),
+             show_on_home = coalesce($4, show_on_home), updated_at = now()
            WHERE id = $1`,
-          [id, patch.name ?? null, patch.slug ?? null],
+          [id, patch.name ?? null, patch.slug ?? null, patch.home ?? null],
         );
         if (!rowCount) throw new AdminError('Бренд не найден', 404);
         if (patch.aliases) await writeAliases(c, id, patch.aliases);

@@ -217,6 +217,38 @@ describe('карточки товаров (HTTP)', () => {
     expect(models).toMatchObject({ brand: { slug: 'diesel' }, total: 1, items: [{ id: a.id }] });
   });
 
+  it('главная: бренды с флагом «Показывать на главной» и их опубликованные карточки', async () => {
+    const empty = await app.inject({ url: '/api/home' });
+    expect(empty.json()).toEqual({ brands: [] });
+    expect(empty.headers['access-control-allow-origin']).toBe('*');
+
+    const brand = (await post('/admin/api/brands', { name: 'Diesel' })).json();
+    expect(brand.home).toBe(false);
+    const card = (await post('/admin/api/cards', { modelId: 'm1' })).json();
+    await upload(card.id, png(1));
+    await put(`/admin/api/cards/${card.id}`, { status: 'published' });
+    // флага нет — на главной пусто, даже если карточка опубликована
+    expect((await app.inject({ url: '/api/home' })).json()).toEqual({ brands: [] });
+
+    const on = await put(`/admin/api/brands/${brand.id}`, { home: true });
+    expect(on.json().home).toBe(true);
+    const home = (await app.inject({ url: '/api/home' })).json();
+    expect(home).toMatchObject({
+      brands: [{ name: 'Diesel', slug: 'diesel', total: 1, items: [{ id: card.id, price: 5990 }] }],
+    });
+    expect(home.brands[0].items[0].photo).toMatch(/^https:\/\/api\.example\.test\/uploads\//);
+
+    // бренд без видимых карточек в блок не попадает
+    const other = (await post('/admin/api/brands', { name: 'Zara', home: true })).json();
+    expect(other.home).toBe(true);
+    expect((await app.inject({ url: '/api/home' })).json().brands).toHaveLength(1);
+
+    // снятие флага убирает блок; неверный тип — 400
+    await put(`/admin/api/brands/${brand.id}`, { home: false });
+    expect((await app.inject({ url: '/api/home' })).json()).toEqual({ brands: [] });
+    expect((await put(`/admin/api/brands/${brand.id}`, { home: 'yes' })).statusCode).toBe(400);
+  });
+
   it('загрузка фото: только картинки по сигнатуре, лимит, удаление чистит файлы', async () => {
     const card = (await post('/admin/api/cards', { modelId: 'm1' })).json();
     const bad = await upload(card.id, Buffer.from('<svg onload=alert(1)>'));

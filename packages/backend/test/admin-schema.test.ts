@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SITE_CARDS_DDL } from '../src/admin/cards-schema.js';
+import { SITE_BRAND_HOME_DDL } from '../src/admin/home-schema.js';
 import { SITE_BRANDS_DDL } from '../src/admin/schema.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -48,5 +49,17 @@ describe('миграция 005 и SITE_CARDS_DDL', () => {
     }
     expect(SITE_CARDS_DDL).not.toMatch(/\bDROP\b/i);
     expect(SITE_CARDS_DDL).not.toMatch(/REFERENCES\s+(products|product_variants|offers)\b/);
+  });
+});
+
+describe('миграция 006 и SITE_BRAND_HOME_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/006', async () => {
+    const file = await readFile(path.join(root, 'migrations', '006_site_brand_home.sql'), 'utf8');
+    expect(normalize(SITE_BRAND_HOME_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и ничего не удаляет', () => {
+    expect(SITE_BRAND_HOME_DDL).toContain('ADD COLUMN IF NOT EXISTS show_on_home');
+    expect(SITE_BRAND_HOME_DDL).not.toMatch(/\bDROP\b/i);
   });
 });

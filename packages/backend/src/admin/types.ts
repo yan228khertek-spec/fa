@@ -25,6 +25,8 @@ export interface SiteBrand {
   photo: string | null;
   logo: string | null;
   placements: Placements;
+  /** Бренд выводится отдельным блоком на главной странице сайта. */
+  home: boolean;
 }
 
 export interface NewBrand {
@@ -32,6 +34,7 @@ export interface NewBrand {
   slug: string;
   aliases: string[];
   placements: Placements;
+  home: boolean;
 }
 
 /** Всё необязательное; placements — итоговые значения (слияние делает сервис). */
@@ -40,6 +43,7 @@ export interface BrandPatch {
   slug?: string;
   aliases?: string[];
   placements?: Placements;
+  home?: boolean;
 }
 
 /** Модель каталога: «Ид товара до #». Название — из products либо из названий SKU. */

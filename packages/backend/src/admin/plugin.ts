@@ -97,6 +97,19 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       return { brand, total: res.total, facets: res.facets, items: res.items.map(publicItem) };
     });
 
+    // Главная страница: бренды с флагом «Показывать на главной» и их последние карточки
+    pub.get('/api/home', async (_req, reply) => {
+      const sections = await cards.homeSections();
+      reply.header('cache-control', 'public, max-age=30');
+      return {
+        brands: sections.map((s) => ({
+          ...s.brand,
+          total: s.total,
+          items: s.items.map(publicItem),
+        })),
+      };
+    });
+
     pub.get('/api/cards', async (req, reply) => {
       const { limit, offset } = page(req.query as { limit?: string; offset?: string }, 100, 24);
       const { category, kind } = req.query as { category?: string; kind?: string };

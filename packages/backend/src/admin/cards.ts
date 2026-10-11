@@ -344,6 +344,32 @@ export class CardService {
     };
   }
 
+  /**
+   * Блоки главной страницы: бренды с флагом «Показывать на главной» и их последние
+   * опубликованные карточки. Бренд без видимых карточек в блок не попадает.
+   */
+  async homeSections(
+    perBrand = 4,
+    maxBrands = 3,
+  ): Promise<{ brand: BrandRef; total: number; items: PublicCardItem[] }[]> {
+    const brands = (await this.brands.repo.listBrands())
+      .filter((b) => b.home)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    if (!brands.length) return [];
+    const items = (await this.visibleCards()).map((x) => this.item(x));
+    return brands
+      .map((b) => {
+        const mine = items.filter((i) => i.brand?.slug === b.slug);
+        return {
+          brand: { name: b.name, slug: b.slug },
+          total: mine.length,
+          items: mine.slice(0, perBrand),
+        };
+      })
+      .filter((s) => s.items.length)
+      .slice(0, maxBrands);
+  }
+
   async publicCard(id: number): Promise<PublicCardDetail | null> {
     const x = (await this.visibleCards()).find((c) => c.card.id === id);
     if (!x) return null;

@@ -18,6 +18,7 @@ export interface BrandInput {
   slug?: unknown;
   aliases?: unknown;
   placements?: unknown;
+  home?: unknown;
 }
 
 export interface RecomputeResult {
@@ -51,6 +52,11 @@ export interface Stats {
 }
 
 const emptyPlacement = (): Placement => ({ in: false, top: false, sort: 0 });
+
+function bool(v: unknown, field: string): boolean {
+  if (typeof v !== 'boolean') throw new AdminError(`${field}: true/false`);
+  return v;
+}
 
 function str(v: unknown, field: string, max: number): string {
   if (typeof v !== 'string') throw new AdminError(`${field}: ожидается строка`);
@@ -167,7 +173,8 @@ export class BrandService {
     const blank: Placements = { men: emptyPlacement(), women: emptyPlacement() };
     const placements =
       input.placements === undefined ? blank : mergePlacements(blank, input.placements);
-    const brand = await this.repo.createBrand({ name, slug, aliases, placements });
+    const home = input.home === undefined ? false : bool(input.home, 'home');
+    const brand = await this.repo.createBrand({ name, slug, aliases, placements, home });
     await this.recompute();
     return this.view(brand.id);
   }
@@ -185,6 +192,7 @@ export class BrandService {
     if (input.placements !== undefined) {
       patch.placements = mergePlacements(current.placements, input.placements);
     }
+    if (input.home !== undefined) patch.home = bool(input.home, 'home');
     await this.repo.updateBrand(id, patch);
     if (patch.name !== undefined || patch.aliases !== undefined) await this.recompute();
     return this.view(id);

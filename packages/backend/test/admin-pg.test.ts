@@ -143,7 +143,13 @@ describe.skipIf(!url)('витринные бренды в PostgreSQL', () => {
     const a = await service.createBrand({ name: 'Alpha', aliases: ['al'] });
     await expect(service.createBrand({ name: 'Alpha' })).rejects.toMatchObject({ status: 409 });
     await expect(
-      repo.createBrand({ name: 'B', slug: 'b', aliases: ['al'], placements: a.placements }),
+      repo.createBrand({
+        name: 'B',
+        slug: 'b',
+        aliases: ['al'],
+        placements: a.placements,
+        home: false,
+      }),
     ).rejects.toMatchObject({
       status: 409,
     });
@@ -155,6 +161,15 @@ describe.skipIf(!url)('витринные бренды в PostgreSQL', () => {
     );
     expect(rows[0]?.n).toBe('0');
     await expect(repo.deleteBrand(a.id)).rejects.toMatchObject({ status: 404 });
+  });
+
+  it('флаг «Показывать на главной» сохраняется и по умолчанию выключен', async () => {
+    const b = await service.createBrand({ name: 'Homey' });
+    expect(b.home).toBe(false);
+    expect((await service.updateBrand(b.id, { home: true })).home).toBe(true);
+    // правка других полей флаг не сбрасывает
+    expect((await service.updateBrand(b.id, { name: 'Homey 2' })).home).toBe(true);
+    expect((await service.updateBrand(b.id, { home: false })).home).toBe(false);
   });
 
   it('топ: порядок, замена, неизвестный бренд откатывает всё', async () => {

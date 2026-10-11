@@ -1,0 +1,44 @@
+/* Информационные страницы (доставка, возврат, клуб, шопинг): общая вёрстка.
+   Подключение: <link rel="stylesheet" href="assets/pages.css"> после site.css.
+   Структура страницы: <main class="doc"> с .crumbs, .doc-head (h1 + .lead), .doc-body (секции .blk), .doc-cta. */
+.doc{max-width:1100px;margin:0 auto;padding:calc(106px + 20px) 12px 70px}
+.doc .crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:28px}
+.doc .crumbs a:hover{color:var(--graphite)}
+.doc-head{max-width:760px}
+.doc-head h1{font-size:28px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;line-height:1.2}
+.doc-head .lead{margin-top:16px;font-size:16.5px;line-height:1.6;color:#3a3936}
+.doc-wrap{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+.doc-nav{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:0 12px}
+.doc-nav::-webkit-scrollbar{display:none}
+.doc-nav a{flex:none;border:1px solid var(--line2);padding:9px 14px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;transition:.15s}
+.doc-nav a:hover{border-color:var(--graphite)}
+.doc-nav a.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.doc-body{max-width:760px;min-width:0}
+.blk{scroll-margin-top:140px;padding:0 0 38px}
+.blk+.blk{padding-top:34px;border-top:1px solid var(--line)}
+.blk h2{font-size:20px;font-weight:600;letter-spacing:.02em;margin-bottom:14px}
+.blk h3{font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:22px 0 8px}
+.blk p{font-size:15px;line-height:1.7;color:#3a3936;margin-bottom:12px}
+.blk ul,.blk ol{margin:0 0 12px 20px}
+.blk li{font-size:15px;line-height:1.7;color:#3a3936;margin-bottom:6px}
+.blk a{border-bottom:1px solid var(--line2)}
+.blk a:hover{border-color:var(--graphite)}
+.note{background:var(--soft);padding:16px 18px;font-size:14px;line-height:1.6;color:#3a3936;margin:18px 0 0}
+.steps{counter-reset:s;list-style:none;margin:0 0 12px}
+.steps li{counter-increment:s;position:relative;padding:0 0 18px 46px;margin:0}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border:1px solid var(--graphite);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600}
+.steps b{display:block;font-size:15px;color:var(--graphite);margin-bottom:2px}
+.doc-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.doc-cta a{padding:15px 30px;font-size:12.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--graphite)}
+.doc-cta a.dark{background:var(--graphite);color:#fff}
+.doc-cta a:hover{opacity:.85}
+@media(min-width:900px){
+  .doc{padding:calc(118px + 30px) 24px 90px}
+  .doc-head h1{font-size:40px}
+  .doc-head .lead{font-size:19px}
+  .doc-wrap{grid-template-columns:230px minmax(0,1fr);gap:64px;margin-top:56px}
+  .doc-nav{flex-direction:column;overflow:visible;margin:0;padding:0;position:sticky;top:130px;align-self:start;gap:0}
+  .doc-nav a{border:0;border-bottom:1px solid var(--line);padding:14px 0;font-size:12.5px}
+  .doc-nav a:hover{border-color:var(--graphite)}
+  .doc-nav a.on{background:none;color:var(--graphite);border-bottom:1px solid var(--graphite)}
+}

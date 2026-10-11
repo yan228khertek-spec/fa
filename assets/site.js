@@ -53,10 +53,10 @@
     </div>
     <div class="mgrp">
       <div class="mcap">Галерея</div>
-      <a class="mlink" href="#" onclick="toast('Персональный шопинг');return false">Персональный шопинг<sup>новое</sup></a>
-      <a class="mlink" href="#" onclick="toast('Клуб FA LOVERS');return false">Клуб FA LOVERS</a>
-      <a class="mlink" href="#" onclick="toast('Доставка и оплата');return false">Доставка и оплата</a>
-      <a class="mlink" href="#" onclick="toast('Обмен и возврат');return false">Обмен и возврат</a>
+      <a class="mlink" href="shopping.html">Персональный шопинг<sup>новое</sup></a>
+      <a class="mlink" href="club.html">Клуб FA LOVERS</a>
+      <a class="mlink" href="delivery.html">Доставка и оплата</a>
+      <a class="mlink" href="returns.html">Обмен и возврат</a>
       <a class="mlink" href="about.html">О нас</a>
     </div>
   </div>
@@ -71,8 +71,8 @@
       <p>Галерея моды в центре Омска. Избранные бренды Италии, Германии и Франции.</p>
       <p>Омск, ул. Маршала Жукова, 65<br>+7 (3812) 390-007</p></div>
     <div><b>Каталог</b><a href="catalog.html?category=Одежда">Одежда</a><a href="catalog.html?category=Обувь">Обувь</a><a href="catalog.html?category=Сумки">Сумки</a><a href="catalog.html?category=Парфюмерия">Парфюмерия</a><a href="catalog.html?category=Аксессуары">Аксессуары</a><a href="brands.html">Бренды</a><a href="catalog.html?sale=1" style="color:var(--red)">Распродажа</a></div>
-    <div><b>Покупателям</b><a href="#">Доставка</a><a href="#">Оплата</a><a href="#">Обмен и возврат</a><a href="#">Клуб FA LOVERS</a></div>
-    <div><b>Галерея</b><a href="about.html">О нас</a><a href="brands.html">Бренды</a><a href="#">Контакты</a><a href="#">Telegram</a></div>
+    <div><b>Покупателям</b><a href="delivery.html#delivery">Доставка</a><a href="delivery.html#payment">Оплата</a><a href="returns.html">Обмен и возврат</a><a href="club.html">Клуб FA LOVERS</a></div>
+    <div><b>Галерея</b><a href="about.html">О нас</a><a href="brands.html">Бренды</a><a href="about.html#contacts">Контакты</a><a href="#">Telegram</a></div>
   </div>
   <div class="legal">© 2026 Fashion Avenue · Политика конфиденциальности · Согласие на обработку персональных данных · Публичная оферта<br>Персональные данные обрабатываются на серверах в России в соответствии с 152-ФЗ</div>
 </div></footer>

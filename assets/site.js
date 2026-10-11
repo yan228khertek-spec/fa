@@ -39,7 +39,7 @@
       <a class="mlink" href="brands.html">Все бренды</a>
     </div>
     <div class="mgrp">
-      <div class="mcap">Каталог</div>
+      <a class="mcap" href="catalog.html" style="display:block">Каталог</a>
       <a class="mlink" href="catalog.html?category=Одежда">Верхняя одежда</a>
       <a class="mlink" href="catalog.html?category=Одежда">Трикотаж</a>
       <a class="mlink" href="catalog.html?category=Одежда&amp;kind=Платье">Платья</a>
@@ -48,7 +48,8 @@
       <a class="mlink" href="catalog.html?category=Одежда&amp;kind=Юбка">Юбки</a>
       <a class="mlink" href="catalog.html?category=Одежда">Футболки | лонгсливы</a>
       <a class="mlink" href="catalog.html?category=Обувь">Обувь</a>
-      <a class="mlink" href="catalog.html?category=Сумки">Сумки | аксессуары</a>
+      <a class="mlink" href="catalog.html?category=Сумки">Сумки</a>
+      <a class="mlink" href="catalog.html?category=Аксессуары">Аксессуары</a>
     </div>
     <div class="mgrp">
       <div class="mcap">Галерея</div>

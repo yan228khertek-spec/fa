@@ -144,7 +144,7 @@ function render(){
   const oneCat=S.facets.categories.length<=1;
   document.getElementById('kinds').innerHTML=(S.category||oneCat)&&(S.facets.kinds.length>1||S.kind)?
     `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
-    +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}</button>`).join(''):'';
+    +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(faKind(k.name))}</button>`).join(''):'';
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
   document.getElementById('state').hidden=S.items.length>0;
   if(!S.items.length)showState('В этом разделе пока нет товаров');

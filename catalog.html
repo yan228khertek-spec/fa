@@ -141,7 +141,7 @@ function render(){
     const t=S.facets.kinds.reduce((a,k)=>a+k.count,0);
     nav.innerHTML=S.facets.kinds.length||S.kind?
       `<button class="${S.kind?'':'on'}" data-k="">Все<i>${t}</i></button>`
-      +S.facets.kinds.map(k=>`<button class="${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(k.name)}<i>${k.count}</i></button>`).join(''):'';
+      +S.facets.kinds.map(k=>`<button class="${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(faKind(k.name))}<i>${k.count}</i></button>`).join(''):'';
   }else{
     const t=S.facets.categories.reduce((a,c)=>a+c.count,0);
     nav.innerHTML=S.facets.categories.length>1?

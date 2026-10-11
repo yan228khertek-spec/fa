@@ -56,6 +56,8 @@
   .cats a.on,.cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
 }
 @media(min-width:1280px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* пока слева нечего показывать (нет разделов/типов), контент и сообщения — по центру страницы */
+.bp-body.nonav{display:block}
 
 </style>
 </head>
@@ -67,7 +69,7 @@
   <div class="crumbs"><a href="catalog.html">Каталог</a> / <span id="crumb">…</span></div>
   <h1 id="bName">Каталог</h1>
   <div class="bp-count" id="bCount"></div>
-  <div class="bp-body">
+  <div class="bp-body nonav">
     <nav class="cats" id="cats" aria-label="Разделы"></nav>
     <div>
       <div class="kinds" id="kinds"></div>
@@ -149,6 +151,7 @@ function render(){
       +S.facets.categories.map(c=>`<a href="catalog.html?category=${encodeURIComponent(c.name)}">${esc(c.name)}<i>${c.count}</i></a>`).join(''):'';
   }
   document.getElementById('kinds').innerHTML='';
+  document.querySelector('.bp-body').classList.toggle('nonav',!document.getElementById('cats').innerHTML.trim());
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
   document.getElementById('state').hidden=S.items.length>0;
   if(!S.items.length)showState(S.sale?'Распродажа скоро откроется. Загляните в разделы каталога.':'В этом разделе пока нет товаров');

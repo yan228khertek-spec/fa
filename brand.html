@@ -53,6 +53,8 @@
   .cats button.on{border:0;text-decoration:underline;text-underline-offset:6px}
 }
 @media(min-width:1280px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* пока слева нечего показывать (нет разделов/типов), контент и сообщения — по центру страницы */
+.bp-body.nonav{display:block}
 
 </style>
 </head>
@@ -64,7 +66,7 @@
   <div class="crumbs"><a href="brands.html">Бренды</a> / <span id="crumb">…</span></div>
   <h1 id="bName">&nbsp;</h1>
   <div class="bp-count" id="bCount"></div>
-  <div class="bp-body">
+  <div class="bp-body nonav">
     <nav class="cats" id="cats" aria-label="Разделы"></nav>
     <div>
       <div class="kinds" id="kinds"></div>
@@ -145,6 +147,7 @@ function render(){
   document.getElementById('kinds').innerHTML=(S.category||oneCat)&&(S.facets.kinds.length>1||S.kind)?
     `<button class="chip ${S.kind?'':'on'}" data-k="">Все типы</button>`
     +S.facets.kinds.map(k=>`<button class="chip ${S.kind===k.name?'on':''}" data-k="${esc(k.name)}">${esc(faKind(k.name))}</button>`).join(''):'';
+  document.querySelector('.bp-body').classList.toggle('nonav',!document.getElementById('cats').innerHTML.trim());
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
   document.getElementById('state').hidden=S.items.length>0;
   if(!S.items.length)showState('В этом разделе пока нет товаров');

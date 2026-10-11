@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#000000">
+<title>О нас — FASHION AVENUE, Омск</title>
+<meta name="description" content="Fashion Avenue — галерея моды в центре Омска. Избранные бренды Италии, Германии и Франции, персональный шопинг, клуб FA LOVERS.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ═════ О НАС ═════ */
+.ab{max-width:1200px;margin:0 auto;padding:calc(106px + 20px) 12px 0}
+.crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:28px}
+.crumbs a:hover{color:var(--graphite)}
+.ab-hero{text-align:center;max-width:760px;margin:0 auto}
+.ab-hero h1{font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.ab-hero p{margin-top:18px;font-size:17px;line-height:1.55;color:#3a3936}
+.ph{margin:34px 0 0;background:var(--soft);overflow:hidden}
+.ph img{display:block;width:100%;height:100%;object-fit:cover}
+.ph.empty{display:none}
+.ph.wide{aspect-ratio:16/8}
+.ph.tall{aspect-ratio:4/5}
+.sec{padding:56px 0 0}
+.sec h2{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:22px}
+.cols{display:grid;grid-template-columns:1fr;gap:30px}
+.col h3{font-size:17px;font-weight:600;letter-spacing:.04em;margin-bottom:10px}
+.col p{font-size:14.5px;line-height:1.65;color:#3a3936}
+.split{display:grid;grid-template-columns:1fr;gap:24px;align-items:center}
+.split .txt h3{font-size:22px;font-weight:600;line-height:1.25;margin-bottom:14px}
+.split .txt p{font-size:14.5px;line-height:1.7;color:#3a3936;margin-bottom:12px}
+.split .ph{margin:0}
+.split:has(.ph.empty){grid-template-columns:1fr;max-width:640px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips a{border:1px solid var(--line2);padding:11px 18px;font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:.15s}
+.chips a:hover{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.chips a.all{border-color:var(--graphite)}
+.info{display:grid;grid-template-columns:1fr;gap:0;border-top:1px solid var(--line)}
+.info div{padding:18px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.info b{display:block;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.info a{border-bottom:1px solid var(--line2)}
+.info a:hover{border-color:var(--graphite)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:44px;justify-content:center}
+.cta a{padding:16px 34px;font-size:12.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--graphite)}
+.cta a.dark{background:var(--graphite);color:#fff}
+.cta a:hover{opacity:.85}
+.ab-end{height:60px}
+@media(min-width:900px){
+  .ab{padding:calc(118px + 30px) 24px 0}
+  .ab-hero h1{font-size:44px}
+  .ab-hero p{font-size:20px}
+  .cols{grid-template-columns:repeat(3,1fr);gap:48px}
+  .split{grid-template-columns:1fr 1fr;gap:64px}
+  .split:has(.ph.empty){grid-template-columns:1fr}
+  .split.rev .ph{order:-1}
+  .sec{padding:84px 0 0}
+  .info{grid-template-columns:repeat(3,1fr);border-top:0}
+  .info div{border-top:1px solid var(--line);padding-right:24px}
+}
+</style>
+</head>
+<body>
+
+<script src="assets/site.js"></script>
+
+<main class="ab">
+  <div class="crumbs"><a href="index.html">Главная</a> / <span>О нас</span></div>
+
+  <section class="ab-hero">
+    <h1>О нас</h1>
+    <p>Fashion Avenue — галерея моды в центре Омска. Мы собрали избранные бренды Италии, Германии и Франции в одном месте, чтобы выбирать одежду, обувь и аксессуары можно было спокойно, с примеркой и вниманием к каждой детали.</p>
+  </section>
+
+  <figure class="ph wide"><img src="assets/about/interior-1.jpg" alt="Галерея моды Fashion Avenue в Омске" onerror="this.parentNode.classList.add('empty')"></figure>
+
+  <section class="sec">
+    <h2>Чем мы отличаемся</h2>
+    <div class="cols">
+      <div class="col"><h3>Авторский подбор</h3><p>Мы сами выбираем бренды и модели для галереи и следим за тем, чтобы в каждом разделе было из чего выбрать: от базового гардероба до акцентных вещей сезона.</p></div>
+      <div class="col"><h3>Живой сервис</h3><p>Консультанты помогают с размером и образом, а услуга персонального шопинга позволяет собрать гардероб под вашу задачу. По Омску возможна примерка при курьере.</p></div>
+      <div class="col"><h3>Клуб FA LOVERS</h3><p>Постоянные гости клуба получают бонусы за покупки и узнают о новых поступлениях и событиях галереи одними из первых.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Бренды</h2>
+    <div class="chips" id="brands"></div>
+  </section>
+
+  <section class="sec">
+    <div class="split">
+      <div class="txt">
+        <h3>Галерея в центре Омска</h3>
+        <p>Бутик находится на улице Маршала Жукова. Мы показываем коллекции так, как их задумали бренды, и обновляем ассортимент по мере выхода новых поступлений.</p>
+        <p>Приходите посмотреть вещи вживую: размеры, цвета и посадку проще оценить на месте.</p>
+      </div>
+      <figure class="ph tall"><img src="assets/about/interior-2.jpg" alt="Залы галереи Fashion Avenue" loading="lazy" onerror="this.parentNode.classList.add('empty')"></figure>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="split rev">
+      <div class="txt">
+        <h3>Покупки онлайн</h3>
+        <p>На сайте собран актуальный каталог галереи: новинки, разделы и бренды в одном месте. Карточки товаров ведутся нашей командой, а цены и наличие обновляются из учётной системы магазина.</p>
+        <p>Доставка по России — бесплатная при заказе от 20 000 ₽. По Омску можно примерить заказ при получении.</p>
+      </div>
+      <figure class="ph tall"><img src="assets/about/service.jpg" alt="Сервис и примерка в Fashion Avenue" loading="lazy" onerror="this.parentNode.classList.add('empty')"></figure>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Контакты</h2>
+    <div class="info">
+      <div><b>Адрес</b>Омск, ул. Маршала Жукова, 65<br><a href="https://2gis.ru/omsk/firm/70000001032780396" target="_blank" rel="noopener">Показать на карте</a></div>
+      <div><b>Телефон</b><a href="tel:+73812390007">+7 (3812) 390-007</a></div>
+      <div><b>Мы на связи</b><a href="#" onclick="toast('Telegram');return false">Telegram</a></div>
+    </div>
+    <div class="cta"><a class="dark" href="catalog.html">Смотреть каталог</a><a href="brands.html">Все бренды</a></div>
+  </section>
+  <div class="ab-end"></div>
+</main>
+
+<div data-site-footer></div>
+
+<script>
+/* Бренды: топ из админки (оба пола), без дублей; если API недоступен — блок скрывается */
+(function(){
+  const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
+  const box=document.getElementById('brands'),sec=box.closest('.sec');
+  const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  sec.hidden=true;
+  Promise.all(['women','men'].map(g=>fetch(API_BASE+'/api/brands?gender='+g).then(r=>r.ok?r.json():null).catch(()=>null)))
+    .then(rs=>{
+      const seen=new Set(),list=[];
+      rs.forEach(d=>d&&(d.top||[]).forEach(b=>{if(!seen.has(b.slug)){seen.add(b.slug);list.push(b)}}));
+      if(!list.length)return;
+      box.innerHTML=list.map(b=>`<a href="brand.html?slug=${encodeURIComponent(b.slug)}">${esc(b.name)}</a>`).join('')
+        +'<a class="all" href="brands.html">Все бренды →</a>';
+      sec.hidden=false;
+    });
+})();
+</script>
+</body>
+</html>

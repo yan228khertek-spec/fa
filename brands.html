@@ -197,11 +197,7 @@ document.getElementById('brandsList').addEventListener('click',e=>{
 /* ───── ПЕРЕКЛЮЧАТЕЛЬ ПОЛА (шапка + меню синхронно) ───── */
 function setGender(g,silent){
   gender=g;
-  document.querySelectorAll('.gender button').forEach((b,i)=>b.classList.toggle('on',(i===0)===(g==='men')));
-  document.querySelectorAll('.mtabs button').forEach((b,i)=>{
-    if(i<2)b.classList.toggle('on',(i===0)===(g==='women'));
-  });
-  document.querySelectorAll('.mtabs button')[2].classList.remove('on');
+  faSetGender(g,true);   // шапка, вкладки меню и бренды в меню (общий каркас)
   renderBrandList();renderTopBrands();loadBrandsFromApi(g);
   if(!silent)toast(g==='men'?'Мужское — раздел переключён':'Женское — раздел переключён');
 }
@@ -210,10 +206,7 @@ function mtab(b){
   const t=b.textContent.trim();
   if(t==='Женщины')setGender('women');
   else if(t==='Мужчины')setGender('men');
-  else{
-    [...b.parentNode.children].forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');toast('Парфюмерия — раздел переключён');
-  }
+  else faMtab(b);
 }
 
 /* ───── ПОИСК: фильтрует логотипы и список ───── */
@@ -224,7 +217,7 @@ document.getElementById('brandSearch').addEventListener('input',e=>{
 });
 
 
-setGender('women',true);
+setGender(faGender(),true);
 </script>
 </body>
 </html>

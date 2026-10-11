@@ -237,9 +237,7 @@ document.querySelectorAll('.pic').forEach(fr=>{
 
 function add(n,s){cart++;const e=document.getElementById('cnt');e.textContent=cart;e.style.display='grid';toast(n+' · размер '+s+' — в корзине')}
 function fav(el){el.classList.toggle('on');event.stopPropagation()}
-function sw(b){[...b.parentNode.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  toast(b.textContent+' — раздел переключён')}
-function mtab(b){[...b.parentNode.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');toast(b.textContent+' — раздел переключён')}
+/* sw() и mtab() — общие, в assets/site.js (пол витрины и топ-бренды в меню) */
 
 /* ── ЗАГРУЗЧИК ФОТО: перетащите снимки на карточки ── */
 const read=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});

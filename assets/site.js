@@ -35,11 +35,7 @@
     </div>
     <div class="mgrp">
       <a class="mcap" href="brands.html" style="display:block">Бренды</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Miss Sixty</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Diesel</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Annette Görtz</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Marina Rinaldi</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Karl Lagerfeld</a>
+      <div id="mbList"></div>
       <a class="mlink" href="brands.html">Все бренды</a>
     </div>
     <div class="mgrp">
@@ -139,15 +135,58 @@
     t.textContent = m; t.classList.add('on');
     clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 2200);
   };
-  // по умолчанию переключатели только подсвечивают выбор; страницы, где они что-то меняют, переопределяют
-  window.sw = function(b){
-    [].forEach.call(b.parentNode.children, function(x){ x.classList.toggle('on', x === b); });
-    window.toast(b.textContent.trim() + ' — раздел переключён');
+  // ── Пол витрины (Мужское/Женское): один на все страницы сессии; шапка и меню меняются синхронно ──
+  var API_BASE = 'https://1c-dev.avenuefashion.online';
+  var topBrands = { women: null, men: null };
+  var perfume = false;
+  function storedGender(){ try { return sessionStorage.getItem('fa_gender') === 'men' ? 'men' : 'women'; } catch (e) { return 'women'; } }
+  var gender = storedGender();
+  function esc(t){ return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function renderMenuBrands(){
+    var box = document.getElementById('mbList');
+    if (!box) return;
+    var list = perfume ? [] : (topBrands[gender] || []);
+    box.innerHTML = list.map(function(b){
+      return '<a class="mlink" href="brand.html?slug=' + encodeURIComponent(b.slug) + '">' + esc(b.name) + '</a>';
+    }).join('');
+  }
+  function paintSwitchers(){
+    var hb = document.querySelectorAll('.gender button');
+    if (hb.length > 1){ hb[0].classList.toggle('on', gender === 'men'); hb[1].classList.toggle('on', gender === 'women'); }
+    var mb = document.querySelectorAll('.mtabs button');
+    if (mb.length > 2){
+      mb[0].classList.toggle('on', !perfume && gender === 'women');
+      mb[1].classList.toggle('on', !perfume && gender === 'men');
+      mb[2].classList.toggle('on', perfume);
+    }
+  }
+  function loadTopBrands(g){
+    fetch(API_BASE + '/api/brands?gender=' + g).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if (!d) return;
+      // топ задаётся в админке; если его ещё не заполнили — первые бренды общего списка
+      topBrands[g] = (d.top && d.top.length ? d.top : (d.all || []).slice(0, 8));
+      if (g === gender) renderMenuBrands();
+    }).catch(function(){});
+  }
+  window.faGender = function(){ return gender; };
+  window.faSetGender = function(g, quiet){
+    gender = g === 'men' ? 'men' : 'women';
+    perfume = false;
+    try { sessionStorage.setItem('fa_gender', gender); } catch (e) {}
+    paintSwitchers(); renderMenuBrands();
+    if (!quiet) window.toast((gender === 'men' ? 'Мужское' : 'Женское') + ' — раздел переключён');
   };
+  // шапка: Мужское/Женское; страницы, которым нужно больше (список брендов на «Брендах»), вызывают faSetGender сами
+  window.sw = function(b){ window.faSetGender(b.textContent.trim() === 'Мужское' ? 'men' : 'women'); };
   window.mtab = function(b){
-    [].forEach.call(b.parentNode.children, function(x){ x.classList.toggle('on', x === b); });
-    window.toast(b.textContent.trim() + ' — раздел переключён');
+    var t = b.textContent.trim();
+    if (t === 'Мужчины') return window.sw({ textContent: 'Мужское' });
+    if (t === 'Женщины') return window.sw({ textContent: 'Женское' });
+    perfume = true; paintSwitchers(); renderMenuBrands();
   };
+  window.faMtab = window.mtab;   // страницы, переопределяющие mtab, могут вызвать общую версию
+  paintSwitchers();
+  loadTopBrands('women'); loadTopBrands('men');
 
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') window.closeMenu(); });
 

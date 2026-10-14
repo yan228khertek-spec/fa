@@ -60,7 +60,12 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       : new MemorySiteBrandRepository());
   const catalogReader =
     opts.catalogReader ??
-    (config.databaseUrl ? new PgCatalogReader(config.databaseUrl) : new MemoryCatalogReader());
+    (config.databaseUrl
+      ? new PgCatalogReader(config.databaseUrl, {
+          priceType: config.sitePriceType,
+          warehouse: config.siteWarehouse,
+        })
+      : new MemoryCatalogReader());
 
   const cardRepo =
     opts.cardRepo ??

@@ -61,7 +61,8 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
   beforeAll(async () => {
     pool = new pg.Pool({ connectionString: url, max: 2 });
     repo = new PgCardRepository(url as string);
-    reader = new PgCatalogReader(url as string);
+    // Имена типа цены и склада — как в фикстурах loadOffers (цена = «Розничная», не минимум).
+    reader = new PgCatalogReader(url as string, { priceType: 'Розничная', warehouse: 'Склад' });
     brands = new PgSiteBrandRepository(url as string);
     cards = new CardService(repo, reader, new BrandService(brands, reader));
     await Promise.all([repo.ready(), brands.ready()]);
@@ -132,12 +133,54 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
     expect(live.get('m1')!.variants).toHaveLength(2);
   });
 
-  it('цена и остаток подклеиваются из предложений', async () => {
+  it('цена — выбранного типа («Розничная»), не минимум по всем типам', async () => {
     await loadOffers(2, 1);
     const live = await reader.liveData();
-    expect(live.get('m1')).toMatchObject({ price: 6500, stock: 3 });
+    // m1#a имеет Розничную 8000 и Распродажу 6500; витрина берёт Розничную.
+    expect(live.get('m1')).toMatchObject({ price: 8000, stock: 3 });
     expect(live.get('m1')!.variants.map((v) => v.quantity)).toEqual([2, 1]);
     expect(live.get('m2')?.stock).toBeNull(); // предложения нет — остаток неизвестен
+  });
+
+  it('остаток — только по выбранному складу: общий остаток и чужие склады не считаются', async () => {
+    const offers = new PgOffersRepository(url as string);
+    const file = path.join(dir, 'offers-wh.xml');
+    await writeOffersXml(
+      file,
+      buildOffersXml({
+        priceTypes: [{ id: 'pt-retail', name: 'Розничная', currency: 'RUB' }],
+        warehouses: [
+          { id: 'wh', name: 'Склад' },
+          { id: 'wh-other', name: 'Брак' },
+        ],
+        offers: [
+          {
+            id: 'm1#a',
+            prices: [{ priceTypeId: 'pt-retail', value: 8000 }],
+            // Общий остаток 100 (тег Количество, warehouse_source_id='') + 5 на «Складе» + 50 на «Браке».
+            quantity: 100,
+            stocks: [
+              { warehouseId: 'wh', quantity: 5 },
+              { warehouseId: 'wh-other', quantity: 50 },
+            ],
+          },
+          {
+            id: 'm1#b',
+            prices: [{ priceTypeId: 'pt-retail', value: 8000 }],
+            // Только общий остаток и чужой склад — по «Складу» ничего → в сумму не идёт.
+            quantity: 7,
+            stocks: [{ warehouseId: 'wh-other', quantity: 9 }],
+          },
+        ],
+      }),
+    );
+    await importOffersFile(offers, file, 'offers.xml');
+    await offers.close();
+    const live = await reader.liveData();
+    // Считается только «Склад»: m1#a=5, m1#b на «Складе» нет → 0 (предложение есть,
+    // но на складе пусто) → модель 5 (не 100+5+50+7+9=171, без общего остатка и «Брака»).
+    expect(live.get('m1')!.stock).toBe(5);
+    expect(live.get('m1')!.variants.map((v) => v.quantity)).toEqual([5, 0]);
   });
 
   it('жизненный цикл: создать → фото → опубликовать → скрытие по остатку', async () => {
@@ -170,7 +213,7 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
     expect((await cards.get(card.id)).hiddenReason).toBe('no-stock');
     expect((await cards.publicList({ limit: 10, offset: 0 })).total).toBe(0);
     await loadOffers(0, 4);
-    expect((await cards.publicCard(card.id))?.price).toBe(6500);
+    expect((await cards.publicCard(card.id))?.price).toBe(8000);
 
     expect(await repo.removePhoto(card.id, p1.id)).toBe('aaaaaaaaaaaaaaaa.jpg');
     expect(await repo.deleteCard(card.id)).toEqual(['bbbbbbbbbbbbbbbb.jpg']);

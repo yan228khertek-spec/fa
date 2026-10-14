@@ -56,6 +56,9 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
       IMAGES_BASE_URL: ${IMAGES_BASE_URL:-}
+      # Тип цены и склад витрины (решение 13.10). Пусто — минимум/сумма по всем (легаси).
+      SITE_PRICE_TYPE: ${SITE_PRICE_TYPE:-Розничные}
+      SITE_STOCK_WAREHOUSE: ${SITE_STOCK_WAREHOUSE:-Касса ТЗ 2 Fashion Avenue}
       # Перед backend стоит Caddy: адрес клиента — из X-Forwarded-For
       # (иначе ограничитель подбора пароля видит один адрес — Caddy).
       TRUST_PROXY: '1'

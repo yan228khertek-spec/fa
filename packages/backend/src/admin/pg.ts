@@ -319,9 +319,18 @@ const isMissingTable = (err: unknown): boolean => (err as { code?: string }).cod
 
 export class PgCatalogReader implements CatalogReader {
   private readonly pool: pg.Pool;
+  /** Имя типа цены витрины (price_types.name); null — цена = минимум по всем типам. */
+  private readonly priceType: string | null;
+  /** Имя склада витрины (warehouses.name); null — остаток = сумма по всем складам. */
+  private readonly warehouse: string | null;
 
-  constructor(databaseUrl: string, poolSize = 2) {
-    this.pool = new pg.Pool({ connectionString: databaseUrl, max: poolSize });
+  constructor(
+    databaseUrl: string,
+    opts: { priceType?: string; warehouse?: string; poolSize?: number } = {},
+  ) {
+    this.pool = new pg.Pool({ connectionString: databaseUrl, max: opts.poolSize ?? 2 });
+    this.priceType = opts.priceType?.trim() || null;
+    this.warehouse = opts.warehouse?.trim() || null;
   }
 
   async listModels(): Promise<CatalogModel[]> {
@@ -400,8 +409,12 @@ export class PgCatalogReader implements CatalogReader {
       color: string | null;
     }>(
       `SELECT product_source_id AS model, source_id AS id, size, color FROM product_variants
-        WHERE source = '${SOURCE}' AND NOT is_deleted ORDER BY product_source_id, source_id`,
+        WHERE source = $1 AND NOT is_deleted ORDER BY product_source_id, source_id`,
+      [SOURCE],
     );
+    // Цена — минимум по типу this.priceType (имя из ТипыЦен); остаток — сумма по складу
+    // this.warehouse (имя из Склады). null-фильтр = без ограничения (минимум/сумма по всем).
+    // Отбор по складу заодно отсекает общий остаток (warehouse_source_id='') и его двоение.
     // offers_* может не существовать (offers.xml ещё не приходил) — тогда остатков и цен нет.
     const offers = await this.rowsOrEmpty<{
       id: string;
@@ -410,13 +423,22 @@ export class PgCatalogReader implements CatalogReader {
     }>(
       `SELECT o.source_id AS id, s.q::text AS quantity, p.price::text AS price
          FROM offers o
-         LEFT JOIN (SELECT offer_source_id, sum(quantity) AS q FROM offer_stocks
-                     WHERE source = '${SOURCE}' GROUP BY offer_source_id) s
+         LEFT JOIN (SELECT st.offer_source_id, sum(st.quantity) AS q FROM offer_stocks st
+                     WHERE st.source = $1
+                       AND ($3::text IS NULL OR st.warehouse_source_id IN (
+                             SELECT w.source_id FROM warehouses w
+                              WHERE w.source = $1 AND w.name = $3))
+                     GROUP BY st.offer_source_id) s
            ON s.offer_source_id = o.source_id
-         LEFT JOIN (SELECT offer_source_id, min(value) AS price FROM offer_prices
-                     WHERE source = '${SOURCE}' GROUP BY offer_source_id) p
+         LEFT JOIN (SELECT pr.offer_source_id, min(pr.value) AS price FROM offer_prices pr
+                     WHERE pr.source = $1
+                       AND ($2::text IS NULL OR pr.price_type_source_id IN (
+                             SELECT pt.source_id FROM price_types pt
+                              WHERE pt.source = $1 AND pt.name = $2))
+                     GROUP BY pr.offer_source_id) p
            ON p.offer_source_id = o.source_id
-        WHERE o.source = '${SOURCE}' AND NOT coalesce(o.is_deleted, false)`,
+        WHERE o.source = $1 AND NOT coalesce(o.is_deleted, false)`,
+      [SOURCE, this.priceType, this.warehouse],
     );
     const byOffer = new Map(offers.map((o) => [o.id, o]));
     for (const v of variants) {
@@ -435,9 +457,12 @@ export class PgCatalogReader implements CatalogReader {
   }
 
   /** Каждую таблицу читаем отдельно: offers_* может не существовать, пока не пришёл offers.xml. */
-  private async rowsOrEmpty<T extends pg.QueryResultRow>(sql: string): Promise<T[]> {
+  private async rowsOrEmpty<T extends pg.QueryResultRow>(
+    sql: string,
+    params: unknown[] = [],
+  ): Promise<T[]> {
     try {
-      return (await this.pool.query<T>(sql)).rows;
+      return (await this.pool.query<T>(sql, params)).rows;
     } catch (err) {
       if (isMissingTable(err)) return [];
       throw err;

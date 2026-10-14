@@ -30,6 +30,17 @@ export interface AppConfig {
   unpackLimit: number;
   /** Строка подключения PostgreSQL; пусто — журнал пишется в память (dev/тесты). */
   databaseUrl: string | undefined;
+  /**
+   * Тип цены 1С, который витрина показывает как цену товара (имя из ТипыЦен).
+   * Пусто — цена = минимум по всем типам (легаси). Решение 13.10: «Розничные».
+   */
+  sitePriceType: string;
+  /**
+   * Склад 1С, по которому считается остаток витрины (имя из Склады).
+   * Пусто — сумма по всем складам, включая общий остаток (легаси; двоит остатки).
+   * Решение 13.10: «Касса ТЗ 2 Fashion Avenue».
+   */
+  siteWarehouse: string;
   /** Отключает логгер (тесты). */
   quiet: boolean;
   /** Админка брендов; не задано — модуль не подключается (старые тесты и dev без неё). */
@@ -49,6 +60,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     importWaitMs: Number(env.EXCHANGE_IMPORT_WAIT_MS ?? 5000),
     unpackLimit: Number(env.EXCHANGE_UNPACK_LIMIT ?? 2 * 1024 * 1024 * 1024),
     databaseUrl: env.DATABASE_URL || undefined,
+    sitePriceType: env.SITE_PRICE_TYPE ?? 'Розничные',
+    siteWarehouse: env.SITE_STOCK_WAREHOUSE ?? 'Касса ТЗ 2 Fashion Avenue',
     quiet: env.NODE_ENV === 'test',
     admin: {
       login: env.ADMIN_LOGIN ?? '',

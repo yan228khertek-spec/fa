@@ -9,7 +9,7 @@ RUN npm ci
 COPY tsconfig.base.json ./
 COPY packages/backend/tsconfig.json packages/backend/
 COPY packages/backend/src packages/backend/src
-RUN npm run build -w @fa/backend && npm prune --omit=dev
+RUN npm run build -w @fa/backend && npm prune --omit=dev && mkdir -p packages/backend/node_modules
 
 FROM node:22-alpine
 ENV NODE_ENV=production
@@ -19,8 +19,11 @@ COPY --from=build /app/packages/backend/node_modules ./packages/backend/node_mod
 COPY --from=build /app/packages/backend/dist ./packages/backend/dist
 COPY packages/backend/package.json ./packages/backend/
 COPY packages/backend/migrations ./packages/backend/migrations
-RUN mkdir -p /app/spool && chown -R node:node /app
+# Страница админки брендов (отдаётся плагином admin; путь считается от dist/).
+COPY packages/backend/public ./packages/backend/public
+RUN mkdir -p /app/spool /app/uploads && chown -R node:node /app
 USER node
 ENV EXCHANGE_SPOOL_DIR=/app/spool
+ENV ADMIN_UPLOADS_DIR=/app/uploads
 EXPOSE 3000
 CMD ["node", "packages/backend/dist/index.js"]

@@ -50,9 +50,19 @@ services:
       EXCHANGE_FILE_LIMIT: ${EXCHANGE_FILE_LIMIT:-10485760}
       EXCHANGE_UNPACK_LIMIT: ${EXCHANGE_UNPACK_LIMIT:-2147483648}
       EXCHANGE_IMPORT_WAIT_MS: ${EXCHANGE_IMPORT_WAIT_MS:-5000}
+      # Админка брендов. Пустые ADMIN_LOGIN/ADMIN_PASSWORD = админка выключена
+      # (публичное API /api/brands работает в любом случае).
+      ADMIN_LOGIN: ${ADMIN_LOGIN:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      IMAGES_BASE_URL: ${IMAGES_BASE_URL:-}
+      # Перед backend стоит Caddy: адрес клиента — из X-Forwarded-For
+      # (иначе ограничитель подбора пароля видит один адрес — Caddy).
+      TRUST_PROXY: '1'
     # Портов наружу нет: трафик идёт только через Caddy.
     volumes:
       - spool:/app/spool
+      - uploads:/app/uploads
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/healthz || exit 1']
       interval: 10s
@@ -81,6 +91,7 @@ services:
 volumes:
   pgdata:
   spool:
+  uploads:
   caddy_data:
   caddy_config:
   caddy_logs:

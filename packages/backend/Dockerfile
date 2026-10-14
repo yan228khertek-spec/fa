@@ -9,7 +9,7 @@ RUN npm ci
 COPY tsconfig.base.json ./
 COPY packages/backend/tsconfig.json packages/backend/
 COPY packages/backend/src packages/backend/src
-RUN npm run build -w @fa/backend && npm prune --omit=dev
+RUN npm run build -w @fa/backend && npm prune --omit=dev && mkdir -p packages/backend/node_modules
 
 FROM node:22-alpine
 ENV NODE_ENV=production

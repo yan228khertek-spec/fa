@@ -7,6 +7,7 @@
 Базовый адрес API (dev/staging): `https://1c-dev.avenuefashion.online`. Витрина берёт его из `API_BASE` в `assets/site.js`.
 
 Общие правила:
+
 - Все публичные ответы — JSON, `Access-Control-Allow-Origin: *` (витрина и API на разных поддоменах).
 - Кэш: `Cache-Control: public, max-age=30…60` на публичных ручках.
 - Фото в ответах — абсолютные URL (`PUBLIC_BASE_URL` + путь), либо `null`.
@@ -18,57 +19,81 @@
 ## Публичные ручки (витрина)
 
 ### `GET /api/brands?gender=men|women`
+
 Бренды раздела: «Топ бренды» (плитки) и полный список.
 
 - Query: `gender` — `men` или `women` (по умолчанию `women`; иное → `400`).
 - Ответ `200`:
+
 ```json
 {
   "gender": "women",
-  "top": [{ "name": "Marina Rinaldi", "slug": "marina-rinaldi", "photo": "https://…/uploads/….jpg", "logo": "https://…/uploads/….png" }],
+  "top": [
+    {
+      "name": "Marina Rinaldi",
+      "slug": "marina-rinaldi",
+      "photo": "https://…/uploads/….jpg",
+      "logo": "https://…/uploads/….png"
+    }
+  ],
   "all": [{ "name": "…", "slug": "…" }]
 }
 ```
+
 `photo`/`logo` могут быть `null`. `top` отсортирован по порядку плиток, `all` — по имени.
 
 ### `GET /api/brands/:slug/models`
+
 Карточки бренда с фасетами (для страницы бренда).
 
 - Path: `slug` — адрес бренда. Нет бренда → `404 {error}`.
 - Query: `category` (≤40), `kind` (≤60), `limit` (1…100, деф. 24), `offset` (≥0).
 - Ответ `200`:
+
 ```json
 {
   "brand": { "name": "…", "slug": "…" },
   "total": 42,
-  "facets": { "categories": [{ "name": "Одежда", "count": 30 }], "kinds": [{ "name": "Джемпер", "count": 8 }] },
-  "items": [ /* см. элемент листинга ниже */ ]
+  "facets": {
+    "categories": [{ "name": "Одежда", "count": 30 }],
+    "kinds": [{ "name": "Джемпер", "count": 8 }]
+  },
+  "items": [/* см. элемент листинга ниже */]
 }
 ```
 
 ### `GET /api/home`
+
 Блоки главной: бренды с флагом «Показывать на главной» и их последние опубликованные карточки.
 
 - Ответ `200`:
+
 ```json
-{ "brands": [ { "name": "…", "slug": "…", "total": 12, "items": [ /* элемент листинга */ ] } ] }
+{ "brands": [{ "name": "…", "slug": "…", "total": 12, "items": [/* элемент листинга */] }] }
 ```
+
 Бренд без видимых карточек в блок не попадает. До 3 брендов, до 4 карточек в каждом.
 
 ### `GET /api/cards?category=&kind=&limit=&offset=`
+
 Листинг витрины (только видимые карточки).
 
 - Query: `category` (≤40), `kind` (≤60), `limit` (1…100, деф. 24), `offset` (≥0).
 - Ответ `200`:
+
 ```json
 {
   "total": 120,
-  "facets": { "categories": [{ "name": "Одежда", "count": 80 }], "kinds": [{ "name": "Платье", "count": 15 }] },
-  "items": [ /* элемент листинга */ ]
+  "facets": {
+    "categories": [{ "name": "Одежда", "count": 80 }],
+    "kinds": [{ "name": "Платье", "count": 15 }]
+  },
+  "items": [/* элемент листинга */]
 }
 ```
 
 **Элемент листинга (`items[]`)** — единый для `/api/cards`, `/api/brands/:slug/models`, `/api/home`:
+
 ```json
 {
   "id": 17,
@@ -82,13 +107,16 @@
   "kind": "Платье"
 }
 ```
+
 `brand`, `photo`, `price`, `inStock` могут быть `null` (нет бренда / фото / цены / данных об остатке).
 
 ### `GET /api/cards/:id`
+
 Карточка целиком (страница товара).
 
 - Path: `id` — целое > 0. Не найдено / не видима → `404 {error}`.
 - Ответ `200` — элемент листинга **плюс**:
+
 ```json
 {
   "article": "PK-1234",
@@ -100,9 +128,11 @@
 ```
 
 ### `GET /uploads/:file`
+
 Фото и логотипы (загруженные в админке). Имя строго `^[a-f0-9]{16}\.(jpg|png|webp|avif)$`, иначе `404`. Заголовки: `Content-Type` по расширению, `X-Content-Type-Options: nosniff`, `Cache-Control: public, max-age=604800, immutable`.
 
 ### `GET /images/*` — план A2 (ещё не реализован)
+
 Служебные фото из выгрузки 1С. На момент 1.0 ручки нет; витрина для товаров её не использует.
 
 ---

@@ -9,12 +9,12 @@
     <a class="logo" href="index.html">FASHION AVENUE<small>ГАЛЕРЕЯ МОДЫ · ОМСК</small></a>
     <div class="right">
       <button class="ic" onclick="toast('Поиск по каталогу')" aria-label="Поиск"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
-      <button class="ic" onclick="toast('Корзина')" aria-label="Корзина"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="n" id="cnt" style="display:none">0</span></button>
+      <button class="ic" onclick="toast('Корзина')" aria-label="Корзина"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4.5" y="8" width="15" height="12.5" rx="1.2"/><path d="M8.5 8V7a3.5 3.5 0 0 1 7 0v1"/></svg><span class="n" id="cnt" style="display:none">0</span></button>
     </div>
   </div>
   <div class="gender">
-    <button onclick="sw(this)">Мужское</button>
     <button class="on" onclick="sw(this)">Женское</button>
+    <button onclick="sw(this)">Мужское</button>
   </div>
 </header>
 
@@ -29,8 +29,7 @@
   </div>
   <div class="mscroll">
     <div class="mgrp">
-      <a class="mlink" href="#" onclick="closeMenu();return false">Новинки</a>
-      <a class="mlink" href="#" onclick="closeMenu();return false">Осень — зима 2026<sup>новое</sup></a>
+      <a class="mlink" href="catalog.html">Новинки<sup>новое</sup></a>
       <a class="mlink red" href="catalog.html?sale=1">Распродажа</a>
     </div>
     <div class="mgrp">
@@ -40,21 +39,17 @@
     </div>
     <div class="mgrp">
       <a class="mcap" href="catalog.html" style="display:block">Каталог</a>
-      <a class="mlink" href="catalog.html?category=Одежда">Верхняя одежда</a>
-      <a class="mlink" href="catalog.html?category=Одежда">Трикотаж</a>
-      <a class="mlink" href="catalog.html?category=Одежда&amp;kind=Платье">Платья</a>
-      <a class="mlink" href="catalog.html?category=Одежда">Рубашки | блузы</a>
-      <a class="mlink" href="catalog.html?category=Одежда">Джинсы | брюки</a>
-      <a class="mlink" href="catalog.html?category=Одежда&amp;kind=Юбка">Юбки</a>
-      <a class="mlink" href="catalog.html?category=Одежда">Футболки | лонгсливы</a>
-      <a class="mlink" href="catalog.html?category=Обувь">Обувь</a>
+      <div class="macc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Одежда<i></i></button>
+        <div class="msub" data-cat="Одежда"><a href="catalog.html?category=Одежда">Вся одежда</a></div></div>
+      <div class="macc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Обувь<i></i></button>
+        <div class="msub" data-cat="Обувь"><a href="catalog.html?category=Обувь">Вся обувь</a></div></div>
       <a class="mlink" href="catalog.html?category=Сумки">Сумки</a>
       <a class="mlink" href="catalog.html?category=Аксессуары">Аксессуары</a>
     </div>
     <div class="mgrp">
       <div class="mcap">Галерея</div>
       <a class="mlink" href="shopping.html">Персональный шопинг<sup>новое</sup></a>
-      <a class="mlink" href="club.html">Клуб FA LOVERS</a>
+      <a class="mlink" href="club.html">Бонусная система</a>
       <a class="mlink" href="delivery.html">Доставка и оплата</a>
       <a class="mlink" href="returns.html">Обмен и возврат</a>
       <a class="mlink" href="about.html">О нас</a>
@@ -71,7 +66,7 @@
       <p>Галерея моды в центре Омска. Избранные бренды Италии, Германии и Франции.</p>
       <p>Омск, ул. Маршала Жукова, 65<br>+7 (3812) 390-007</p></div>
     <div><b>Каталог</b><a href="catalog.html?category=Одежда">Одежда</a><a href="catalog.html?category=Обувь">Обувь</a><a href="catalog.html?category=Сумки">Сумки</a><a href="catalog.html?category=Парфюмерия">Парфюмерия</a><a href="catalog.html?category=Аксессуары">Аксессуары</a><a href="brands.html">Бренды</a><a href="catalog.html?sale=1" style="color:var(--red)">Распродажа</a></div>
-    <div><b>Покупателям</b><a href="delivery.html#delivery">Доставка</a><a href="delivery.html#payment">Оплата</a><a href="returns.html">Обмен и возврат</a><a href="club.html">Клуб FA LOVERS</a></div>
+    <div><b>Покупателям</b><a href="delivery.html#delivery">Доставка</a><a href="delivery.html#payment">Оплата</a><a href="returns.html">Обмен и возврат</a><a href="club.html">Бонусная система</a></div>
     <div><b>Галерея</b><a href="about.html">О нас</a><a href="brands.html">Бренды</a><a href="about.html#contacts">Контакты</a><a href="#">Telegram</a></div>
   </div>
   <div class="legal">© 2026 Fashion Avenue · Политика конфиденциальности · Согласие на обработку персональных данных · Публичная оферта<br>Персональные данные обрабатываются на серверах в России в соответствии с 152-ФЗ</div>
@@ -153,7 +148,7 @@
   }
   function paintSwitchers(){
     var hb = document.querySelectorAll('.gender button');
-    if (hb.length > 1){ hb[0].classList.toggle('on', gender === 'men'); hb[1].classList.toggle('on', gender === 'women'); }
+    if (hb.length > 1){ hb[0].classList.toggle('on', gender === 'women'); hb[1].classList.toggle('on', gender === 'men'); }
     var mb = document.querySelectorAll('.mtabs button');
     if (mb.length > 2){
       mb[0].classList.toggle('on', !perfume && gender === 'women');
@@ -192,6 +187,22 @@
     else r = w + (/[гкхжшщч]$/.test(l) ? 'и' : 'ы');    // Джемпер → Джемперы, Жилет → Жилеты
     return r;
   };
+  // Подкатегории меню («Одежда», «Обувь») — реальные типы товаров из витрины; раскрываются по клику
+  window.faAcc = function(b){
+    var open = b.parentNode.classList.toggle('open');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  function loadMenuKinds(){
+    [].forEach.call(document.querySelectorAll('.msub[data-cat]'), function(box){
+      var cat = box.getAttribute('data-cat');
+      fetch(API_BASE + '/api/cards?limit=1&category=' + encodeURIComponent(cat)).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+        if (!d || !d.facets.kinds.length) return;
+        box.innerHTML += d.facets.kinds.map(function(k){
+          return '<a href="catalog.html?category=' + encodeURIComponent(cat) + '&kind=' + encodeURIComponent(k.name) + '">' + esc(window.faKind(k.name)) + '</a>';
+        }).join('');
+      }).catch(function(){});
+    });
+  }
   window.faGender = function(){ return gender; };
   window.faSetGender = function(g, quiet){
     gender = g === 'men' ? 'men' : 'women';
@@ -206,11 +217,11 @@
     var t = b.textContent.trim();
     if (t === 'Мужчины') return window.sw({ textContent: 'Мужское' });
     if (t === 'Женщины') return window.sw({ textContent: 'Женское' });
-    perfume = true; paintSwitchers(); renderMenuBrands();
+    location.href = 'catalog.html?category=' + encodeURIComponent('Парфюмерия');
   };
   window.faMtab = window.mtab;   // страницы, переопределяющие mtab, могут вызвать общую версию
   paintSwitchers();
-  loadTopBrands('women'); loadTopBrands('men');
+  loadTopBrands('women'); loadTopBrands('men'); loadMenuKinds();
 
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') window.closeMenu(); });
 

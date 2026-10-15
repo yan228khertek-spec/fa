@@ -59,6 +59,16 @@ services:
       # Тип цены и склад витрины (решение 13.10). Пусто — минимум/сумма по всем (легаси).
       SITE_PRICE_TYPE: ${SITE_PRICE_TYPE:-Розничные}
       SITE_STOCK_WAREHOUSE: ${SITE_STOCK_WAREHOUSE:-Касса ТЗ 2 Fashion Avenue}
+      # Заказы (F1). Суммы и версии документов с заказчиком не согласованы — правятся в .env.
+      ORDERS_ENABLED: ${ORDERS_ENABLED:-1}
+      ORDER_CDEK_FEE: ${ORDER_CDEK_FEE:-500}
+      ORDER_FREE_DELIVERY_FROM: ${ORDER_FREE_DELIVERY_FROM-20000}
+      ORDER_PICKUP_ADDRESS: ${ORDER_PICKUP_ADDRESS:-}
+      ORDER_OFFER_VERSION: ${ORDER_OFFER_VERSION:-draft-2026-10}
+      ORDER_PD_POLICY_VERSION: ${ORDER_PD_POLICY_VERSION:-draft-2026-10}
+      ORDER_MARKETING_CONSENT_VERSION: ${ORDER_MARKETING_CONSENT_VERSION:-draft-2026-10}
+      ORDER_RATE_LIMIT: ${ORDER_RATE_LIMIT:-20}
+      ORDER_RATE_WINDOW_MS: ${ORDER_RATE_WINDOW_MS:-600000}
       # Перед backend стоит Caddy: адрес клиента — из X-Forwarded-For
       # (иначе ограничитель подбора пароля видит один адрес — Caddy).
       TRUST_PROXY: '1'

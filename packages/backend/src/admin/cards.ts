@@ -39,7 +39,13 @@ export interface CardView extends SiteCard {
     brand: BrandRef | null;
     price: number | null;
     stock: number | null;
-    variants: { id: string; size: string | null; color: string | null; inStock: boolean | null }[];
+    variants: {
+      id: string;
+      size: string | null;
+      color: string | null;
+      inStock: boolean | null;
+      price: number | null;
+    }[];
   } | null;
   visible: boolean;
   hiddenReason: HiddenReason | null;
@@ -69,7 +75,32 @@ export interface PublicCardDetail extends PublicCardItem {
   description: string;
   characteristics: CardCharacteristic[];
   photos: string[];
-  sizes: { size: string | null; color: string | null; inStock: boolean | null }[];
+  /** id — Ид SKU для корзины (v1.1), price — цена именно этого SKU (v1.1). */
+  sizes: {
+    id: string;
+    size: string | null;
+    color: string | null;
+    inStock: boolean | null;
+    price: number | null;
+  }[];
+}
+
+/** Карточка, которую можно заказать: живые SKU модели со снимком полей для order_items. */
+export interface OrderableCard {
+  cardId: number;
+  modelId: string;
+  title: string;
+  article: string | null;
+  variants: Map<
+    string,
+    {
+      size: string | null;
+      color: string | null;
+      name: string | null;
+      price: number | null;
+      quantity: number | null;
+    }
+  >;
 }
 
 export interface CardInput {
@@ -171,6 +202,7 @@ export class CardService {
               size: v.size,
               color: v.color,
               inStock: v.quantity === null ? null : v.quantity > 0,
+              price: v.price ?? null,
             })),
           }
         : null,
@@ -380,8 +412,49 @@ export class CardService {
       description: x.card.description,
       characteristics: x.card.characteristics,
       photos: x.card.photos.map((p) => p.file),
-      sizes: m.variants.map((v) => ({ size: v.size, color: v.color, inStock: v.inStock })),
+      sizes: m.variants.map((v) => ({
+        id: v.id,
+        size: v.size,
+        color: v.color,
+        inStock: v.inStock,
+        price: v.price,
+      })),
     };
+  }
+
+  /**
+   * Для оформления заказа: только ВИДИМЫЕ на витрине карточки из `ids` (то же правило A5,
+   * что у публичной выдачи) с живыми SKU — цена и остаток из той же liveData, что у витрины.
+   */
+  async orderable(ids: number[]): Promise<Map<number, OrderableCard>> {
+    const want = new Set(ids);
+    const [ctx, cards] = await Promise.all([this.context(), this.repo.listCards()]);
+    const out = new Map<number, OrderableCard>();
+    for (const card of cards) {
+      if (!want.has(card.id)) continue;
+      const view = this.view(card, ctx);
+      if (!view.visible || !view.model) continue;
+      const live = ctx.live.get(card.modelId);
+      out.set(card.id, {
+        cardId: card.id,
+        modelId: card.modelId,
+        title: card.title ?? view.model.name,
+        article: view.model.article,
+        variants: new Map(
+          (live?.variants ?? []).map((v) => [
+            v.id,
+            {
+              size: v.size,
+              color: v.color,
+              name: v.name ?? null,
+              price: v.price ?? null,
+              quantity: v.quantity,
+            },
+          ]),
+        ),
+      });
+    }
+    return out;
   }
 
   /** Пути фото модели в выгрузке 1С (для кнопки «Взять фото из 1С»). */

@@ -17,6 +17,9 @@ import { BrandService } from './admin/service.js';
 import { BannerService, type BannerRepository } from './admin/banners.js';
 import { MemoryBannerRepository } from './admin/banners-memory.js';
 import { PgBannerRepository } from './admin/banners-pg.js';
+import { TickerService, type TickerRepository } from './admin/ticker.js';
+import { MemoryTickerRepository } from './admin/ticker-memory.js';
+import { PgTickerRepository } from './admin/ticker-pg.js';
 import { CardService } from './admin/cards.js';
 import { MemoryCardRepository } from './admin/cards-memory.js';
 import { PgCardRepository } from './admin/cards-pg.js';
@@ -36,6 +39,10 @@ export interface BuildAppOptions {
   cardRepo?: CardRepository;
   /** Баннеры главной (миграция 007). */
   bannerRepo?: BannerRepository;
+  /** Бегущая строка главной (миграция 009). */
+  tickerRepo?: TickerRepository;
+  /** Часы для календаря акций (тесты). */
+  now?: () => Date;
 }
 
 export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -82,6 +89,12 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       ? new PgBannerRepository(config.databaseUrl)
       : new MemoryBannerRepository());
 
+  const tickerRepo =
+    opts.tickerRepo ??
+    (config.databaseUrl
+      ? new PgTickerRepository(config.databaseUrl)
+      : new MemoryTickerRepository());
+
   const app = Fastify({
     logger: !config.quiet,
     // Глобальный лимит тела маленький: большие тела легальны только в
@@ -102,6 +115,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       service,
       cards: new CardService(cardRepo, catalogReader, service),
       banners: new BannerService(bannerRepo),
+      ticker: new TickerService(tickerRepo, opts.now),
       // Фото из 1С берём из постоянного хранилища, спул — запасной путь.
       imageDirs: [config.mediaDir, path.join(config.spoolDir, 'unpacked')].filter(Boolean),
     });
@@ -115,6 +129,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     await siteBrands.close();
     await cardRepo.close();
     await bannerRepo.close();
+    await tickerRepo.close();
     await catalogReader.close();
     await logSink.close();
   });

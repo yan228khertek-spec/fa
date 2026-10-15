@@ -7,6 +7,8 @@ import type { AdminConfig } from '../config.js';
 import { FailureLimiter, checkAdminAuth } from './auth.js';
 import { bannerDto, registerBannerRoutes } from './banners-routes.js';
 import type { BannerService } from './banners.js';
+import { registerTickerRoutes } from './ticker-routes.js';
+import type { TickerService } from './ticker.js';
 import { registerCardRoutes } from './cards-routes.js';
 import type { CardService } from './cards.js';
 import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
@@ -19,6 +21,7 @@ export interface AdminPluginOptions {
   service: BrandService;
   cards: CardService;
   banners: BannerService;
+  ticker: TickerService;
   /**
    * Где лежат картинки выгрузки 1С, в порядке поиска. Первый каталог —
    * постоянное медиа-хранилище (A2/M1), второй — spool/unpacked, который
@@ -53,7 +56,7 @@ function gender(v: unknown): Gender {
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service, cards, banners, imageDirs } = opts;
+  const { admin, service, cards, banners, ticker, imageDirs } = opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -137,6 +140,19 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
             mobileFocus: { x: d.mobileFocusX, y: d.mobileFocusY },
           };
         }),
+      };
+    });
+
+    // Бегущая строка главной: стандартная или текущая акция из графика (по омскому календарю)
+    pub.get('/api/ticker', async (_req, reply) => {
+      const t = await ticker.current();
+      reply.header('cache-control', 'public, max-age=60');
+      return {
+        items: t.items,
+        bgColor: t.bgColor,
+        textColor: t.textColor,
+        source: t.source,
+        until: t.until,
       };
     });
 
@@ -354,6 +370,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     });
 
     registerBannerRoutes(adm, { banners, uploadsDir, uploadUrl });
+    registerTickerRoutes(adm, ticker);
     registerCardRoutes(adm, { cards, uploadsDir, imageDirs, uploadUrl, modelPhoto });
 
     adm.post('/admin/api/recompute', async () => service.recompute());

@@ -11,7 +11,9 @@
 <link rel="stylesheet" href="assets/site.css">
 <style>
 /* ═════ СТРАНИЦА ТОВАРА ═════ */
-.pp{max-width:1400px;margin:0 auto;padding:calc(106px + 20px) 12px 60px}
+/* на странице товара переключатель Женское/Мужское ни на что не влияет — прячем, шапка ниже */
+header .gender{display:none}
+.pp{max-width:1400px;margin:0 auto;padding:calc(60px + 24px) 12px 60px}
 .crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
 .crumbs a:hover{color:var(--graphite)}
 .pp-body{display:block}
@@ -49,7 +51,7 @@
 .pp-state{text-align:center;color:var(--muted);padding:80px 0}
 .pp-state a{text-decoration:underline;text-underline-offset:4px;color:var(--graphite)}
 @media(min-width:900px){
-  .pp{padding:calc(118px + 30px) 24px 80px}
+  .pp{padding:calc(72px + 32px) 24px 80px}
   .pp-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0 56px;align-items:start}
   .gal{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:start}
   .gal-main{order:2;grid-column:2}

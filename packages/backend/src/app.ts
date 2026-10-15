@@ -32,6 +32,11 @@ import { PgCardRepository } from './admin/cards-pg.js';
 import { MemoryCatalogReader, MemorySiteBrandRepository } from './admin/memory.js';
 import { PgCatalogReader, PgSiteBrandRepository } from './admin/pg.js';
 import type { CardRepository, CatalogReader, SiteBrandRepository } from './admin/types.js';
+import { ordersPlugin } from './orders/plugin.js';
+import { MemoryOrderRepository } from './orders/memory.js';
+import { PgOrderRepository } from './orders/pg.js';
+import { OrderService } from './orders/service.js';
+import { DEFAULT_ORDERS_CONFIG, type OrderRepository } from './orders/types.js';
 
 export interface BuildAppOptions {
   config?: AppConfig;
@@ -53,6 +58,8 @@ export interface BuildAppOptions {
   posterMaker?: PosterMaker;
   /** Часы для календаря акций (тесты). */
   now?: () => Date;
+  /** Заказы (миграция 014). */
+  orderRepo?: OrderRepository;
 }
 
 export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -92,6 +99,9 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   const cardRepo =
     opts.cardRepo ??
     (config.databaseUrl ? new PgCardRepository(config.databaseUrl) : new MemoryCardRepository());
+  const orderRepo =
+    opts.orderRepo ??
+    (config.databaseUrl ? new PgOrderRepository(config.databaseUrl) : new MemoryOrderRepository());
 
   const bannerRepo =
     opts.bannerRepo ??
@@ -118,12 +128,13 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
 
   await app.register(exchangePlugin, { config, logSink, catalog, offers, jobs });
 
+  const brandService = new BrandService(siteBrands, catalogReader);
+  const cardService = new CardService(cardRepo, catalogReader, brandService);
   if (config.admin) {
-    const service = new BrandService(siteBrands, catalogReader);
     await app.register(adminPlugin, {
       admin: config.admin,
-      service,
-      cards: new CardService(cardRepo, catalogReader, service),
+      service: brandService,
+      cards: cardService,
       banners: new BannerService(bannerRepo),
       ticker: new TickerService(tickerRepo, opts.now),
       videoCompressor: opts.videoCompressor ?? ffmpegCompressor(),
@@ -132,6 +143,11 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       imageDirs: [config.mediaDir, path.join(config.spoolDir, 'unpacked')].filter(Boolean),
     });
   }
+
+  // Заказы проверяют позиции по той же выдаче, что видит витрина (CardService.orderable).
+  await app.register(ordersPlugin, {
+    orders: new OrderService(orderRepo, cardService, config.orders ?? DEFAULT_ORDERS_CONFIG),
+  });
 
   app.addHook('onClose', async () => {
     // Фоновая загрузка каталога должна дописаться до закрытия пулов.
@@ -142,6 +158,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     await cardRepo.close();
     await bannerRepo.close();
     await tickerRepo.close();
+    await orderRepo.close();
     await catalogReader.close();
     await logSink.close();
   });

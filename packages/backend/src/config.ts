@@ -1,3 +1,5 @@
+import { DEFAULT_ORDERS_CONFIG, type OrdersConfig } from './orders/types.js';
+
 /** Витринный слой брендов и админка (миграция 004). */
 export interface AdminConfig {
   /** Basic auth админки. Пусто — админка выключена, публичное API брендов работает. */
@@ -53,6 +55,45 @@ export interface AppConfig {
   admin?: AdminConfig;
   /** За reverse-proxy (Caddy): брать адрес клиента из X-Forwarded-For. */
   trustProxy?: boolean;
+  /** Приём заказов (F1). Не задано — значения по умолчанию (DEFAULT_ORDERS_CONFIG). */
+  orders?: OrdersConfig;
+}
+
+/** Сумма в рублях из env: пусто → fallback; не число или < 0 — ошибка старта (деньги не угадываем). */
+function money(env: NodeJS.ProcessEnv, key: string, fallback: number | null): number | null {
+  const raw = env[key]?.trim();
+  if (raw === undefined) return fallback;
+  if (raw === '') return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${key}: ожидается сумма в рублях ≥ 0`);
+  return n;
+}
+
+function positiveInt(env: NodeJS.ProcessEnv, key: string, fallback: number): number {
+  const raw = env[key]?.trim();
+  if (!raw) return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`${key}: ожидается целое > 0`);
+  return n;
+}
+
+export function loadOrdersConfig(env: NodeJS.ProcessEnv = process.env): OrdersConfig {
+  const d = DEFAULT_ORDERS_CONFIG;
+  const enabled = (env.ORDERS_ENABLED ?? '1').trim().toLowerCase();
+  return {
+    enabled: !['0', 'false', 'no', 'off'].includes(enabled),
+    cdekFee: money(env, 'ORDER_CDEK_FEE', d.cdekFee) ?? 0,
+    freeDeliveryFrom: money(env, 'ORDER_FREE_DELIVERY_FROM', d.freeDeliveryFrom),
+    pickupAddress: env.ORDER_PICKUP_ADDRESS?.trim() ?? d.pickupAddress,
+    offerVersion: env.ORDER_OFFER_VERSION?.trim() || d.offerVersion,
+    pdPolicyVersion: env.ORDER_PD_POLICY_VERSION?.trim() || d.pdPolicyVersion,
+    marketingConsentVersion:
+      env.ORDER_MARKETING_CONSENT_VERSION?.trim() || d.marketingConsentVersion,
+    // Онлайн-оплата включается вместе с интеграцией ЮKassa (F4), не переменной окружения.
+    onlinePayment: false,
+    rateLimit: positiveInt(env, 'ORDER_RATE_LIMIT', d.rateLimit),
+    rateWindowMs: positiveInt(env, 'ORDER_RATE_WINDOW_MS', d.rateWindowMs),
+  };
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -78,5 +119,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       imagesBaseUrl: env.IMAGES_BASE_URL ?? '',
     },
     trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
+    orders: loadOrdersConfig(env),
   };
 }

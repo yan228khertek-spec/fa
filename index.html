@@ -12,7 +12,8 @@
 <style>
 /* ═════ БЕГУЩАЯ СТРОКА ═════ */
 .tick{background:var(--graphite);color:#fff;overflow:hidden;padding:9px 0;font-size:11.5px;padding-top:calc(9px + var(--st))}
-.tk{display:flex;gap:56px;width:max-content;animation:tk 28s linear infinite;white-space:nowrap}
+.tk{display:flex;width:max-content;animation:tk 28s linear infinite;white-space:nowrap}
+.tkh{display:flex;gap:56px;padding-right:56px}
 
 .tk a{text-decoration:underline;text-underline-offset:2px}
 @keyframes tk{to{transform:translateX(-50%)}}
@@ -222,10 +223,35 @@ fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():null).then(d=>{
     theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart();
 }).catch(()=>{});
 
-document.getElementById('tk').innerHTML=[...Array(2)].map(()=>
- ['Бесплатная доставка по России от 20 000 ₽','Примерка при курьере по Омску',
-  'Скидки до −50% в разделе «Распродажа»','Бонусная система: до 20% бонусами']
- .map(t=>`<span>${t}</span>`).join('')).join('');
+/* Бегущая строка: стандартная или текущая акция из админки (/api/ticker). Пока API не ответил или
+   недоступен — встроенная строка, та же, что в админке по умолчанию. */
+(function(){
+  const E=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safe=h=>/^(https?:\/\/|\/|[\w.-]+\.html\b|#)/i.test(h||'')?h:'';
+  const tk=document.getElementById('tk'), bar=tk.parentElement;
+  const FALLBACK={bgColor:'#2c2b27',textColor:'#ffffff',items:[
+    {text:'Бесплатная доставка по России от 20 000 ₽'},{text:'Примерка при курьере по Омску'},
+    {text:'Скидки до −50% в разделе «Распродажа»',link:'catalog.html?sale=1'},
+    {text:'Бонусная система: до 20% бонусами',link:'club.html'}]};
+  let sig='';
+  function show(t){
+    const key=JSON.stringify(t); if(key===sig)return; sig=key;
+    bar.style.background=t.bgColor; bar.style.color=t.textColor;
+    const one=t.items.map(i=>{const h=safe(i.link);return h?`<a href="${E(h)}">${E(i.text)}</a>`:`<span>${E(i.text)}</span>`}).join('');
+    tk.innerHTML=`<div class="tkh">${one}</div>`;
+    /* набор повторяем, пока одна «половина» не станет шире экрана, и дублируем её для бесшовного круга */
+    const w=tk.firstElementChild.getBoundingClientRect().width||1;
+    const n=Math.max(1,Math.ceil(innerWidth/w));
+    tk.innerHTML=`<div class="tkh">${one.repeat(n)}</div><div class="tkh" aria-hidden="true">${one.repeat(n)}</div>`;
+    const half=tk.firstElementChild.getBoundingClientRect().width;
+    tk.style.animationDuration=Math.max(12,half/55)+'s';   /* ~55 px/с, одинаково для любой длины */
+  }
+  show(FALLBACK);
+  fetch(API_BASE+'/api/ticker').then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+    if(d&&Array.isArray(d.items)&&d.items.length)show({bgColor:d.bgColor||FALLBACK.bgColor,textColor:d.textColor||FALLBACK.textColor,items:d.items});
+  }).catch(()=>{});
+  let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const k=sig;sig='';try{show(JSON.parse(k))}catch(e){}},200)});
+})();
 
 function card(p){
   const id='p'+(++uid);

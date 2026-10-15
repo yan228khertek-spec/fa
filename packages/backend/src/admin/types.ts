@@ -144,6 +144,8 @@ export interface SiteCard {
   title: string | null;
   description: string;
   characteristics: CardCharacteristic[];
+  /** Раздел, заданный вручную; null — определяется по названию из 1С. */
+  category: string | null;
   status: CardStatus;
   publishedAt: string | null;
   createdAt: string;
@@ -162,6 +164,7 @@ export interface CardPatch {
   title?: string | null;
   description?: string;
   characteristics?: CardCharacteristic[];
+  category?: string | null;
   status?: CardStatus;
 }
 

@@ -45,6 +45,7 @@ export class MemoryCardRepository implements CardRepository {
       title: input.title,
       description: input.description,
       characteristics: structuredClone(input.characteristics),
+      category: null,
       status: 'draft',
       publishedAt: null,
       createdAt: now,
@@ -61,6 +62,7 @@ export class MemoryCardRepository implements CardRepository {
     if (patch.description !== undefined) c.description = patch.description;
     if (patch.characteristics !== undefined)
       c.characteristics = structuredClone(patch.characteristics);
+    if (patch.category !== undefined) c.category = patch.category;
     if (patch.status !== undefined && patch.status !== c.status) {
       c.status = patch.status;
       c.publishedAt = patch.status === 'published' ? new Date().toISOString() : null;

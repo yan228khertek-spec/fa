@@ -7,7 +7,7 @@
     <title>FASHION AVENUE — админка</title>
     <style>
       :root {
-        --graphite: #1d1d1f;
+        --graphite: #2c2b27;
         --red: #c8452f;
         --line: #e4e1dc;
         --muted: #8a8782;
@@ -239,6 +239,139 @@
         .cols {
           grid-template-columns: 1fr;
         }
+      }
+
+      /* баннеры */
+      .bn {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .bn-head {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .bn-head b {
+        flex: 1;
+        min-width: 120px;
+      }
+      .bn-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+      }
+      .bn-lab {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin: 0 0 4px;
+      }
+      .bn-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .bn-fields .wide {
+        grid-column: 1 / -1;
+      }
+      .focus {
+        position: relative;
+        background: var(--soft);
+        border: 1px solid var(--line);
+        line-height: 0;
+        cursor: crosshair;
+        touch-action: none;
+        user-select: none;
+        min-height: 60px;
+      }
+      .focus img {
+        width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        display: block;
+        pointer-events: none;
+      }
+      .focus i {
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        margin: -13px 0 0 -13px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 1px var(--graphite),
+          0 0 6px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+      }
+      .focus i::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 4px;
+        height: 4px;
+        margin: -2px 0 0 -2px;
+        background: var(--red);
+        border-radius: 50%;
+      }
+      .prev {
+        position: relative;
+        overflow: hidden;
+        background: var(--soft);
+        border: 1px solid var(--line);
+      }
+      .prev img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .prev .tx {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 12px;
+        line-height: 1.25;
+      }
+      .prev .tx b {
+        display: block;
+        font-size: 14px;
+      }
+      .prev .tx span {
+        font-size: 11px;
+      }
+      .prev.light .tx {
+        color: #fff;
+        background: linear-gradient(transparent, rgba(44, 43, 39, 0.65));
+      }
+      .prev.dark .tx {
+        color: var(--graphite);
+        background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
+      }
+      .prev.d {
+        aspect-ratio: 16 / 7;
+      }
+      .prev.m {
+        aspect-ratio: 4 / 5;
+        width: 200px;
+        max-width: 100%;
+      }
+      .bn-pv {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .bn-pv > div:first-child {
+        flex: 1;
+        min-width: 200px;
       }
       .toplist {
         list-style: none;
@@ -501,6 +634,7 @@
         <nav id="nav">
           <button data-t="home" class="on">Обзор</button>
           <button data-t="cards">Карточки</button>
+          <button data-t="banners">Баннеры</button>
           <button data-t="brands">Бренды</button>
           <button data-t="top">Топ-бренды</button>
           <button data-t="unmatched">Без бренда</button>
@@ -586,6 +720,22 @@
           <span class="muted" id="cTotal"></span
           ><button class="btn ghost" id="cMore">Показать ещё</button>
         </div>
+      </section>
+
+      <section id="t-banners" class="hidden">
+        <p class="muted" style="margin-top: 0">
+          Баннеры главной страницы идут слайдером в заданном порядке. Для каждого можно отдельно
+          подобрать кадр под компьютер и под телефон: нажмите на картинку в нужном месте — эта точка
+          останется в кадре при обрезке. Справа сразу видно, как баннер ляжет на экран. Для телефона
+          можно загрузить свою картинку (рекомендуем вертикальную 4:5, от 1080×1350).
+        </p>
+        <div class="row" style="margin-bottom: 16px">
+          <button class="btn" id="bnAdd">+ Новый баннер</button>
+          <span class="hint muted"
+            >Для компьютера — от 2400×1050 (16:7), JPEG/PNG/WebP до 8 МБ</span
+          >
+        </div>
+        <div id="bnList"></div>
       </section>
 
       <section id="t-brands" class="hidden">
@@ -722,7 +872,7 @@
 
     <script>
       const $ = (s) => document.querySelector(s),
-        $$ = (s) => [...document.querySelectorAll(s)];
+        $$ = (s, r = document) => [...r.querySelectorAll(s)];
       const esc = (s) =>
         String(s ?? '')
           .replace(/&/g, '&amp;')
@@ -774,6 +924,7 @@
         ({
           home: loadHome,
           cards: loadCards,
+          banners: loadBanners,
           brands: loadBrands,
           top: loadTop,
           unmatched: loadUnmatched,
@@ -784,6 +935,201 @@
       $('#nav').onclick = (e) => {
         const b = e.target.closest('button');
         if (b) tab(b.dataset.t);
+      };
+
+      /* баннеры */
+      let BN = [];
+      async function loadBanners() {
+        BN = await api('/banners');
+        drawBanners();
+      }
+      const bnPos = (x, y) => `${x}% ${y}%`;
+      function bnCard(b, i) {
+        const mob = b.imageMobile || b.image;
+        const ph = (src, cls, x, y) =>
+          `<div class="prev ${cls} ${b.theme}">${src ? `<img src="${esc(src)}" alt="" style="object-position:${bnPos(x, y)}">` : ''}
+            <div class="tx"><b>${esc(b.title) || 'Заголовок'}</b><span>${esc(b.subtitle)}</span></div></div>`;
+        const ed = (kind, src, x, y, note) => `<div>
+          <span class="bn-lab">${note}</span>
+          ${
+            src
+              ? `<div class="focus" data-k="${kind}"><img src="${esc(src)}" alt=""><i style="left:${x}%;top:${y}%"></i></div>`
+              : '<div class="focus muted" style="padding:20px;line-height:1.4;cursor:default">Загрузите картинку</div>'
+          }</div>`;
+        return `<div class="card bn" data-id="${b.id}">
+          <div class="bn-head">
+            <span class="tag ${b.active ? 'top' : ''}">${b.active ? 'Показывается' : 'Скрыт'}</span>
+            <b>${i + 1}. ${esc(b.title) || 'Без заголовка'}</b>
+            <button class="btn ghost sm" data-a="up" ${i ? '' : 'disabled'}>↑</button>
+            <button class="btn ghost sm" data-a="down" ${i < BN.length - 1 ? '' : 'disabled'}>↓</button>
+            <button class="btn ghost sm" data-a="del">Удалить</button>
+          </div>
+          <div class="bn-fields">
+            <div class="wide"><span class="bn-lab">Заголовок</span><input type="text" data-f="title" maxlength="120" value="${esc(b.title)}"></div>
+            <div class="wide"><span class="bn-lab">Подзаголовок</span><input type="text" data-f="subtitle" maxlength="240" value="${esc(b.subtitle)}"></div>
+            <div><span class="bn-lab">Текст кнопки</span><input type="text" data-f="buttonText" maxlength="40" value="${esc(b.buttonText)}" placeholder="Смотреть"></div>
+            <div><span class="bn-lab">Ссылка</span><input type="text" data-f="link" maxlength="300" value="${esc(b.link)}" placeholder="catalog.html?category=Обувь"></div>
+            <div><span class="bn-lab">Цвет текста</span><select data-f="theme"><option value="light" ${b.theme === 'light' ? 'selected' : ''}>Светлый (на тёмной картинке)</option><option value="dark" ${b.theme === 'dark' ? 'selected' : ''}>Тёмный (на светлой картинке)</option></select></div>
+            <div><span class="bn-lab">Показывать на сайте</span><select data-f="active"><option value="1" ${b.active ? 'selected' : ''}>Да</option><option value="0" ${b.active ? '' : 'selected'}>Нет</option></select></div>
+          </div>
+          <div class="bn-grid">
+            <div>
+              <span class="bn-lab">Картинка для компьютера ${b.image ? '' : '<span class="err">· обязательна</span>'}</span>
+              <div class="row"><label class="btn sm">${b.image ? 'Заменить' : 'Загрузить'}<input type="file" accept="image/*" data-up="desktop" hidden></label>
+              ${b.image ? '<button class="btn ghost sm" data-rm="desktop">Убрать</button>' : ''}</div>
+              <div class="bn-pv">${ed('d', b.image, b.focusX, b.focusY, 'Точка фокуса — нажмите на картинку')}
+              <div><span class="bn-lab">Как выглядит на компьютере</span>${ph(b.image, 'd', b.focusX, b.focusY)}</div></div>
+            </div>
+            <div>
+              <span class="bn-lab">Картинка для телефона <span class="muted">· по желанию</span></span>
+              <div class="row"><label class="btn sm">${b.imageMobile ? 'Заменить' : 'Загрузить свою'}<input type="file" accept="image/*" data-up="mobile" hidden></label>
+              ${b.imageMobile ? '<button class="btn ghost sm" data-rm="mobile">Убрать (взять компьютерную)</button>' : ''}</div>
+              <div class="bn-pv">${ed('m', mob, b.mobileFocusX, b.mobileFocusY, b.imageMobile ? 'Точка фокуса — нажмите на картинку' : 'Своей нет — берём компьютерную. Нажмите на картинку: что оставить в кадре')}
+              <div><span class="bn-lab">Как выглядит на телефоне</span>${ph(mob, 'm', b.mobileFocusX, b.mobileFocusY)}</div></div>
+            </div>
+          </div>
+          <div class="row"><button class="btn" data-a="save">Сохранить</button><span class="muted bn-state"></span></div>
+        </div>`;
+      }
+      function drawBanners() {
+        $('#bnList').innerHTML = BN.length
+          ? BN.map(bnCard).join('')
+          : '<div class="card muted">Баннеров пока нет. Пока их нет, на главной показывается оформление по умолчанию.</div>';
+      }
+      $('#bnAdd').onclick = async () => {
+        await api('/banners', { method: 'POST', json: { title: 'Новый баннер' } });
+        await loadBanners();
+        toast('Баннер создан — загрузите картинку');
+      };
+      /* точка фокуса: нажатие и перетаскивание по картинке, превью обновляется на лету */
+      (function () {
+        let cur = null;
+        const apply = (e) => {
+          const r = cur.box.getBoundingClientRect(),
+            img = cur.box.querySelector('img').getBoundingClientRect();
+          /* считаем по самой картинке (она может не занимать всю рамку) */
+          const x = Math.min(
+              100,
+              Math.max(0, Math.round(((e.clientX - img.left) / img.width) * 100)),
+            ),
+            y = Math.min(100, Math.max(0, Math.round(((e.clientY - img.top) / img.height) * 100)));
+          void r;
+          const b = BN.find((v) => v.id === cur.id);
+          if (cur.k === 'd') ((b.focusX = x), (b.focusY = y));
+          else ((b.mobileFocusX = x), (b.mobileFocusY = y));
+          cur.box.querySelector('i').style.cssText = `left:${x}%;top:${y}%`;
+          const pv = cur.card.querySelector(cur.k === 'd' ? '.prev.d img' : '.prev.m img');
+          if (pv) pv.style.objectPosition = bnPos(x, y);
+          cur.card.querySelector('.bn-state').textContent = 'Не сохранено';
+        };
+        $('#bnList').addEventListener('pointerdown', (e) => {
+          const box = e.target.closest('.focus[data-k]');
+          if (!box || !box.querySelector('img')) return;
+          cur = {
+            box,
+            k: box.dataset.k,
+            card: box.closest('.card'),
+            id: +box.closest('.card').dataset.id,
+          };
+          box.setPointerCapture(e.pointerId);
+          apply(e);
+        });
+        $('#bnList').addEventListener('pointermove', (e) => cur && apply(e));
+        const end = () => (cur = null);
+        $('#bnList').addEventListener('pointerup', end);
+        $('#bnList').addEventListener('pointercancel', end);
+      })();
+      function bnFields(card) {
+        const f = {};
+        $$('[data-f]', card).forEach((el) => (f[el.dataset.f] = el.value));
+        f.active = f.active === '1';
+        return f;
+      }
+      $('#bnList').oninput = (e) => {
+        const card = e.target.closest('.card');
+        if (!card || !e.target.dataset.f) return;
+        card.querySelector('.bn-state').textContent = 'Не сохранено';
+        const f = bnFields(card);
+        $$('.prev', card).forEach((p) => {
+          p.querySelector('.tx b').textContent = f.title || 'Заголовок';
+          p.querySelector('.tx span').textContent = f.subtitle;
+          p.classList.toggle('light', f.theme === 'light');
+          p.classList.toggle('dark', f.theme === 'dark');
+        });
+      };
+      $('#bnList').onchange = async (e) => {
+        const inp = e.target.closest('input[data-up]');
+        if (!inp || !inp.files[0]) return;
+        const id = +inp.closest('.card').dataset.id;
+        try {
+          await api(`/banners/${id}/image/${inp.dataset.up}`, {
+            method: 'POST',
+            body: inp.files[0],
+            type: 'application/octet-stream',
+          });
+        } catch {
+          inp.value = '';
+          return;
+        }
+        toast('Загружено');
+        await keepBannerEdits(id);
+      };
+      /* перерисовка после загрузки не должна терять несохранённый текст */
+      async function keepBannerEdits(id) {
+        const card = $(`#bnList .card[data-id="${id}"]`);
+        const typed = card ? bnFields(card) : null;
+        const old = BN.find((v) => v.id === id);
+        const keep = old && { ...old };
+        BN = await api('/banners');
+        const b = BN.find((v) => v.id === id);
+        if (b && typed)
+          Object.assign(b, typed, {
+            focusX: keep.focusX,
+            focusY: keep.focusY,
+            mobileFocusX: keep.mobileFocusX,
+            mobileFocusY: keep.mobileFocusY,
+          });
+        drawBanners();
+      }
+      $('#bnList').onclick = async (e) => {
+        const btn = e.target.closest('button');
+        const card = e.target.closest('.card[data-id]');
+        if (!btn || !card) return;
+        const id = +card.dataset.id;
+        if (btn.dataset.rm) {
+          await api(`/banners/${id}/image/${btn.dataset.rm}`, { method: 'DELETE' });
+          return keepBannerEdits(id);
+        }
+        const a = btn.dataset.a;
+        if (a === 'save') {
+          const b = BN.find((v) => v.id === id);
+          await api('/banners/' + id, {
+            method: 'PUT',
+            json: {
+              ...bnFields(card),
+              focusX: b.focusX,
+              focusY: b.focusY,
+              mobileFocusX: b.mobileFocusX,
+              mobileFocusY: b.mobileFocusY,
+            },
+          });
+          toast('Сохранено');
+          return loadBanners();
+        }
+        if (a === 'del') {
+          if (!confirm('Удалить баннер вместе с картинками?')) return;
+          await api('/banners/' + id, { method: 'DELETE' });
+          toast('Удалено');
+          return loadBanners();
+        }
+        if (a === 'up' || a === 'down') {
+          const ids = BN.map((v) => v.id),
+            i = ids.indexOf(id),
+            j = a === 'up' ? i - 1 : i + 1;
+          [ids[i], ids[j]] = [ids[j], ids[i]];
+          BN = await api('/banners-order', { method: 'PUT', json: { ids } });
+          drawBanners();
+        }
       };
 
       /* обзор */
@@ -1119,6 +1465,8 @@
         $('#dlgBody').innerHTML =
           `<h3>${esc(c.title || m?.name || c.modelId)} ${cbadge(c)}</h3><div class="sub">${esc(m?.name || '')}</div>${live}
     <div class="fld"><label>Название на сайте (пусто — как в 1С)</label><input type="text" id="kTitle" maxlength="200" value="${esc(c.title || '')}"></div>
+    <div class="fld"><label>Раздел на сайте</label><select id="kCat">${['', 'Одежда', 'Обувь', 'Сумки', 'Аксессуары', 'Парфюмерия'].map((v) => `<option value="${v}" ${(c.category || '') === v ? 'selected' : ''}>${v || 'Определить автоматически по названию из 1С'}</option>`).join('')}</select>
+      <div class="hint muted">Для парфюмерии выберите «Парфюмерия»: она попадёт в блок на главной и в раздел каталога.</div></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
       <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
@@ -1134,6 +1482,7 @@
         if (!dlg.open) dlg.showModal();
         const fields = () => ({
           title: $('#kTitle').value,
+          category: $('#kCat').value,
           description: $('#kDesc').value,
           characteristics: $$('#kKv .kv')
             .map((r) => {
@@ -1402,7 +1751,9 @@
       }
 
       tab(
-        ['home', 'cards', 'brands', 'top', 'unmatched', 'exchange'].includes(location.hash.slice(1))
+        ['home', 'cards', 'banners', 'brands', 'top', 'unmatched', 'exchange'].includes(
+          location.hash.slice(1),
+        )
           ? location.hash.slice(1)
           : 'home',
       );

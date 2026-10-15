@@ -220,6 +220,7 @@
     perfume = false;
     try { sessionStorage.setItem('fa_gender', gender); } catch (e) {}
     paintSwitchers(); renderMenuBrands();
+    try { document.dispatchEvent(new CustomEvent('fa:gender', { detail: gender })); } catch (e) {}
     if (!quiet) window.toast((gender === 'men' ? 'Мужское' : 'Женское') + ' — раздел переключён');
   };
   // шапка: Мужское/Женское; страницы, которым нужно больше (список брендов на «Брендах»), вызывают faSetGender сами

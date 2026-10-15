@@ -93,6 +93,17 @@
   var me = document.currentScript;
   me.insertAdjacentHTML('beforebegin', HEADER);
 
+  // Бегущую строку (если страница её содержит — сейчас только главная) переносим
+  // первым элементом внутрь шапки. Иначе фиксированная шапка (top:0) ложится
+  // поверх строки и полностью её скрывает. Внутри шапки строка видна над баром
+  // и скрывается/появляется вместе с шапкой при скролле.
+  var tick = document.querySelector('.tick');
+  var hdr = document.querySelector('header');
+  if (tick && hdr) {
+    hdr.insertBefore(tick, hdr.firstChild);
+    hdr.classList.add('has-tick');
+  }
+
   function mountFooter(){
     var slot = document.querySelector('[data-site-footer]');
     if (slot) slot.outerHTML = FOOTER;

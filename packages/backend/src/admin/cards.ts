@@ -98,7 +98,7 @@ export interface PublicCardDetail extends PublicCardItem {
   description: string;
   characteristics: CardCharacteristic[];
   photos: string[];
-  /** id — Ид SKU для корзины (v1.1), price — цена именно этого SKU (v1.1). */
+  /** id — Ид SKU для корзины (v1.2), price — цена именно этого SKU (v1.2). */
   sizes: {
     id: string;
     size: string | null;

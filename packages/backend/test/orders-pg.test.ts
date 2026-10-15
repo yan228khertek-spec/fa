@@ -207,7 +207,7 @@ describe.skipIf(!url)('заказы в PostgreSQL (HTTP end-to-end)', () => {
   const count = async (table: string) =>
     Number((await pool.query(`SELECT count(*) FROM ${table}`)).rows[0].count);
 
-  it('карточка витрины отдаёт sizes[].id и цену размера (контракт v1.1)', async () => {
+  it('карточка витрины отдаёт sizes[].id и цену размера (контракт v1.2)', async () => {
     const res = await app.inject({ url: `/api/cards/${cardId}` });
     expect(res.statusCode).toBe(200);
     expect(res.json().sizes).toEqual([

@@ -70,7 +70,7 @@ export class RateLimiter {
 }
 
 /**
- * Публичное API заказов (трек F1, контракт v1.1 — docs/api-contract.md, раздел «Заказы»):
+ * Публичное API заказов (трек F1, контракт v1.2 — docs/api-contract.md, раздел «Заказы»):
  *   GET  /api/checkout/config    — тарифы доставки, способы оплаты, версии документов
  *   POST /api/orders             — оформить заказ (Idempotency-Key обязателен)
  *   GET  /api/orders/:token      — заказ для страницы «Спасибо» (без ПД)

@@ -30,6 +30,7 @@ describe('карточки товаров (HTTP)', () => {
       exchangePassword: 'y',
       fileLimit: 1024,
       spoolDir: path.join(dir, 'spool'),
+      mediaDir: path.join(dir, 'media'),
       importWaitMs: 100,
       unpackLimit: 1024,
       databaseUrl: undefined,
@@ -343,7 +344,7 @@ describe('карточки товаров (HTTP)', () => {
 
     const first = await post(url);
     expect(first.statusCode).toBe(200);
-    expect(first.json().import).toEqual({ found: 5, added: 2, skipped: 2 });
+    expect(first.json().import).toEqual({ found: 5, added: 2, skipped: 3 });
     expect(first.json().photos).toHaveLength(2);
 
     const again = await post(url); // повтор ничего не добавляет
@@ -354,6 +355,20 @@ describe('карточки товаров (HTTP)', () => {
     const empty = await post(`/admin/api/cards/${none.id}/photos/from-1c`);
     expect(empty.json().import).toEqual({ found: 0, added: 0, skipped: 0 });
     expect((await post('/admin/api/cards/999/photos/from-1c')).statusCode).toBe(404);
+  });
+
+  it('«Взять фото из 1С» берёт файл из медиа-хранилища, когда спул уже вычищен', async () => {
+    // Спула нет вовсе: именно так выглядит сервер после очередного mode=init.
+    const media = path.join(dir, 'media', 'import_files', 'ab');
+    await mkdir(media, { recursive: true });
+    await writeFile(path.join(media, 'a.jpg'), png(1));
+    catalog.images.set('m1', ['import_files/ab/a.jpg']);
+    const card = (await post('/admin/api/cards', { modelId: 'm1' })).json();
+
+    const res = await post(`/admin/api/cards/${card.id}/photos/from-1c`);
+
+    expect(res.json().import).toEqual({ found: 1, added: 1, skipped: 0 });
+    expect(res.json().photos).toHaveLength(1);
   });
 
   it('валидация полей', async () => {

@@ -88,7 +88,27 @@ git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Данные (pgdata, spool, сертификаты) живут в named volumes и переживают пересборку. Полный сброс БД: `docker compose -f docker-compose.prod.yml down -v` (УНИЧТОЖАЕТ каталог и журнал — только осознанно).
+Данные (pgdata, spool, uploads, media, сертификаты) живут в named volumes и переживают пересборку. Полный сброс БД: `docker compose -f docker-compose.prod.yml down -v` (УНИЧТОЖАЕТ каталог, журнал, фото админки и медиа-хранилище — только осознанно).
+
+### Медиа-хранилище фото из 1С (A2/M1)
+
+Том `media` смонтирован в backend как `/app/media` (запись) и в Caddy как `/srv/images` (чтение); Caddy отдаёт его по `/images/*`. Backend переносит туда `spool/unpacked/import_files` после каждого успешного `import.xml` — **ничего не удаляя**, поэтому выданные витрине URL переживают любую следующую выгрузку (спул при `mode=init` чистится целиком).
+
+Чтобы фото появились, в настройке 1С должна быть включена галка **«Файлы изображений»**: выгрузка без неё не приносит ни файлов, ни тегов `Картинка`.
+
+Если на момент деплоя в спуле уже лежат картинки прошлой выгрузки, их можно перенести разово, не дожидаясь следующего обмена:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T backend \
+  sh -c 'cp -an /app/spool/unpacked/import_files/. /app/media/import_files/ 2>/dev/null; \
+         echo "в media: $(find /app/media -type f | wc -l) файлов"' </dev/null
+```
+
+Проверка снаружи (с сервера к своему домену curl не ходит — проверять с Мака или из браузера):
+
+```
+https://1c-dev.avenuefashion.online/images/<путь из колонки «Файлы фото»>
+```
 
 ## 7. Подключение 1С (этап 6, после этого деплоя)
 

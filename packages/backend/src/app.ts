@@ -90,7 +90,8 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       admin: config.admin,
       service,
       cards: new CardService(cardRepo, catalogReader, service),
-      unpackedDir: path.join(config.spoolDir, 'unpacked'),
+      // Фото из 1С берём из постоянного хранилища, спул — запасной путь.
+      imageDirs: [config.mediaDir, path.join(config.spoolDir, 'unpacked')].filter(Boolean),
     });
   }
 

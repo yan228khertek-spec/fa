@@ -221,6 +221,79 @@ describe.skipIf(!url)('PostgreSQL staging-каталог', () => {
     expect(await count('product_variants')).toBe(1);
   });
 
+  it('выгрузка без картинок НЕ стирает метаданные фото', async () => {
+    await load(SPEC);
+    expect(await count('product_images_meta')).toBe(2);
+
+    // Ровно то, что случилось на fa-dev 13.10: лёгкий каталог выгружен со
+    // снятой галкой «Файлы изображений» — в файле нет ни одного тега Картинка.
+    const noImages: ImportSpec = {
+      ...SPEC,
+      products: [
+        {
+          id: 'p1',
+          article: 'ART-1',
+          name: 'Платье',
+          groups: ['g1-1', 'g1-1-1'],
+          brand: { id: 'b1', name: 'Gerry Weber' },
+          props: [{ id: 'prop-color', values: ['c-red'] }],
+        },
+        {
+          id: 'p1#ch1',
+          name: 'Платье 44 Красный',
+          chars: [
+            { name: 'Размер', value: '44' },
+            { name: 'Цвет', value: 'Красный' },
+          ],
+        },
+      ],
+    };
+    const summary = await load(noImages, 'import-light.xml');
+
+    expect(summary.images).toBe(0);
+    expect(await count('product_images_meta')).toBe(2);
+    const paths = await pool.query<{ path: string }>(
+      `SELECT path FROM product_images_meta ORDER BY sort_order`,
+    );
+    expect(paths.rows.map((r) => r.path)).toEqual(['import_files/p1.jpg', 'import_files/p1-2.jpg']);
+  });
+
+  it('владелец с картинками синхронизируется как раньше, сосед без картинок не страдает', async () => {
+    const two: ImportSpec = {
+      ...SPEC,
+      products: [
+        {
+          id: 'p1',
+          name: 'Платье',
+          groups: ['g1-1'],
+          images: ['import_files/p1.jpg', 'import_files/p1-2.jpg'],
+        },
+        { id: 'p2', name: 'Юбка', groups: ['g1-1'], images: ['import_files/p2.jpg'] },
+      ],
+    };
+    await load(two);
+    expect(await count('product_images_meta')).toBe(3);
+
+    // p1 пришёл с одной картинкой (вторую в 1С убрали), p2 — вовсе без тегов.
+    const changed: ImportSpec = {
+      ...two,
+      onlyChanges: true,
+      products: [
+        { id: 'p1', name: 'Платье', groups: ['g1-1'], images: ['import_files/p1.jpg'] },
+        { id: 'p2', name: 'Юбка', groups: ['g1-1'] },
+      ],
+    };
+    await load(changed, 'import2.xml');
+
+    const rows = await pool.query<{ owner_source_id: string; path: string }>(
+      `SELECT owner_source_id, path FROM product_images_meta ORDER BY owner_source_id, path`,
+    );
+    expect(rows.rows).toEqual([
+      { owner_source_id: 'p1', path: 'import_files/p1.jpg' },
+      { owner_source_id: 'p2', path: 'import_files/p2.jpg' },
+    ]);
+  });
+
   it('битый файл: прогон помечен failure, каталог не меняется', async () => {
     await load(SPEC);
     const before = await counts();

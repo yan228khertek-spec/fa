@@ -38,6 +38,7 @@ services:
     volumes:
       - spool:/app/spool
       - uploads:/app/uploads
+      - media:/app/media
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/healthz || exit 1']
       interval: 10s
@@ -48,3 +49,4 @@ volumes:
   pgdata:
   spool:
   uploads:
+  media:

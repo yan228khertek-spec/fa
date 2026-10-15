@@ -17,6 +17,7 @@ import {
   unzipPendingArchives,
   unzipSafely,
 } from './files.js';
+import { syncImportMedia } from './media.js';
 import { type ImportJobRegistry, settleWithin } from './import-jobs.js';
 import { emptyCommerceInfoXml, sendFailure, sendPlain, sendSuccess, sendXml } from './protocol.js';
 
@@ -198,7 +199,19 @@ export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions
             return `${s.encoding}; типов цен ${s.priceTypes}, складов ${s.warehouses}, предложений ${s.offers}, цен ${s.prices}, остатков ${s.stocks}, ${s.durationMs} мс`;
           }
           const s = await importCatalogFile(catalog, file, relative);
-          return `${s.encoding}; категорий ${s.categories}, брендов ${s.brands}, свойств ${s.properties}, товаров ${s.products}, SKU ${s.variants}, картинок ${s.images}, ${s.durationMs} мс`;
+          // Картинки выгрузки — в постоянное хранилище (A2/M1): spool чистится
+          // следующим init, а URL /images/* должны пережить обмен. Отказ
+          // переноса не роняет уже загруженный каталог — только помечается
+          // в журнале обмена.
+          let media = '';
+          try {
+            const m = await syncImportMedia(unpackedDir, config.mediaDir);
+            if (m) media = `, медиа +${m.copied} (на месте ${m.skipped})`;
+          } catch (err) {
+            req.log.error({ err }, 'media sync failed');
+            media = `, медиа: ошибка переноса`;
+          }
+          return `${s.encoding}; категорий ${s.categories}, брендов ${s.brands}, свойств ${s.properties}, товаров ${s.products}, SKU ${s.variants}, картинок ${s.images}${media}, ${s.durationMs} мс`;
         });
 
         const settled = await settleWithin(job, config.importWaitMs);

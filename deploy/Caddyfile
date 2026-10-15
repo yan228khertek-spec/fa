@@ -16,12 +16,38 @@
 		max_size 100MB
 	}
 
-	reverse_proxy backend:3000 {
-		# mode=import отвечает максимум через EXCHANGE_IMPORT_WAIT_MS (5 c),
-		# длинные загрузки идут в фоне под ответ progress — дефолтных
-		# таймаутов Caddy достаточно; явный запас на медленные куски файла.
-		transport http {
-			response_header_timeout 120s
+	# Фото из выгрузки 1С (A2/M1): статика из тома media, смонтированного
+	# только на чтение. handle_path срезает префикс, поэтому запрос
+	# /images/import_files/aa/bb.jpg отдаёт /srv/images/import_files/aa/bb.jpg.
+	# Через backend не ходим: Node не должен раздавать сотни мегабайт картинок.
+	handle_path /images/* {
+		root * /srv/images
+		# Хранилище только для чтения: всё, кроме GET/HEAD, отбиваем сразу.
+		@write not method GET HEAD
+		respond @write 405
+
+		# Отдаём ТОЛЬКО картинки. Содержимое тома приходит из 1С, и файл с
+		# расширением .html/.svg исполнился бы на origin API — том же, где
+		# живут /admin и /uploads (по той же причине админка не принимает SVG).
+		@image path_regexp (?i)\.(jpe?g|png|webp|avif|gif|bmp)$
+		handle @image {
+			header Cache-Control "public, max-age=86400"
+			header X-Content-Type-Options "nosniff"
+			file_server
+		}
+		handle {
+			respond 404
+		}
+	}
+
+	handle {
+		reverse_proxy backend:3000 {
+			# mode=import отвечает максимум через EXCHANGE_IMPORT_WAIT_MS (5 c),
+			# длинные загрузки идут в фоне под ответ progress — дефолтных
+			# таймаутов Caddy достаточно; явный запас на медленные куски файла.
+			transport http {
+				response_header_timeout 120s
+			}
 		}
 	}
 

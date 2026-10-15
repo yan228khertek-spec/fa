@@ -1,7 +1,9 @@
 /* Информационные страницы (доставка, возврат, клуб, шопинг): общая вёрстка.
    Подключение: <link rel="stylesheet" href="assets/pages.css"> после site.css.
    Структура страницы: <main class="doc"> с .crumbs, .doc-head (h1 + .lead), .doc-body (секции .blk), .doc-cta. */
-.doc{max-width:1100px;margin:0 auto;padding:calc(106px + 20px) 12px 70px}
+/* на информационных страницах переключатель Женское/Мужское не нужен */
+header .gender{display:none}
+.doc{max-width:1100px;margin:0 auto;padding:calc(60px + 24px) 12px 70px}
 .doc .crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:28px}
 .doc .crumbs a:hover{color:var(--graphite)}
 .doc-head{max-width:760px}
@@ -33,7 +35,7 @@
 .doc-cta a.dark{background:var(--graphite);color:#fff}
 .doc-cta a:hover{opacity:.85}
 @media(min-width:900px){
-  .doc{padding:calc(118px + 30px) 24px 90px}
+  .doc{padding:calc(72px + 32px) 24px 90px}
   .doc-head h1{font-size:40px}
   .doc-head .lead{font-size:19px}
   .doc-wrap{grid-template-columns:230px minmax(0,1fr);gap:64px;margin-top:56px}

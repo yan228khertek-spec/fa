@@ -16,8 +16,12 @@ export interface AdminPluginOptions {
   admin: AdminConfig;
   service: BrandService;
   cards: CardService;
-  /** spool/unpacked: сюда 1С кладёт картинки выгрузки. */
-  unpackedDir: string;
+  /**
+   * Где лежат картинки выгрузки 1С, в порядке поиска. Первый каталог —
+   * постоянное медиа-хранилище (A2/M1), второй — spool/unpacked, который
+   * чистится следующим обменом (запасной путь, пока media не наполнено).
+   */
+  imageDirs: string[];
 }
 
 const MIME: Record<string, string> = {
@@ -46,7 +50,7 @@ function gender(v: unknown): Gender {
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service, cards, unpackedDir } = opts;
+  const { admin, service, cards, imageDirs } = opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -323,7 +327,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       return { ok: true };
     });
 
-    registerCardRoutes(adm, { cards, uploadsDir, unpackedDir, uploadUrl, modelPhoto });
+    registerCardRoutes(adm, { cards, uploadsDir, imageDirs, uploadUrl, modelPhoto });
 
     adm.post('/admin/api/recompute', async () => service.recompute());
     adm.post('/admin/api/seed', async () => {

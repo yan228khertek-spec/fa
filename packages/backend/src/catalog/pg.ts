@@ -299,14 +299,13 @@ export class PgCatalogRepository implements CatalogRepository {
         ),
       );
 
-      await this.syncImages(client, 'product', owners, rows);
+      await this.syncImages(client, 'product', rows);
     });
   }
 
   async upsertVariants(items: CatalogVariant[]): Promise<void> {
     const rows = dedupe(items, (i) => i.sourceId);
     if (rows.length === 0) return;
-    const owners = rows.map((r) => r.sourceId);
     const q = insertFromArrays(
       'product_variants',
       [
@@ -376,16 +375,38 @@ export class PgCatalogRepository implements CatalogRepository {
     );
     await this.tx(async (client) => {
       await client.query(q.text, q.params);
-      await this.syncImages(client, 'variant', owners, rows);
+      await this.syncImages(client, 'variant', rows);
     });
   }
 
+  /**
+   * Метаданные фото из выгрузки 1С.
+   *
+   * Синхронизируются ТОЛЬКО у владельцев, у которых в этом прогоне картинки
+   * есть: владелец, пришедший без единого тега `Картинка`, не трогается вовсе.
+   * Иначе любая выгрузка со снятой галкой «Файлы изображений» (а такие мы
+   * гоняем постоянно — лёгкий каталог без 140 МБ фото) обнуляла бы
+   * product_images_meta у всех товаров прогона, и кнопка «фото из 1С» в
+   * админке переставала что-либо находить. Отсутствие тега в CommerceML
+   * означает «про картинки в этом файле ничего не сказано», а не «картинок
+   * нет» — ровно та же логика coalesce-семантики цен и остатков в offers
+   * (ревью этапа 3, находка 1).
+   *
+   * Цена правила: если фото у модели действительно убрали в 1С, выгрузка
+   * приходит с нулём картинок и старые пути остаются в метаданных — админка
+   * предложит снимок, которого в 1С уже нет. Файлы медиа-хранилища мы тоже
+   * никогда не удаляем, поэтому это «устаревшая подсказка», а не битая
+   * ссылка. Полная сверка метаданных с 1С — отдельная задача (A3/A4).
+   * Владелец, пришедший хотя бы с одной картинкой, синхронизируется как
+   * раньше: лишние пути удаляются.
+   */
   private async syncImages(
     client: pg.PoolClient,
     kind: 'product' | 'variant',
-    owners: string[],
     rows: { sourceId: string; images: { path: string; sortOrder: number }[] }[],
   ): Promise<void> {
+    const withImages = rows.filter((row) => row.images.length > 0);
+    if (withImages.length === 0) return;
     await syncChildren(
       client,
       {
@@ -396,9 +417,9 @@ export class PgCatalogRepository implements CatalogRepository {
         valueCols: ['sort_order'],
         valueTypes: { sort_order: 'integer' },
       },
-      owners,
+      withImages.map((row) => row.sourceId),
       dedupe(
-        rows.flatMap((row) =>
+        withImages.flatMap((row) =>
           row.images.map((img) => ({
             owner_source_id: row.sourceId,
             path: img.path,

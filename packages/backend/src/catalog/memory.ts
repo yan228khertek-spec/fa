@@ -50,12 +50,26 @@ export class MemoryCatalogRepository implements CatalogRepository {
     for (const item of items) this.properties.set(item.sourceId, item);
   }
 
+  /**
+   * Прогон без единой картинки не стирает уже известные пути — то же правило,
+   * что в PgCatalogRepository.syncImages (выгрузка со снятой галкой «Файлы
+   * изображений» не должна обнулять метаданные фото).
+   */
+  private keepImages<T extends { images: unknown[] }>(prev: T | undefined, item: T): T {
+    if (item.images.length > 0 || !prev || prev.images.length === 0) return item;
+    return { ...item, images: prev.images };
+  }
+
   async upsertProducts(items: CatalogProduct[]): Promise<void> {
-    for (const item of items) this.products.set(item.sourceId, item);
+    for (const item of items) {
+      this.products.set(item.sourceId, this.keepImages(this.products.get(item.sourceId), item));
+    }
   }
 
   async upsertVariants(items: CatalogVariant[]): Promise<void> {
-    for (const item of items) this.variants.set(item.sourceId, item);
+    for (const item of items) {
+      this.variants.set(item.sourceId, this.keepImages(this.variants.get(item.sourceId), item));
+    }
   }
 
   async loadDictionary(): Promise<CatalogDictionary> {

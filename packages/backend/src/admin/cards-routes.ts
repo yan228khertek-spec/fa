@@ -9,15 +9,15 @@ import { AdminError, type CardPhoto } from './types.js';
 interface Deps {
   cards: CardService;
   uploadsDir: string;
-  /** Каталог распакованной выгрузки 1С (spool/unpacked); пути фото из staging лежат в нём. */
-  unpackedDir: string;
+  /** Каталоги с картинками выгрузки 1С (медиа-хранилище, затем spool/unpacked). */
+  imageDirs: string[];
   uploadUrl: (file: string | null) => string | null;
   modelPhoto: (path: string | null) => string | null;
 }
 
 /** Маршруты админки карточек (регистрируются внутри защищённой области /admin). */
 export function registerCardRoutes(adm: FastifyInstance, deps: Deps): void {
-  const { cards, uploadsDir, unpackedDir, uploadUrl } = deps;
+  const { cards, uploadsDir, imageDirs, uploadUrl } = deps;
   const sha = (b: Buffer) => createHash('sha256').update(b).digest('hex');
 
   const dto = <T extends { photos: CardPhoto[] }>(card: T) => ({
@@ -93,16 +93,27 @@ export function registerCardRoutes(adm: FastifyInstance, deps: Deps): void {
       const buf = await readFile(path.join(uploadsDir, p.file)).catch(() => null);
       if (buf) have.add(sha(buf));
     }
-    const root = path.resolve(unpackedDir);
+    const roots = imageDirs.map((dir) => path.resolve(dir));
+    /**
+     * Ищем файл по корням в порядке приоритета: сначала постоянное
+     * медиа-хранилище (A2/M1), затем спул последней выгрузки. Путь пришёл из
+     * XML 1С, поэтому из каждого корня не выходим (resolve + startsWith).
+     */
+    const findSource = async (rel: string): Promise<string | null> => {
+      for (const root of roots) {
+        const full = path.resolve(root, rel);
+        if (!full.startsWith(root + path.sep)) continue;
+        const info = await stat(full).catch(() => null);
+        if (info?.isFile() && info.size <= MAX_IMAGE_BYTES) return full;
+      }
+      return null;
+    };
     let added = 0;
     let skipped = 0;
     let left = MAX_CARD_PHOTOS - current.photos.length;
     for (const rel of sources) {
-      const full = path.resolve(root, rel);
-      // Путь пришёл из XML 1С — наружу из каталога выгрузки не выходим.
-      if (!full.startsWith(root + path.sep)) continue;
-      const info = await stat(full).catch(() => null);
-      if (!info?.isFile() || info.size > MAX_IMAGE_BYTES) {
+      const full = await findSource(rel);
+      if (!full) {
         skipped++;
         continue;
       }

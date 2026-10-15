@@ -50,6 +50,9 @@ services:
       EXCHANGE_FILE_LIMIT: ${EXCHANGE_FILE_LIMIT:-10485760}
       EXCHANGE_UNPACK_LIMIT: ${EXCHANGE_UNPACK_LIMIT:-2147483648}
       EXCHANGE_IMPORT_WAIT_MS: ${EXCHANGE_IMPORT_WAIT_MS:-5000}
+      # Постоянное хранилище фото из 1С (A2/M1): backend пишет, Caddy отдаёт
+      # его по /images/*. Спул чистится каждым обменом, медиа — никогда.
+      EXCHANGE_MEDIA_DIR: /app/media
       # Админка брендов. Пустые ADMIN_LOGIN/ADMIN_PASSWORD = админка выключена
       # (публичное API /api/brands работает в любом случае).
       ADMIN_LOGIN: ${ADMIN_LOGIN:-}
@@ -66,6 +69,7 @@ services:
     volumes:
       - spool:/app/spool
       - uploads:/app/uploads
+      - media:/app/media
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/healthz || exit 1']
       interval: 10s
@@ -87,6 +91,8 @@ services:
       ACME_EMAIL: ${ACME_EMAIL:?set in .env}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Фото из 1С: Caddy отдаёт их статикой, только на чтение.
+      - media:/srv/images:ro
       - caddy_data:/data
       - caddy_config:/config
       - caddy_logs:/var/log/caddy
@@ -95,6 +101,7 @@ volumes:
   pgdata:
   spool:
   uploads:
+  media:
   caddy_data:
   caddy_config:
   caddy_logs:

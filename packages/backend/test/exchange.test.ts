@@ -27,6 +27,7 @@ let logSink: MemoryExchangeLog;
 let catalog: MemoryCatalogRepository;
 let offers: MemoryOffersRepository;
 let spoolDir: string;
+let mediaDir: string;
 let importWaitMs = 30_000;
 
 function cfg(): AppConfig {
@@ -37,6 +38,7 @@ function cfg(): AppConfig {
     exchangePassword: PASSWORD,
     fileLimit: 1024 * 1024,
     spoolDir,
+    mediaDir,
     importWaitMs,
     unpackLimit: 64 * 1024 * 1024,
     databaseUrl: undefined,
@@ -59,6 +61,7 @@ beforeEach(async () => {
   resetSessions();
   importWaitMs = 30_000;
   spoolDir = await mkdtemp(path.join(tmpdir(), 'fa-spool-'));
+  mediaDir = await mkdtemp(path.join(tmpdir(), 'fa-media-'));
   logSink = new MemoryExchangeLog();
   catalog = new MemoryCatalogRepository();
   offers = new MemoryOffersRepository();
@@ -68,6 +71,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await app.close();
   await rm(spoolDir, { recursive: true, force: true });
+  await rm(mediaDir, { recursive: true, force: true });
 });
 
 describe('checkauth', () => {
@@ -376,6 +380,34 @@ describe('import', () => {
     const lines = iconv.decode(res.rawPayload, 'win1251').split('\n');
     expect(lines[0]).toBe('failure');
     expect(offers.offers.size).toBe(0);
+  });
+
+  it('фото выгрузки переносятся в медиа-хранилище и переживают следующий init', async () => {
+    const cookie = await checkauth();
+    const zip = new AdmZip();
+    zip.addFile('import.xml', iconvEncode(FIXTURE));
+    zip.addFile('import_files/p1.jpg', Buffer.from('JPEG-1'));
+    await postFile(cookie, 'v8_catalog.zip', zip.toBuffer());
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/1c-exchange?type=catalog&mode=import&filename=import.xml',
+      headers: { cookie },
+    });
+    expect(res.body).toBe('success');
+    expect(await readFile(path.join(mediaDir, 'import_files/p1.jpg'), 'utf8')).toBe('JPEG-1');
+    expect(logSink.entries.at(-1)?.detail).toContain('медиа +1');
+
+    // Следующая выгрузка чистит spool — хранилище при этом не трогается.
+    await app.inject({
+      method: 'GET',
+      url: '/api/1c-exchange?type=catalog&mode=init',
+      headers: { cookie },
+    });
+    await expect(
+      readFile(path.join(spoolDir, 'unpacked', 'import_files/p1.jpg')),
+    ).rejects.toThrow();
+    expect(await readFile(path.join(mediaDir, 'import_files/p1.jpg'), 'utf8')).toBe('JPEG-1');
   });
 
   it('init чистит spool: вторая выгрузка не склеивается с первой', async () => {

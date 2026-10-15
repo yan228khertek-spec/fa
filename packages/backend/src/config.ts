@@ -22,6 +22,12 @@ export interface AppConfig {
   /** Каталог, куда складываются принятые файлы обмена. */
   spoolDir: string;
   /**
+   * Постоянное хранилище фото из 1С (A2/M1): после успешного import сюда
+   * переносится spool/unpacked/import_files, отсюда их отдаёт Caddy по
+   * /images/*. Пусто — хранилище выключено (dev/тесты без тома).
+   */
+  mediaDir: string;
+  /**
    * Сколько ждать завершения разбора import.xml перед ответом `progress`, мс.
    * Короткие выгрузки успевают за один запрос, длинные грузятся в фоне.
    */
@@ -57,6 +63,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     exchangePassword: env.EXCHANGE_PASSWORD ?? '',
     fileLimit: Number(env.EXCHANGE_FILE_LIMIT ?? 10 * 1024 * 1024),
     spoolDir: env.EXCHANGE_SPOOL_DIR ?? 'spool',
+    mediaDir: env.EXCHANGE_MEDIA_DIR ?? 'media',
     importWaitMs: Number(env.EXCHANGE_IMPORT_WAIT_MS ?? 5000),
     unpackLimit: Number(env.EXCHANGE_UNPACK_LIMIT ?? 2 * 1024 * 1024 * 1024),
     databaseUrl: env.DATABASE_URL || undefined,

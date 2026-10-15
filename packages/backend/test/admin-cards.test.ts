@@ -367,3 +367,66 @@ describe('карточки товаров (HTTP)', () => {
     expect((await app.inject({ url: '/api/cards/abc' })).statusCode).toBe(404);
   });
 });
+
+describe('ручной раздел карточки', () => {
+  it('значение проверяется и попадает в публичную выдачу', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'fa-cardcat-'));
+    const config: AppConfig = {
+      port: 0,
+      host: '127.0.0.1',
+      exchangeLogin: 'x',
+      exchangePassword: 'y',
+      fileLimit: 1024,
+      spoolDir: path.join(dir, 'spool'),
+      importWaitMs: 100,
+      unpackLimit: 1024,
+      databaseUrl: undefined,
+      quiet: true,
+      admin: {
+        login: 'boss',
+        password: 'secret',
+        uploadsDir: path.join(dir, 'uploads'),
+        publicBaseUrl: 'https://api.example.test',
+        imagesBaseUrl: '',
+      },
+    };
+    const catalog = new MemoryCatalogReader(
+      [{ id: 'p1', name: 'Nasomatto Black Afgano 30 мл', skus: 1, photo: null, article: 'N-1' }],
+      new Map(),
+    );
+    const app = await buildApp({ config, catalogReader: catalog });
+    try {
+      const send = (method: 'POST' | 'PUT', url: string, payload: unknown, type?: string) =>
+        app.inject({
+          method,
+          url,
+          headers: { ...write, ...(type ? { 'content-type': type } : {}) },
+          payload: payload as never,
+        });
+      const card = (await send('POST', '/admin/api/cards', { modelId: 'p1' })).json();
+      await send('POST', `/admin/api/cards/${card.id}/photos`, png(1), 'image/png');
+      expect(
+        (await send('PUT', `/admin/api/cards/${card.id}`, { category: 'Зонты' })).statusCode,
+      ).toBe(400);
+      const ok = await send('PUT', `/admin/api/cards/${card.id}`, {
+        category: 'Парфюмерия',
+        status: 'published',
+      });
+      expect(ok.json().category).toBe('Парфюмерия');
+      const pub = (
+        await app.inject({ method: 'GET', url: '/api/cards?category=Парфюмерия' })
+      ).json();
+      expect(pub.items).toHaveLength(1);
+      expect(pub.items[0]).toMatchObject({ category: 'Парфюмерия', kind: 'Парфюмерия' });
+      const none = (await app.inject({ method: 'GET', url: '/api/cards?category=Одежда' })).json();
+      expect(none.items).toHaveLength(0);
+      // пусто — возврат к автоопределению по названию (здесь «Nasomatto…» → Одежда)
+      await send('PUT', `/admin/api/cards/${card.id}`, { category: '' });
+      const back = (await app.inject({ method: 'GET', url: '/api/cards?category=Одежда' })).json();
+      expect(back.items).toHaveLength(1);
+    } finally {
+      await app.close();
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});

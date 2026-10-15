@@ -1,0 +1,7 @@
+// Схема ручного раздела карточки. Источник истины — migrations/008_site_card_category.sql:
+// тест admin-schema.test.ts сверяет эту константу с файлом миграции.
+export const SITE_CARD_CATEGORY_DDL = `-- Раздел карточки, заданный вручную. Нужен, когда по названию из 1С раздел не определить
+-- (например, парфюмерия с названием, начинающимся с имени бренда). NULL — раздел по названию.
+-- Идемпотентно: применяется автоматически при старте админки и вручную:
+-- psql "$DATABASE_URL" -f migrations/008_site_card_category.sql
+ALTER TABLE site_cards ADD COLUMN IF NOT EXISTS category text;`;

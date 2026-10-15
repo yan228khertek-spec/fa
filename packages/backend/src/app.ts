@@ -14,6 +14,9 @@ import { MemoryOffersRepository } from './offers/memory.js';
 import { PgOffersRepository } from './offers/pg.js';
 import { adminPlugin } from './admin/plugin.js';
 import { BrandService } from './admin/service.js';
+import { BannerService, type BannerRepository } from './admin/banners.js';
+import { MemoryBannerRepository } from './admin/banners-memory.js';
+import { PgBannerRepository } from './admin/banners-pg.js';
 import { CardService } from './admin/cards.js';
 import { MemoryCardRepository } from './admin/cards-memory.js';
 import { PgCardRepository } from './admin/cards-pg.js';
@@ -31,6 +34,8 @@ export interface BuildAppOptions {
   catalogReader?: CatalogReader;
   /** Карточки товаров витрины (миграция 005). */
   cardRepo?: CardRepository;
+  /** Баннеры главной (миграция 007). */
+  bannerRepo?: BannerRepository;
 }
 
 export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -66,6 +71,12 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     opts.cardRepo ??
     (config.databaseUrl ? new PgCardRepository(config.databaseUrl) : new MemoryCardRepository());
 
+  const bannerRepo =
+    opts.bannerRepo ??
+    (config.databaseUrl
+      ? new PgBannerRepository(config.databaseUrl)
+      : new MemoryBannerRepository());
+
   const app = Fastify({
     logger: !config.quiet,
     // Глобальный лимит тела маленький: большие тела легальны только в
@@ -85,6 +96,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       admin: config.admin,
       service,
       cards: new CardService(cardRepo, catalogReader, service),
+      banners: new BannerService(bannerRepo),
       unpackedDir: path.join(config.spoolDir, 'unpacked'),
     });
   }
@@ -96,6 +108,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     await offers.close();
     await siteBrands.close();
     await cardRepo.close();
+    await bannerRepo.close();
     await catalogReader.close();
     await logSink.close();
   });

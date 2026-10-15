@@ -83,6 +83,24 @@ describe('медиа-хранилище', () => {
     expect(await exists('new.jpg')).toBe(true);
   });
 
+  it('две параллельные синхронизации не мешают друг другу', async () => {
+    // 1С шлёт выгрузку частями (import.xml, import0_1.xml) — их разбор идёт
+    // параллельно, и перенос может стартовать дважды на одном дереве.
+    for (let i = 0; i < 20; i++) await write(`ab/p-${i}.jpg`, `PHOTO-${i}`);
+
+    const [a, b] = await Promise.all([syncMediaTree(src, dest), syncMediaTree(src, dest)]);
+
+    expect(a.copied + a.skipped).toBe(20);
+    expect(b.copied + b.skipped).toBe(20);
+    for (let i = 0; i < 20; i++) {
+      expect(await readFile(path.join(dest, `ab/p-${i}.jpg`), 'utf8')).toBe(`PHOTO-${i}`);
+    }
+    // временных файлов не осталось
+    const { readdir } = await import('node:fs/promises');
+    const left = await readdir(path.join(dest, 'ab'));
+    expect(left.filter((f) => f.includes('.part'))).toEqual([]);
+  });
+
   it('нет каталога с картинками — не ошибка', async () => {
     const res = await syncMediaTree(path.join(dir, 'нет-такого'), dest);
     expect(res).toMatchObject({ copied: 0, skipped: 0 });

@@ -25,9 +25,19 @@
 		# Хранилище только для чтения: всё, кроме GET/HEAD, отбиваем сразу.
 		@write not method GET HEAD
 		respond @write 405
-		header Cache-Control "public, max-age=86400"
-		header X-Content-Type-Options "nosniff"
-		file_server
+
+		# Отдаём ТОЛЬКО картинки. Содержимое тома приходит из 1С, и файл с
+		# расширением .html/.svg исполнился бы на origin API — том же, где
+		# живут /admin и /uploads (по той же причине админка не принимает SVG).
+		@image path_regexp (?i)\.(jpe?g|png|webp|avif|gif|bmp)$
+		handle @image {
+			header Cache-Control "public, max-age=86400"
+			header X-Content-Type-Options "nosniff"
+			file_server
+		}
+		handle {
+			respond 404
+		}
 	}
 
 	handle {

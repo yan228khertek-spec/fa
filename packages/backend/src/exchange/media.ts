@@ -1,4 +1,5 @@
-import { copyFile, mkdir, readdir, rename, stat, utimes } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
+import { copyFile, mkdir, readdir, rename, rm, stat, utimes } from 'node:fs/promises';
 import path from 'node:path';
 
 /**
@@ -70,10 +71,20 @@ export async function syncMediaTree(srcDir: string, destDir: string): Promise<Me
     await mkdir(path.dirname(target), { recursive: true });
     // Копируем во временный файл рядом и переименовываем: Caddy может отдавать
     // этот каталог прямо сейчас, и половина файла наружу попасть не должна.
-    const tmp = `${target}.part-${process.pid}`;
-    await copyFile(source, tmp);
-    await utimes(tmp, src.atime, src.mtime); // mtime переносим — по нему сверяемся дальше
-    await rename(tmp, target);
+    // Имя временного файла случайное: 1С шлёт выгрузку несколькими файлами
+    // (import.xml, import0_1.xml), их разбор идёт параллельно, и два переноса
+    // одного и того же файла не должны писать в один и тот же .part.
+    const tmp = `${target}.part-${randomBytes(6).toString('hex')}`;
+    try {
+      await copyFile(source, tmp);
+      await utimes(tmp, src.atime, src.mtime); // mtime переносим — по нему сверяемся дальше
+      await rename(tmp, target);
+    } catch (err) {
+      // Иначе оборванный перенос оставит .part-мусор в томе навсегда:
+      // следующая синхронизация его не увидит (его нет в источнике).
+      await rm(tmp, { force: true }).catch(() => undefined);
+      throw err;
+    }
     result.copied++;
     result.bytes += src.size;
   }

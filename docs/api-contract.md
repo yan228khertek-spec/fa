@@ -137,6 +137,7 @@
 
 - Путь после `/images/` — значение `product_images_meta.path`, то есть относительный путь внутри выгрузки: `/images/import_files/ab/cd.jpg`.
 - Только `GET` и `HEAD`; остальные методы — `405`.
+- Отдаются **только картинки** (`jpg/jpeg/png/webp/avif/gif/bmp`); файл с любым другим расширением — `404`, даже если он лежит в томе: содержимое приходит из 1С, а `.html`/`.svg` исполнялся бы на origin API, где живут `/admin` и `/uploads`.
 - Заголовки: `Cache-Control: public, max-age=86400`, `X-Content-Type-Options: nosniff`.
 - Файл появляется после успешного `import.xml` (backend переносит `spool/unpacked/import_files` в хранилище) и **не удаляется** следующими выгрузками: старые URL не рвутся. `404` — фото в выгрузках не было.
 - Базовый адрес для витрины — `IMAGES_BASE_URL`, по умолчанию `PUBLIC_BASE_URL + /images/`. Формула для карточки: URL фото = `https://1c-dev.avenuefashion.online/images/` + путь из колонки «Файлы фото».

@@ -1465,6 +1465,8 @@
         $('#dlgBody').innerHTML =
           `<h3>${esc(c.title || m?.name || c.modelId)} ${cbadge(c)}</h3><div class="sub">${esc(m?.name || '')}</div>${live}
     <div class="fld"><label>Название на сайте (пусто — как в 1С)</label><input type="text" id="kTitle" maxlength="200" value="${esc(c.title || '')}"></div>
+    <div class="fld"><label>Раздел на сайте</label><select id="kCat">${['', 'Одежда', 'Обувь', 'Сумки', 'Аксессуары', 'Парфюмерия'].map((v) => `<option value="${v}" ${(c.category || '') === v ? 'selected' : ''}>${v || 'Определить автоматически по названию из 1С'}</option>`).join('')}</select>
+      <div class="hint muted">Для парфюмерии выберите «Парфюмерия»: она попадёт в блок на главной и в раздел каталога.</div></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
       <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
@@ -1480,6 +1482,7 @@
         if (!dlg.open) dlg.showModal();
         const fields = () => ({
           title: $('#kTitle').value,
+          category: $('#kCat').value,
           description: $('#kDesc').value,
           characteristics: $$('#kKv .kv')
             .map((r) => {

@@ -78,6 +78,7 @@ export interface CardInput {
   description?: unknown;
   characteristics?: unknown;
   status?: unknown;
+  category?: unknown;
 }
 
 function parseTitle(v: unknown): string | null {
@@ -114,6 +115,13 @@ function parseCharacteristics(v: unknown): CardCharacteristic[] {
     out.push({ name: n, value: val });
   }
   return out;
+}
+
+/** Раздел вручную: пусто — «по названию из 1С», иначе один из разделов витрины. */
+function parseCategory(v: unknown): string | null {
+  if (v === null || v === '') return null;
+  if (typeof v === 'string' && (CATEGORIES as readonly string[]).includes(v)) return v;
+  throw new AdminError(`category: пусто или один из «${CATEGORIES.join('», «')}»`);
 }
 
 function parseStatus(v: unknown): CardStatus {
@@ -254,6 +262,7 @@ export class CardService {
     if (input.characteristics !== undefined) {
       patch.characteristics = parseCharacteristics(input.characteristics);
     }
+    if (input.category !== undefined) patch.category = parseCategory(input.category);
     if (input.status !== undefined) {
       patch.status = parseStatus(input.status);
       if (patch.status === 'published') {
@@ -300,8 +309,9 @@ export class CardService {
       photo: x.card.photos[0]?.file ?? null,
       price: m.price,
       inStock: stock === null ? null : stock > 0,
-      category: categoryOf(m.name),
-      kind: kindOf(m.name),
+      category: (x.card.category as Category | null) ?? categoryOf(m.name),
+      // у карточки с ручным разделом первое слово названия — не вид изделия (часто бренд)
+      kind: x.card.category ?? kindOf(m.name),
     };
   }
 

@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { SITE_CARD_CATEGORY_DDL } from './card-category-schema.js';
 import { SITE_CARDS_DDL } from './cards-schema.js';
 import {
   AdminError,
@@ -17,13 +18,14 @@ interface CardRow {
   title: string | null;
   description: string;
   characteristics: CardCharacteristic[];
+  category: string | null;
   status: CardStatus;
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
 
-const COLS = `id::text, model_source_id, title, description, characteristics, status,
+const COLS = `id::text, model_source_id, title, description, characteristics, category, status,
   published_at, created_at, updated_at`;
 
 export class PgCardRepository implements CardRepository {
@@ -35,10 +37,13 @@ export class PgCardRepository implements CardRepository {
   }
 
   ready(): Promise<void> {
-    this.prepared ??= this.pool.query(SITE_CARDS_DDL).catch((err: unknown) => {
-      this.prepared = undefined;
-      throw err;
-    });
+    this.prepared ??= this.pool
+      .query(SITE_CARDS_DDL)
+      .then(() => this.pool.query(SITE_CARD_CATEGORY_DDL))
+      .catch((err: unknown) => {
+        this.prepared = undefined;
+        throw err;
+      });
     return this.prepared.then(() => undefined);
   }
 
@@ -65,6 +70,7 @@ export class PgCardRepository implements CardRepository {
       title: r.title,
       description: r.description,
       characteristics: r.characteristics,
+      category: r.category,
       status: r.status,
       publishedAt: r.published_at?.toISOString() ?? null,
       createdAt: r.created_at.toISOString(),
@@ -116,6 +122,7 @@ export class PgCardRepository implements CardRepository {
          published_at = CASE
            WHEN $6::text IS NULL OR $6 = status THEN published_at
            WHEN $6 = 'published' THEN now() ELSE NULL END,
+         category = CASE WHEN $7::boolean THEN $8 ELSE category END,
          status = coalesce($6, status),
          updated_at = now()
        WHERE id = $1`,
@@ -126,6 +133,8 @@ export class PgCardRepository implements CardRepository {
         patch.description ?? null,
         patch.characteristics ? JSON.stringify(patch.characteristics) : null,
         patch.status ?? null,
+        patch.category !== undefined,
+        patch.category ?? null,
       ],
     );
     if (!rowCount) throw new AdminError('Карточка не найдена', 404);

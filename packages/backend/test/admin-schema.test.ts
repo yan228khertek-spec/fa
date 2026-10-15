@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SITE_CARDS_DDL } from '../src/admin/cards-schema.js';
+import { SITE_CARD_CATEGORY_DDL } from '../src/admin/card-category-schema.js';
 import { SITE_BANNERS_DDL } from '../src/admin/banners-schema.js';
 import { SITE_BRAND_HOME_DDL } from '../src/admin/home-schema.js';
 import { SITE_BRANDS_DDL } from '../src/admin/schema.js';
@@ -74,5 +75,20 @@ describe('миграция 007 и SITE_BANNERS_DDL', () => {
   it('идемпотентна и ничего не удаляет', () => {
     expect(SITE_BANNERS_DDL).toContain('CREATE TABLE IF NOT EXISTS site_banners');
     expect(SITE_BANNERS_DDL).not.toMatch(/\bDROP\b/i);
+  });
+});
+
+describe('миграция 008 и SITE_CARD_CATEGORY_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/008', async () => {
+    const file = await readFile(
+      path.join(root, 'migrations', '008_site_card_category.sql'),
+      'utf8',
+    );
+    expect(normalize(SITE_CARD_CATEGORY_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и ничего не удаляет', () => {
+    expect(SITE_CARD_CATEGORY_DDL).toContain('ADD COLUMN IF NOT EXISTS category');
+    expect(SITE_CARD_CATEGORY_DDL).not.toMatch(/\bDROP\b/i);
   });
 });

@@ -170,12 +170,17 @@ let N=SLIDES.length;
 const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* Безопасная ссылка: страница сайта или http(s); остальное (javascript: и т.п.) отбрасываем */
 const safeHref=h=>/^(https?:\/\/|\/|[\w.-]+\.html\b|#)/i.test(h||'')?h:'';
+/* Форматирование заголовка/подзаголовка слайда: сперва экранируем всё, затем
+   возвращаем только белый список безопасных тегов БЕЗ атрибутов (перенос строки
+   и выделение). Любой другой тег или атрибут остаётся экранированным — XSS
+   невозможен даже для баннеров из админки. */
+const fmt=t=>esc(t).replace(/&lt;(\/?)(br|em|b|i|strong|u)\s*\/?&gt;/gi,'<$1$2>');
 function paintSlides(list){
   N=list.length;
   sl.innerHTML=list.map(x=>{
     const pos=(x.fx!=null?`--dp:${x.fx}% ${x.fy}%;--mp:${x.mfx}% ${x.mfy}%`:''),
           href=safeHref(x.link),
-          txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<h1>${esc(x.t)}</h1>`:''}${x.s?`<p class="sub">${esc(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
+          txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<h1>${fmt(x.t)}</h1>`:''}${x.s?`<p class="sub">${fmt(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
     return `<div class="slide" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${txt}</div>`;
   }).join('');
   hd.innerHTML=list.map((_,i)=>`<i class="${i?'':'on'}" onclick="goSlide(${i})"></i>`).join('');

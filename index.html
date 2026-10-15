@@ -195,6 +195,16 @@ sl.addEventListener('scroll',()=>{const i=Math.round(sl.scrollLeft/sl.clientWidt
 sl.addEventListener('touchstart',()=>clearInterval(auto),{passive:true});
 sl.addEventListener('touchend',restart,{passive:true});
 addEventListener('resize',()=>sl.scrollTo({left:cur*sl.clientWidth}));
+/* Шапка фиксированная (бегущая строка + логотип + переключатель): баннер начинается ровно под ней,
+   отступ следит за реальной высотой шапки (меняется с шириной экрана, шрифтами и вырезом телефона) */
+(function(){
+  const hdr=document.querySelector('header'), hero=document.querySelector('.hero');
+  if(!hdr||!hero)return;
+  const fit=()=>{hero.style.marginTop=hdr.offsetHeight+'px'};
+  fit();
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(hdr);
+  addEventListener('resize',fit); addEventListener('load',fit);
+})();
 paintSlides(SLIDES);
 restart();
 /* Баннеры из админки; пока их нет или API недоступно — остаются стандартные слайды */

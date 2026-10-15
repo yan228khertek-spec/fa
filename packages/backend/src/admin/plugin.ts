@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AdminConfig } from '../config.js';
 import { FailureLimiter, checkAdminAuth } from './auth.js';
+import { bannerDto, registerBannerRoutes } from './banners-routes.js';
+import type { BannerService } from './banners.js';
 import { registerCardRoutes } from './cards-routes.js';
 import type { CardService } from './cards.js';
 import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
@@ -16,6 +18,7 @@ export interface AdminPluginOptions {
   admin: AdminConfig;
   service: BrandService;
   cards: CardService;
+  banners: BannerService;
   /**
    * Где лежат картинки выгрузки 1С, в порядке поиска. Первый каталог —
    * постоянное медиа-хранилище (A2/M1), второй — spool/unpacked, который
@@ -50,7 +53,7 @@ function gender(v: unknown): Gender {
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service, cards, imageDirs } = opts;
+  const { admin, service, cards, banners, imageDirs } = opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -111,6 +114,29 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
           total: s.total,
           items: s.items.map(publicItem),
         })),
+      };
+    });
+
+    // Баннеры главной: включённые, с картинкой, по порядку. Точки фокуса — для обрезки под экран
+    pub.get('/api/banners', async (_req, reply) => {
+      const list = await banners.publicList();
+      reply.header('cache-control', 'public, max-age=30');
+      return {
+        items: list.map((b) => {
+          const d = bannerDto(b, uploadUrl);
+          return {
+            id: d.id,
+            title: d.title,
+            subtitle: d.subtitle,
+            buttonText: d.buttonText,
+            link: d.link,
+            theme: d.theme,
+            image: d.image,
+            imageMobile: d.imageMobile,
+            focus: { x: d.focusX, y: d.focusY },
+            mobileFocus: { x: d.mobileFocusX, y: d.mobileFocusY },
+          };
+        }),
       };
     });
 
@@ -327,6 +353,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       return { ok: true };
     });
 
+    registerBannerRoutes(adm, { banners, uploadsDir, uploadUrl });
     registerCardRoutes(adm, { cards, uploadsDir, imageDirs, uploadUrl, modelPhoto });
 
     adm.post('/admin/api/recompute', async () => service.recompute());

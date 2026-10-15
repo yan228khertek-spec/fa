@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SITE_CARDS_DDL } from '../src/admin/cards-schema.js';
+import { SITE_BANNERS_DDL } from '../src/admin/banners-schema.js';
 import { SITE_BRAND_HOME_DDL } from '../src/admin/home-schema.js';
 import { SITE_BRANDS_DDL } from '../src/admin/schema.js';
 
@@ -61,5 +62,17 @@ describe('миграция 006 и SITE_BRAND_HOME_DDL', () => {
   it('идемпотентна и ничего не удаляет', () => {
     expect(SITE_BRAND_HOME_DDL).toContain('ADD COLUMN IF NOT EXISTS show_on_home');
     expect(SITE_BRAND_HOME_DDL).not.toMatch(/\bDROP\b/i);
+  });
+});
+
+describe('миграция 007 и SITE_BANNERS_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/007', async () => {
+    const file = await readFile(path.join(root, 'migrations', '007_site_banners.sql'), 'utf8');
+    expect(normalize(SITE_BANNERS_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и ничего не удаляет', () => {
+    expect(SITE_BANNERS_DDL).toContain('CREATE TABLE IF NOT EXISTS site_banners');
+    expect(SITE_BANNERS_DDL).not.toMatch(/\bDROP\b/i);
   });
 });

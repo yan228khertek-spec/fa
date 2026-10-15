@@ -1,7 +1,7 @@
 import { normalizeText } from './matcher.js';
 
 /** Разделы витрины (как в левом меню страницы бренда). Порядок = порядок показа. */
-export const CATEGORIES = ['Одежда', 'Обувь', 'Сумки', 'Аксессуары'] as const;
+export const CATEGORIES = ['Одежда', 'Обувь', 'Сумки', 'Аксессуары', 'Парфюмерия'] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 /**
@@ -11,6 +11,7 @@ export type Category = (typeof CATEGORIES)[number];
  * Ключи — нормализованные (нижний регистр, «ё»→«е») основы слов: сверяются как начало слова.
  */
 const STEMS: Record<Exclude<Category, 'Одежда'>, string[]> = {
+  Парфюмерия: ['парфюм', 'духи', 'одеколон', 'туалетн', 'аромат', 'мист', 'диффузор', 'свеч'],
   Обувь: [
     'туфл',
     'ботин',
@@ -111,7 +112,7 @@ export function kindOf(name: string): string {
 export function categoryOf(name: string): Category {
   const first = normalizeText(kindOf(name));
   if (first) {
-    for (const cat of ['Обувь', 'Сумки', 'Аксессуары'] as const) {
+    for (const cat of ['Обувь', 'Сумки', 'Аксессуары', 'Парфюмерия'] as const) {
       if (STEMS[cat].some((s) => first.startsWith(s))) return cat;
     }
   }

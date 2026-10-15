@@ -294,6 +294,9 @@ function card(p){
   sec.style.display='none';   // пока бренды не пришли — блок скрыт, без пустой рамки
   load(cur());
   document.addEventListener('fa:gender',e=>load(e.detail));
+  /* Запасной путь: если в кэше старый site.js без события — перехватываем смену раздела сами */
+  const orig=window.faSetGender;
+  if(typeof orig==='function')window.faSetGender=function(){const r=orig.apply(this,arguments);load(cur());return r};
 })();
 
 /* смена ракурса: наведение на десктопе, тап на телефоне */

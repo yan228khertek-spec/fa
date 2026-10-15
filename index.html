@@ -22,9 +22,12 @@
 .slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .slides::-webkit-scrollbar{display:none}
 .slide{position:relative;flex:0 0 100%;scroll-snap-align:center}
-.slide img{width:100%;height:74svh;min-height:420px;max-height:660px;object-fit:cover;object-position:center 30%;display:block}
+.slide img{width:100%;height:74svh;min-height:420px;max-height:660px;object-fit:cover;object-position:var(--mp,var(--dp,center 30%));display:block}
+.slide picture{display:block}
 .slide .c{position:absolute;left:0;right:0;bottom:0;padding:100px 16px 40px;color:#fff;
-  background:linear-gradient(transparent,rgba(0,0,0,.62))}
+  background:linear-gradient(transparent,rgba(44,43,39,.62))}
+.slide .c.dk{color:var(--graphite);background:linear-gradient(transparent,rgba(255,255,255,.78))}
+.slide .c .sub{margin-top:8px;font-size:14px;opacity:.9;max-width:40ch}
 .dots{position:absolute;left:0;right:0;bottom:16px;z-index:4;display:flex;gap:7px;justify-content:center}
 .dots i{width:26px;height:2px;background:rgba(255,255,255,.4);display:block;cursor:pointer;transition:.3s}
 .dots i.on{background:#fff}
@@ -32,7 +35,7 @@
   place-items:center;background:rgba(255,255,255,.9);color:var(--graphite);font-size:17px}
 .arw.l{left:14px}.arw.r{right:14px}
 @media(hover:hover) and (min-width:900px){.arw{display:grid}.arw:hover{background:#fff}}
-@media(min-width:900px){.slide img{height:66vw;max-height:760px}.slide .c{padding:140px 28px 56px}}
+@media(min-width:900px){.slide img{height:66vw;max-height:760px;object-position:var(--dp,center 30%)}.slide .c{padding:140px 28px 56px}}
 .eb{font-size:10px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
 .hero h1{font-size:30px;font-weight:700;line-height:1.06;letter-spacing:-.01em}
 .hero h1 em{font-style:italic;font-weight:400}
@@ -161,11 +164,25 @@ const SLIDES=[
  {im:IM.b2,eb:'Кампейн',t:'Ремни и пояса<br><em>сезона</em>',cta:'Смотреть аксессуары'},
  {im:IM.b3,eb:'Summer capsule',t:'Летняя капсула<br><em>уже в галерее</em>',cta:'Открыть капсулу'},
 ];
+const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
 const sl=document.getElementById('slides'), hd=document.getElementById('hdots');
-sl.innerHTML=SLIDES.map(x=>`<div class="slide"><img src="${x.im}" alt=""></div>`).join('');
-hd.innerHTML=SLIDES.map((_,i)=>`<i class="${i?'':'on'}" onclick="goSlide(${i})"></i>`).join('');
+let N=SLIDES.length;
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Безопасная ссылка: страница сайта или http(s); остальное (javascript: и т.п.) отбрасываем */
+const safeHref=h=>/^(https?:\/\/|\/|[\w.-]+\.html\b|#)/i.test(h||'')?h:'';
+function paintSlides(list){
+  N=list.length;
+  sl.innerHTML=list.map(x=>{
+    const pos=(x.fx!=null?`--dp:${x.fx}% ${x.fy}%;--mp:${x.mfx}% ${x.mfy}%`:''),
+          href=safeHref(x.link),
+          txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<h1>${esc(x.t)}</h1>`:''}${x.s?`<p class="sub">${esc(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
+    return `<div class="slide" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${txt}</div>`;
+  }).join('');
+  hd.innerHTML=list.map((_,i)=>`<i class="${i?'':'on'}" onclick="goSlide(${i})"></i>`).join('');
+  cur=0; sl.scrollTo({left:0});
+}
 let cur=0, auto;
-function goSlide(i){cur=(i+SLIDES.length)%SLIDES.length;sl.scrollTo({left:cur*sl.clientWidth,behavior:'smooth'})}
+function goSlide(i){cur=(i+N)%N;sl.scrollTo({left:cur*sl.clientWidth,behavior:'smooth'})}
 function slide(d){goSlide(cur+d);restart()}
 function restart(){clearInterval(auto);auto=setInterval(()=>goSlide(cur+1),7000)}
 sl.addEventListener('scroll',()=>{const i=Math.round(sl.scrollLeft/sl.clientWidth);
@@ -173,7 +190,14 @@ sl.addEventListener('scroll',()=>{const i=Math.round(sl.scrollLeft/sl.clientWidt
 sl.addEventListener('touchstart',()=>clearInterval(auto),{passive:true});
 sl.addEventListener('touchend',restart,{passive:true});
 addEventListener('resize',()=>sl.scrollTo({left:cur*sl.clientWidth}));
+paintSlides(SLIDES);
 restart();
+/* Баннеры из админки; пока их нет или API недоступно — остаются стандартные слайды */
+fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():null).then(d=>{
+  if(!d||!d.items||!d.items.length)return;
+  paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
+    theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart();
+}).catch(()=>{});
 
 document.getElementById('tk').innerHTML=[...Array(2)].map(()=>
  ['Бесплатная доставка по России от 20 000 ₽','Примерка при курьере по Омску',
@@ -194,7 +218,6 @@ function card(p){
    </div></div>`;
 }
 /* «Бренды галереи»: плитки ведут на страницу бренда, когда бренд найден в витринном API */
-const API_BASE='https://1c-dev.avenuefashion.online';   // адрес бэкенда
 /* Витрина из админки: «Новые поступления» (последние опубликованные карточки) и блоки брендов
    с флагом «Показывать на главной» (/api/home). Нет данных — блок остаётся скрытым. */
 (function(){

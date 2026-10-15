@@ -369,5 +369,7 @@ describe('loadOrdersConfig', () => {
     expect(() => loadOrdersConfig({ ORDER_CDEK_FEE: 'пятьсот' })).toThrow(/ORDER_CDEK_FEE/);
     expect(() => loadOrdersConfig({ ORDER_FREE_DELIVERY_FROM: '-1' })).toThrow();
     expect(() => loadOrdersConfig({ ORDER_RATE_LIMIT: '0' })).toThrow();
+    // Пустой тариф СДЭК — не «бесплатно», а ошибка конфигурации.
+    expect(() => loadOrdersConfig({ ORDER_CDEK_FEE: '' })).toThrow(/ORDER_CDEK_FEE/);
   });
 });

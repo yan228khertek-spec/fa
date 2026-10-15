@@ -87,14 +87,11 @@ export class OrderService {
       // Цена 0 или отрицательная в 1С — мусор, не продаём (как и отсутствие цены).
       if (v.price === null || !(v.price > 0)) return problems.push({ ...base, code: 'NO_PRICE' });
       // Остаток неизвестен (null) — не продаём: без данных 1С нельзя обещать товар.
-      if (v.quantity === null || v.quantity <= 0)
-        return problems.push({ ...base, code: 'OUT_OF_STOCK' });
-      if (v.quantity < it.quantity) {
-        return problems.push({
-          ...base,
-          code: 'INSUFFICIENT_STOCK',
-          available: Math.floor(v.quantity),
-        });
+      // Остаток в 1С дробный (numeric(14,3)); продаём только целые штуки.
+      const available = v.quantity === null ? 0 : Math.floor(v.quantity);
+      if (available <= 0) return problems.push({ ...base, code: 'OUT_OF_STOCK' });
+      if (available < it.quantity) {
+        return problems.push({ ...base, code: 'INSUFFICIENT_STOCK', available });
       }
       const priceKop = Math.round(v.price * 100);
       if (priceKop !== it.priceKop) {

@@ -361,6 +361,22 @@ describe.skipIf(!url)('заказы в PostgreSQL (HTTP end-to-end)', () => {
     expect(await count('orders')).toBe(0);
   });
 
+  it('дробный остаток 1С меньше одной штуки — OUT_OF_STOCK, а не «доступно 0»', async () => {
+    await loadOffers([offer('m1#a', 8000, 0.5), offer('m1#b', 8500, 2.7)], 'offers6.xml');
+    const res = await post(
+      body({
+        items: [
+          { cardId, variantId: 'm1#a', quantity: 1, price: 8000 },
+          { cardId, variantId: 'm1#b', quantity: 3, price: 8500 },
+        ],
+      }),
+    );
+    expect(res.json().items).toEqual([
+      { index: 0, cardId, variantId: 'm1#a', code: 'OUT_OF_STOCK' },
+      { index: 1, cardId, variantId: 'm1#b', code: 'INSUFFICIENT_STOCK', available: 2 },
+    ]);
+  });
+
   it('модель исчезла с витрины целиком (нет остатка ни в одном размере) — CARD_NOT_AVAILABLE', async () => {
     await loadOffers([offer('m1#a', 8000, 0), offer('m1#b', 8500, 0)], 'offers4.xml');
     const res = await post(body());

@@ -59,11 +59,23 @@ export interface AppConfig {
   orders?: OrdersConfig;
 }
 
-/** Сумма в рублях из env: пусто → fallback; не число или < 0 — ошибка старта (деньги не угадываем). */
-function money(env: NodeJS.ProcessEnv, key: string, fallback: number | null): number | null {
+/**
+ * Сумма в рублях из env: не задано → fallback; пустая строка → null, только если `nullable`
+ * (иначе ошибка: пустой тариф не должен тихо стать бесплатной доставкой);
+ * не число или < 0 — ошибка старта (деньги не угадываем).
+ */
+function money(
+  env: NodeJS.ProcessEnv,
+  key: string,
+  fallback: number | null,
+  nullable = false,
+): number | null {
   const raw = env[key]?.trim();
   if (raw === undefined) return fallback;
-  if (raw === '') return null;
+  if (raw === '') {
+    if (nullable) return null;
+    throw new Error(`${key}: пусто — задайте сумму в рублях или уберите переменную`);
+  }
   const n = Number(raw);
   if (!Number.isFinite(n) || n < 0) throw new Error(`${key}: ожидается сумма в рублях ≥ 0`);
   return n;
@@ -82,8 +94,8 @@ export function loadOrdersConfig(env: NodeJS.ProcessEnv = process.env): OrdersCo
   const enabled = (env.ORDERS_ENABLED ?? '1').trim().toLowerCase();
   return {
     enabled: !['0', 'false', 'no', 'off'].includes(enabled),
-    cdekFee: money(env, 'ORDER_CDEK_FEE', d.cdekFee) ?? 0,
-    freeDeliveryFrom: money(env, 'ORDER_FREE_DELIVERY_FROM', d.freeDeliveryFrom),
+    cdekFee: money(env, 'ORDER_CDEK_FEE', d.cdekFee)!,
+    freeDeliveryFrom: money(env, 'ORDER_FREE_DELIVERY_FROM', d.freeDeliveryFrom, true),
     pickupAddress: env.ORDER_PICKUP_ADDRESS?.trim() ?? d.pickupAddress,
     offerVersion: env.ORDER_OFFER_VERSION?.trim() || d.offerVersion,
     pdPolicyVersion: env.ORDER_PD_POLICY_VERSION?.trim() || d.pdPolicyVersion,

@@ -25,6 +25,11 @@
 .slide{position:relative;flex:0 0 100%;scroll-snap-align:center}
 .slide img{width:100%;height:74svh;min-height:420px;max-height:660px;object-fit:cover;object-position:var(--mp,var(--dp,center 30%));display:block}
 .slide picture{display:block}
+/* баннер парфюмерии перед карточками (из админки): тот же вид, что у слайда, но ниже */
+.slide.pbn{flex:none;background:var(--soft);overflow:hidden}
+.slide.pbn img{height:440px;min-height:0;max-height:none}
+.slide.pbn .c h2{font-size:28px;font-weight:700;line-height:1.08;letter-spacing:-.01em}
+@media(min-width:900px){.slide.pbn img{height:36vw;min-height:360px;max-height:540px}.slide.pbn .c h2{font-size:44px;max-width:16ch}}
 /* видео ложится поверх картинки-постера и появляется, когда пошёл первый кадр */
 .slide video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--mp,var(--dp,center 30%));opacity:0;transition:opacity .5s;pointer-events:none}
 .slide video.on{opacity:1}
@@ -49,6 +54,7 @@
 .btn.dark{background:var(--graphite);color:#fff}
 .btn.full{width:100%}
 @media(min-width:900px){.hero h1{font-size:52px;max-width:15ch}}
+.perf[hidden],#perfBanner[hidden]{display:none}
 .perf{display:grid;grid-template-columns:1fr;background:var(--soft);overflow:hidden}
 .perf-txt{padding:34px 22px 38px}
 .perf-k{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
@@ -136,7 +142,8 @@
   </div>
 
   <div class="sec" id="perfume">
-    <div class="perf">
+    <div id="perfBanner" hidden></div>
+    <div class="perf" id="perfStatic">
       <div class="perf-txt">
         <span class="perf-k">Парфюмерия</span>
         <h2>Редкие ароматы</h2>
@@ -188,14 +195,17 @@ const safeHref=h=>/^(https?:\/\/|\/|[\w.-]+\.html\b|#)/i.test(h||'')?h:'';
    и выделение). Любой другой тег или атрибут остаётся экранированным — XSS
    невозможен даже для баннеров из админки. */
 const fmt=t=>esc(t).replace(/&lt;(\/?)(br|em|b|i|strong|u)\s*\/?&gt;/gi,'<$1$2>');
-function paintSlides(list){
-  N=list.length;
-  sl.innerHTML=list.map(x=>{
+/* Разметка одного баннера: и для слайдера вверху, и для баннера парфюмерии (cls — доп. класс, h — тег заголовка) */
+function slideHTML(x,cls,h){
+    h=h||'h1';
     const pos=(x.fx!=null?`--dp:${x.fx}% ${x.fy}%;--mp:${x.mfx}% ${x.mfy}%`:''),
           href=safeHref(x.link),
-          txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<h1>${fmt(x.t)}</h1>`:''}${x.s?`<p class="sub">${fmt(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
-    return `<div class="slide" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${(x.vd||x.vm)?`<video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-vd="${esc(x.vd||'')}" data-vm="${esc(x.vm||'')}"></video>`:''}${txt}</div>`;
-  }).join('');
+          txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<${h}>${fmt(x.t)}</${h}>`:''}${x.s?`<p class="sub">${fmt(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
+    return `<div class="slide${cls?' '+cls:''}" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${(x.vd||x.vm)?`<video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-vd="${esc(x.vd||'')}" data-vm="${esc(x.vm||'')}"></video>`:''}${txt}</div>`;
+}
+function paintSlides(list){
+  N=list.length;
+  sl.innerHTML=list.map(x=>slideHTML(x)).join('');
   hd.innerHTML=list.map((_,i)=>`<i class="${i?'':'on'}" onclick="goSlide(${i})"></i>`).join('');
   cur=0; sl.scrollTo({left:0}); vsync();
 }
@@ -268,6 +278,32 @@ fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():Promise.reject('HTTP '+r.st
   paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
     theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart(); window.__bn='баннеров из админки: '+d.items.length;
 }).catch(e=>{window.__bn='баннеры не загрузились: '+e});
+
+/* Баннер парфюмерии из админки (/api/banners?placement=perfume): первый включённый. Пока его нет —
+   остаётся прежний текстовый блок «Редкие ароматы». */
+(function(){
+  const box=document.getElementById('perfBanner'),stat=document.getElementById('perfStatic');
+  if(!box)return;
+  fetch(API_BASE+'/api/banners?placement=perfume').then(r=>r.ok?r.json():null).then(d=>{
+    const b=d&&d.items&&d.items[0]; if(!b)return;
+    box.innerHTML=slideHTML({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
+      theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link},'pbn','h2');
+    box.hidden=false; if(stat)stat.hidden=true;
+    const v=box.querySelector('video'); if(!v||vcalm)return;
+    /* видео играет, пока баннер на экране; звук всегда выключен */
+    const pick=()=>vwide.matches?v.dataset.vd:(v.dataset.vm||v.dataset.vd);
+    let vis=false;
+    const sync=()=>{
+      const want=pick();
+      if(!want||!vis||document.hidden){v.pause();return}
+      if(v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
+      v.onplaying=()=>v.classList.add('on'); vplay(v);
+    };
+    if(window.IntersectionObserver)new IntersectionObserver(es=>{vis=es[0].isIntersecting;sync()},{threshold:.25}).observe(box);
+    else{vis=true;sync()}
+    vwide.addEventListener&&vwide.addEventListener('change',sync); document.addEventListener('visibilitychange',sync);
+  }).catch(()=>{});
+})();
 
 /* Бегущая строка: стандартная или текущая акция из админки (/api/ticker). Пока API не ответил или
    недоступен — встроенная строка, та же, что в админке по умолчанию. */

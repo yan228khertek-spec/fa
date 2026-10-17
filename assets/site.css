@@ -20,12 +20,14 @@ img{display:block;max-width:100%}
 @media(min-width:900px){.wrap{max-width:1600px;margin:0 auto;padding:0 24px}}
 
 /* ═════ ШАПКА ═════ */
-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);transition:transform .3s ease;padding-top:var(--st)}
 header.hidden{transform:translateY(-100%)}
 /* Когда внутри шапки есть бегущая строка (главная), безопасную зону сверху
    держит сама строка (её padding-top), иначе отступ задвоится. */
 header.has-tick{padding-top:0}
+/* прозрачность 80% задаёт сама шапка; внутренние полосы без своей заливки, иначе она удвоится */
+header .bar,header .gender{background:transparent}
 .bar{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;height:72px;position:relative;
   padding:0 calc(6px + var(--sl)) 0 calc(6px + var(--sr))}
 .ic{width:48px;height:48px;display:grid;place-items:center;color:var(--graphite);position:relative}

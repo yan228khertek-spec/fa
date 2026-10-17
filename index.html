@@ -230,7 +230,7 @@ if(/[?&]vdebug\b/.test(location.search)){
   document.body.appendChild(box);
   setInterval(()=>{
     const c=navigator.connection||{};
-    box.textContent=['reduceMotion='+matchMedia('(prefers-reduced-motion:reduce)').matches,'saveData='+c.saveData,'wide='+vwide.matches,'calm='+!!vcalm,'cur='+cur,
+    box.textContent=[(window.__bn||'баннеры: ждём ответ сервера'),'reduceMotion='+matchMedia('(prefers-reduced-motion:reduce)').matches,'saveData='+c.saveData,'wide='+vwide.matches,'calm='+!!vcalm,'cur='+cur,
       ...[...document.querySelectorAll('.slide video')].map((v,i)=>`#${i} src=${(v.currentSrc||v.getAttribute('src')||'—').split('/').pop()} ready=${v.readyState} net=${v.networkState} paused=${v.paused} muted=${v.muted} t=${v.currentTime.toFixed(1)} err=${v.error?v.error.code+' '+v.error.message:'—'}`)].join('\n');
   },500);
 }
@@ -258,11 +258,11 @@ addEventListener('resize',()=>sl.scrollTo({left:cur*sl.clientWidth}));
 paintSlides(SLIDES);
 restart();
 /* Баннеры из админки; пока их нет или API недоступно — остаются стандартные слайды */
-fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():null).then(d=>{
-  if(!d||!d.items||!d.items.length)return;
+fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():Promise.reject('HTTP '+r.status)).then(d=>{
+  if(!d||!d.items||!d.items.length){window.__bn='в админке нет показываемых баннеров';return}
   paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
-    theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart();
-}).catch(()=>{});
+    theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart(); window.__bn='баннеров из админки: '+d.items.length;
+}).catch(e=>{window.__bn='баннеры не загрузились: '+e});
 
 /* Бегущая строка: стандартная или текущая акция из админки (/api/ticker). Пока API не ответил или
    недоступен — встроенная строка, та же, что в админке по умолчанию. */

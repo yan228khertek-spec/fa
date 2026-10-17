@@ -144,7 +144,7 @@ describe('админка брендов (HTTP)', () => {
     expect(models.json()).toEqual({
       brand: { name: 'Diesel', slug: 'diesel' },
       total: 0,
-      facets: { categories: [], kinds: [] },
+      facets: { brands: [], categories: [], colors: [], kinds: [], price: null, sizes: [] },
       items: [],
     });
     expect((await app.inject({ url: '/api/brands/nope/models' })).statusCode).toBe(404);

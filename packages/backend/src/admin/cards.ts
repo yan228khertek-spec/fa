@@ -62,6 +62,29 @@ export interface PublicCardItem {
 export interface PublicCardFacets {
   categories: { name: Category; count: number }[];
   kinds: { name: string; count: number }[];
+  /** Ниже — для фильтра на странице: считаются внутри выбранного раздела, без учёта самих фильтров. */
+  brands: { name: string; slug: string; count: number }[];
+  sizes: { name: string; count: number }[];
+  colors: { name: string; count: number }[];
+  price: { min: number; max: number } | null;
+}
+
+export type CardSort = 'new' | 'priceAsc' | 'priceDesc';
+
+/** Размеры по порядку: буквенные XS…XXL, числовые по возрастанию, остальное по алфавиту. */
+const LETTER_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+export function compareSizes(a: string, b: string): number {
+  const na = Number(a.replace(',', '.'));
+  const nb = Number(b.replace(',', '.'));
+  if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  if (!Number.isNaN(na)) return -1;
+  if (!Number.isNaN(nb)) return 1;
+  const ia = LETTER_SIZES.indexOf(a.toUpperCase());
+  const ib = LETTER_SIZES.indexOf(b.toUpperCase());
+  if (ia >= 0 && ib >= 0) return ia - ib;
+  if (ia >= 0) return -1;
+  if (ib >= 0) return 1;
+  return a.localeCompare(b, 'ru');
 }
 
 export interface PublicCardDetail extends PublicCardItem {
@@ -324,12 +347,28 @@ export class CardService {
     brandSlug?: string;
     category?: string;
     kind?: string;
+    /** Фильтры страницы: бренды (slug), размеры и цвета «любой из», цена «от и до». */
+    brands?: string[];
+    sizes?: string[];
+    colors?: string[];
+    priceMin?: number;
+    priceMax?: number;
+    sort?: CardSort;
     limit: number;
     offset: number;
   }): Promise<Page<PublicCardItem> & { facets: PublicCardFacets }> {
+    // размеры и цвета берём только у вариантов, которые есть в наличии (или наличие неизвестно)
+    const sizesOf = new Map<number, { sizes: Set<string>; colors: Set<string> }>();
     const byBrand = (await this.visibleCards())
       .filter((x) => !opts.brandSlug || x.view.model?.brand?.slug === opts.brandSlug)
-      .map((x) => this.item(x));
+      .map((x) => {
+        const v = (x.view.model?.variants ?? []).filter((w) => w.inStock !== false);
+        sizesOf.set(x.card.id, {
+          sizes: new Set(v.map((w) => w.size?.trim()).filter((z): z is string => !!z)),
+          colors: new Set(v.map((w) => w.color?.trim()).filter((z): z is string => !!z)),
+        });
+        return this.item(x);
+      });
     const count = <T extends string>(names: T[]) => {
       const m = new Map<T, number>();
       for (const n of names) m.set(n, (m.get(n) ?? 0) + 1);
@@ -338,11 +377,63 @@ export class CardService {
     const catCounts = count(byBrand.map((i) => i.category));
     const inCategory = byBrand.filter((i) => !opts.category || i.category === opts.category);
     const kindCounts = count(inCategory.filter((i) => i.kind).map((i) => i.kind));
-    const rows = inCategory.filter((i) => !opts.kind || i.kind === opts.kind);
+    const brandCounts = new Map<string, { name: string; slug: string; count: number }>();
+    const sizeCounts = new Map<string, number>();
+    const colorCounts = new Map<string, number>();
+    let pMin = Infinity;
+    let pMax = -Infinity;
+    for (const i of inCategory) {
+      if (i.brand) {
+        const e = brandCounts.get(i.brand.slug) ?? { ...i.brand, count: 0 };
+        e.count++;
+        brandCounts.set(i.brand.slug, e);
+      }
+      const v = sizesOf.get(i.id);
+      for (const z of v?.sizes ?? []) sizeCounts.set(z, (sizeCounts.get(z) ?? 0) + 1);
+      for (const c of v?.colors ?? []) colorCounts.set(c, (colorCounts.get(c) ?? 0) + 1);
+      if (i.price !== null) {
+        pMin = Math.min(pMin, i.price);
+        pMax = Math.max(pMax, i.price);
+      }
+    }
+    const has = (list: string[] | undefined, set: Set<string> | undefined) =>
+      !list?.length || list.some((x) => set?.has(x));
+    const rows = inCategory
+      .filter((i) => !opts.kind || i.kind === opts.kind)
+      .filter(
+        (i) => !opts.brands?.length || (i.brand !== null && opts.brands.includes(i.brand.slug)),
+      )
+      .filter((i) => has(opts.sizes, sizesOf.get(i.id)?.sizes))
+      .filter((i) => has(opts.colors, sizesOf.get(i.id)?.colors))
+      .filter((i) => opts.priceMin === undefined || (i.price !== null && i.price >= opts.priceMin))
+      .filter((i) => opts.priceMax === undefined || (i.price !== null && i.price <= opts.priceMax));
+    if (opts.sort === 'priceAsc' || opts.sort === 'priceDesc') {
+      const dir = opts.sort === 'priceAsc' ? 1 : -1;
+      // без цены — в конец; при равной цене остаётся порядок «сначала новинки» (сортировка устойчивая)
+      rows.sort((a, b) =>
+        a.price === null
+          ? b.price === null
+            ? 0
+            : 1
+          : b.price === null
+            ? -1
+            : (a.price - b.price) * dir,
+      );
+    }
     return {
       total: rows.length,
       items: rows.slice(opts.offset, opts.offset + opts.limit),
       facets: {
+        brands: [...brandCounts.values()].sort(
+          (a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ru'),
+        ),
+        sizes: [...sizeCounts]
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => compareSizes(a.name, b.name)),
+        colors: [...colorCounts]
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ru')),
+        price: pMin <= pMax ? { min: Math.floor(pMin), max: Math.ceil(pMax) } : null,
         categories: CATEGORIES.filter((c) => catCounts.has(c)).map((name) => ({
           name,
           count: catCounts.get(name)!,

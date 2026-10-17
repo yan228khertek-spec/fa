@@ -10,7 +10,7 @@ import { BANNER_PLACEMENTS, type BannerPlacement, type BannerService } from './b
 import { registerTickerRoutes } from './ticker-routes.js';
 import type { TickerService } from './ticker.js';
 import { registerCardRoutes } from './cards-routes.js';
-import type { CardService } from './cards.js';
+import type { CardService, CardSort } from './cards.js';
 import { MAX_VIDEO_UPLOAD_BYTES, type PosterMaker, type VideoCompressor } from './video.js';
 import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
 import { seedBrands } from './seed.js';
@@ -72,6 +72,29 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
   const modelPhoto = (p: string | null): string | null =>
     p ? `${imagesBase.replace(/\/+$/, '')}/${p.replace(/^\/+/, '')}` : null;
 
+  /** Фильтры списка из query: brand/size/color — через запятую, pmin/pmax — рубли, sort — new|priceAsc|priceDesc. */
+  const listFilters = (q: Record<string, string | undefined>) => {
+    const list = (v?: string) =>
+      (v ?? '')
+        .split(',')
+        .map((x) => x.trim().slice(0, 60))
+        .filter(Boolean)
+        .slice(0, 30);
+    const num = (v?: string) => {
+      if (v === undefined || v === '') return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? n : undefined;
+    };
+    return {
+      brands: list(q.brand),
+      sizes: list(q.size),
+      colors: list(q.color),
+      priceMin: num(q.pmin),
+      priceMax: num(q.pmax),
+      sort: (q.sort === 'priceAsc' || q.sort === 'priceDesc' ? q.sort : 'new') as CardSort,
+    };
+  };
+
   const publicItem = <T extends { photo: string | null }>(c: T) => ({
     ...c,
     photo: uploadUrl(c.photo),
@@ -106,6 +129,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
         brandSlug: slug,
         category: category?.slice(0, 40),
         kind: kind?.slice(0, 60),
+        ...listFilters(req.query as Record<string, string | undefined>),
         limit,
         offset,
       });
@@ -174,6 +198,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const res = await cards.publicList({
         category: category?.slice(0, 40),
         kind: kind?.slice(0, 60),
+        ...listFilters(req.query as Record<string, string | undefined>),
         limit,
         offset,
       });

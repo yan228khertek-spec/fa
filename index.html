@@ -207,8 +207,10 @@ function vsync(){
   [...sl.children].forEach((sd,k)=>{
     const v=sd.querySelector('video'); if(!v)return;
     if(vcalm||k!==cur||document.hidden){v.pause();return}
-    const want=(vwide.matches?(v.dataset.vd||v.dataset.vm):(v.dataset.vm||v.dataset.vd));
-    if(want&&v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
+    /* компьютер — только своё видео (нет его — остаётся картинка); телефон — своё, а если нет, то компьютерное */
+    const want=vwide.matches?v.dataset.vd:(v.dataset.vm||v.dataset.vd);
+    if(!want){v.pause();v.classList.remove('on');if(v.getAttribute('src')){v.removeAttribute('src');v.load()}return}
+    if(v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
     v.onplaying=()=>v.classList.add('on');
     vplay(v);
   });

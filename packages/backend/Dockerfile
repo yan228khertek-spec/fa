@@ -21,6 +21,8 @@ COPY packages/backend/package.json ./packages/backend/
 COPY packages/backend/migrations ./packages/backend/migrations
 # Страница админки брендов (отдаётся плагином admin; путь считается от dist/).
 COPY packages/backend/public ./packages/backend/public
+# ffmpeg сжимает видео баннеров, загруженное в админке (без него принимается только лёгкий MP4).
+RUN apk add --no-cache ffmpeg
 RUN mkdir -p /app/spool /app/uploads && chown -R node:node /app
 USER node
 ENV EXCHANGE_SPOOL_DIR=/app/spool

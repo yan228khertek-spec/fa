@@ -1,6 +1,13 @@
 import pg from 'pg';
+import { SITE_BANNER_VIDEO_DDL } from './banner-video-schema.js';
 import { SITE_BANNERS_DDL } from './banners-schema.js';
-import type { BannerPatch, BannerRepository, NewBanner, SiteBanner } from './banners.js';
+import type {
+  BannerFileKind,
+  BannerPatch,
+  BannerRepository,
+  NewBanner,
+  SiteBanner,
+} from './banners.js';
 import { AdminError } from './types.js';
 
 interface Row {
@@ -12,6 +19,8 @@ interface Row {
   theme: 'light' | 'dark';
   image: string | null;
   image_mobile: string | null;
+  video: string | null;
+  video_mobile: string | null;
   focus_x: number;
   focus_y: number;
   mobile_focus_x: number;
@@ -23,7 +32,7 @@ interface Row {
 }
 
 const COLS = `id::text, title, subtitle, button_text, link, theme, image, image_mobile,
-  focus_x, focus_y, mobile_focus_x, mobile_focus_y, active, sort, created_at, updated_at`;
+  video, video_mobile, focus_x, focus_y, mobile_focus_x, mobile_focus_y, active, sort, created_at, updated_at`;
 
 const COLUMN: Record<keyof BannerPatch, string> = {
   title: 'title',
@@ -38,6 +47,13 @@ const COLUMN: Record<keyof BannerPatch, string> = {
   active: 'active',
 };
 
+const FILE_COLUMN: Record<BannerFileKind, string> = {
+  image: 'image',
+  imageMobile: 'image_mobile',
+  video: 'video',
+  videoMobile: 'video_mobile',
+};
+
 const view = (r: Row): SiteBanner => ({
   id: Number(r.id),
   title: r.title,
@@ -47,6 +63,8 @@ const view = (r: Row): SiteBanner => ({
   theme: r.theme,
   image: r.image,
   imageMobile: r.image_mobile,
+  video: r.video,
+  videoMobile: r.video_mobile,
   focusX: r.focus_x,
   focusY: r.focus_y,
   mobileFocusX: r.mobile_focus_x,
@@ -66,10 +84,12 @@ export class PgBannerRepository implements BannerRepository {
   }
 
   ready(): Promise<void> {
-    this.prepared ??= this.pool.query(SITE_BANNERS_DDL).catch((err: unknown) => {
-      this.prepared = undefined;
-      throw err;
-    });
+    this.prepared ??= this.pool
+      .query(`${SITE_BANNERS_DDL}\n${SITE_BANNER_VIDEO_DDL}`)
+      .catch((err: unknown) => {
+        this.prepared = undefined;
+        throw err;
+      });
     return this.prepared.then(() => undefined);
   }
 
@@ -128,17 +148,20 @@ export class PgBannerRepository implements BannerRepository {
 
   async delete(id: number): Promise<string[]> {
     await this.ready();
-    const { rows } = await this.pool.query<{ image: string | null; image_mobile: string | null }>(
-      'DELETE FROM site_banners WHERE id = $1 RETURNING image, image_mobile',
-      [id],
-    );
+    const { rows } = await this.pool.query<
+      Pick<Row, 'image' | 'image_mobile' | 'video' | 'video_mobile'>
+    >('DELETE FROM site_banners WHERE id = $1 RETURNING image, image_mobile, video, video_mobile', [
+      id,
+    ]);
     if (!rows[0]) throw new AdminError('Баннер не найден', 404);
-    return [rows[0].image, rows[0].image_mobile].filter((f): f is string => !!f);
+    return [rows[0].image, rows[0].image_mobile, rows[0].video, rows[0].video_mobile].filter(
+      (f): f is string => !!f,
+    );
   }
 
-  async setImage(id: number, kind: 'image' | 'imageMobile', file: string | null) {
+  async setFile(id: number, kind: BannerFileKind, file: string | null) {
     await this.ready();
-    const col = kind === 'image' ? 'image' : 'image_mobile';
+    const col = FILE_COLUMN[kind];
     const { rows } = await this.pool.query<{ old: string | null }>(
       `UPDATE site_banners b SET ${col} = $2, updated_at = now()
        FROM (SELECT id, ${col} AS old FROM site_banners WHERE id = $1 FOR UPDATE) o

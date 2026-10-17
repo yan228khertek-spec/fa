@@ -48,13 +48,13 @@ describe.skipIf(!url)('баннеры в PostgreSQL', () => {
 
   it('картинки: замена возвращает прежнее имя, удаление — оба файла', async () => {
     const b = await svc.create({});
-    expect(await repo.setImage(b.id, 'image', 'a.png')).toBeNull();
-    expect(await repo.setImage(b.id, 'image', 'b.png')).toBe('a.png');
-    await repo.setImage(b.id, 'imageMobile', 'm.png');
+    expect(await repo.setFile(b.id, 'image', 'a.png')).toBeNull();
+    expect(await repo.setFile(b.id, 'image', 'b.png')).toBe('a.png');
+    await repo.setFile(b.id, 'imageMobile', 'm.png');
     expect(await svc.publicList()).toHaveLength(1);
     expect(await repo.delete(b.id)).toEqual(['b.png', 'm.png']);
     await expect(repo.delete(b.id)).rejects.toThrow('Баннер не найден');
-    await expect(repo.setImage(b.id, 'image', 'c.png')).rejects.toThrow('Баннер не найден');
+    await expect(repo.setFile(b.id, 'image', 'c.png')).rejects.toThrow('Баннер не найден');
   });
 
   it('порядок: все баннеры ровно по разу', async () => {

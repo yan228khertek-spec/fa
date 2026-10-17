@@ -6,7 +6,7 @@ import { AdminError } from './types.js';
 
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 /** Имена файлов, которые создаём сами; только такие отдаём и удаляем. */
-export const OWN_FILE_RE = /^[a-f0-9]{16}\.(?:jpg|png|webp|avif)$/;
+export const OWN_FILE_RE = /^[a-f0-9]{16}\.(?:jpg|png|webp|avif|mp4)$/;
 
 export function parseId(raw: string, what = 'бренда'): number {
   const n = Number(raw);

@@ -26,6 +26,8 @@
 .slide img{width:100%;height:74svh;min-height:420px;max-height:660px;object-fit:cover;object-position:var(--mp,var(--dp,center 30%));display:block}
 .slide picture{display:block}
 /* баннер парфюмерии перед карточками (из админки): тот же вид, что у слайда, но ниже */
+/* вырываемся из контейнера страницы: баннер на всю ширину экрана, а карточки ниже остаются в сетке */
+#perfBanner{width:100vw;margin-left:calc(50% - 50vw);margin-bottom:26px}
 .slide.pbn{flex:none;background:var(--soft);overflow:hidden}
 .slide.pbn img{height:440px;min-height:0;max-height:none}
 .slide.pbn .c h2{font-size:28px;font-weight:700;line-height:1.08;letter-spacing:-.01em}

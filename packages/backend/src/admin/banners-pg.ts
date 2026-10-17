@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { SITE_BANNER_PLACEMENT_DDL } from './banner-placement-schema.js';
 import { SITE_BANNER_VIDEO_DDL } from './banner-video-schema.js';
 import { SITE_BANNERS_DDL } from './banners-schema.js';
 import type {
@@ -12,6 +13,7 @@ import { AdminError } from './types.js';
 
 interface Row {
   id: string;
+  placement: 'hero' | 'perfume';
   title: string;
   subtitle: string;
   button_text: string;
@@ -31,7 +33,7 @@ interface Row {
   updated_at: Date;
 }
 
-const COLS = `id::text, title, subtitle, button_text, link, theme, image, image_mobile,
+const COLS = `id::text, placement, title, subtitle, button_text, link, theme, image, image_mobile,
   video, video_mobile, focus_x, focus_y, mobile_focus_x, mobile_focus_y, active, sort, created_at, updated_at`;
 
 const COLUMN: Record<keyof BannerPatch, string> = {
@@ -56,6 +58,7 @@ const FILE_COLUMN: Record<BannerFileKind, string> = {
 
 const view = (r: Row): SiteBanner => ({
   id: Number(r.id),
+  placement: r.placement,
   title: r.title,
   subtitle: r.subtitle,
   buttonText: r.button_text,
@@ -85,7 +88,7 @@ export class PgBannerRepository implements BannerRepository {
 
   ready(): Promise<void> {
     this.prepared ??= this.pool
-      .query(`${SITE_BANNERS_DDL}\n${SITE_BANNER_VIDEO_DDL}`)
+      .query(`${SITE_BANNERS_DDL}\n${SITE_BANNER_VIDEO_DDL}\n${SITE_BANNER_PLACEMENT_DDL}`)
       .catch((err: unknown) => {
         this.prepared = undefined;
         throw err;
@@ -113,8 +116,8 @@ export class PgBannerRepository implements BannerRepository {
     await this.ready();
     const { rows } = await this.pool.query<Row>(
       `INSERT INTO site_banners (title, subtitle, button_text, link, theme, focus_x, focus_y,
-         mobile_focus_x, mobile_focus_y, active, sort)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+         mobile_focus_x, mobile_focus_y, active, placement, sort)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
          (SELECT COALESCE(MAX(sort), 0) + 1 FROM site_banners))
        RETURNING ${COLS}`,
       [
@@ -128,6 +131,7 @@ export class PgBannerRepository implements BannerRepository {
         input.mobileFocusX,
         input.mobileFocusY,
         input.active,
+        input.placement,
       ],
     );
     return view(rows[0]!);

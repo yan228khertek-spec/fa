@@ -64,6 +64,7 @@
 <body>
 
 <script src="assets/site.js"></script>
+<script src="assets/listing.js"></script>
 
 <main class="bp">
   <div class="crumbs"><a href="catalog.html">Каталог</a> / <span id="crumb">…</span></div>
@@ -72,6 +73,7 @@
   <div class="bp-body nonav">
     <nav class="cats" id="cats" aria-label="Разделы"></nav>
     <div>
+      <div id="tb" hidden></div>
       <div class="kinds" id="kinds"></div>
       <div class="pgrid" id="pgrid"></div>
       <div class="bp-state" id="state">Загружаем товары…</div>
@@ -94,12 +96,14 @@ const plural=(n,a,b,c)=>{const m=n%100,d=n%10;return (m>10&&m<15)?c:d===1?a:(d>1
 const q=new URLSearchParams(location.search);
 const S={sale:q.get('sale')==='1',category:q.get('category')||'',kind:q.get('kind')||'',
   items:[],total:0,facets:{categories:[],kinds:[]},loading:false,seq:0};
+FAList.read(q,S);
 
 function syncUrl(){
   const p=new URLSearchParams();
   if(S.sale)p.set('sale','1');
   if(S.category)p.set('category',S.category);
   if(S.kind)p.set('kind',S.kind);
+  FAList.write(p,S);
   history.replaceState(null,'','?'+p.toString());
 }
 
@@ -109,7 +113,7 @@ async function load(reset){
   S.loading=true;
   if(reset){S.items=[];document.getElementById('more').hidden=true;showState('Загружаем товары…')}
   const url=`${API_BASE}/api/cards?limit=${PAGE}&offset=${S.items.length}`
-    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'');
+    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'')+FAList.qs(S);
   try{
     const r=await fetch(url);
     if(my!==S.seq)return;
@@ -154,8 +158,9 @@ function render(){
   document.querySelector('.bp-body').classList.toggle('nonav',!document.getElementById('cats').innerHTML.trim());
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
   document.getElementById('state').hidden=S.items.length>0;
-  if(!S.items.length)showState(S.sale?'Распродажа скоро откроется. Загляните в разделы каталога.':'В этом разделе пока нет товаров');
+  if(!S.items.length)showState(S.sale?'Распродажа скоро откроется. Загляните в разделы каталога.':FAList.count(S)?'Ничего не найдено. Измените или очистите фильтр':'В этом разделе пока нет товаров');
   document.getElementById('more').hidden=S.items.length>=S.total;
+  FAList.render(S,S.facets);
   syncUrl();
 }
 
@@ -173,6 +178,7 @@ document.getElementById('cats').addEventListener('click',e=>{
   const b=e.target.closest('button[data-k]');if(!b)return;
   S.kind=b.dataset.k;load(true);
 });
+FAList.init(S,{showBrands:true,onChange:()=>load(true)});
 document.getElementById('more').addEventListener('click',()=>{if(!S.loading)load(false)});
 load(true);
 </script>

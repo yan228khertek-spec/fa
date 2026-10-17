@@ -25,6 +25,10 @@
 .slide{position:relative;flex:0 0 100%;scroll-snap-align:center}
 .slide img{width:100%;height:74svh;min-height:420px;max-height:660px;object-fit:cover;object-position:var(--mp,var(--dp,center 30%));display:block}
 .slide picture{display:block}
+/* видео ложится поверх картинки-постера и появляется, когда пошёл первый кадр */
+.slide video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--mp,var(--dp,center 30%));opacity:0;transition:opacity .5s;pointer-events:none}
+.slide video.on{opacity:1}
+@media(min-width:900px){.slide video{object-position:var(--dp,center 30%)}}
 .slide .c{position:absolute;left:0;right:0;bottom:0;padding:100px 16px 40px;color:#fff;
   background:linear-gradient(transparent,rgba(44,43,39,.62))}
 .slide .c.dk{color:var(--graphite);background:linear-gradient(transparent,rgba(255,255,255,.78))}
@@ -190,17 +194,33 @@ function paintSlides(list){
     const pos=(x.fx!=null?`--dp:${x.fx}% ${x.fy}%;--mp:${x.mfx}% ${x.mfy}%`:''),
           href=safeHref(x.link),
           txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<h1>${fmt(x.t)}</h1>`:''}${x.s?`<p class="sub">${fmt(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
-    return `<div class="slide" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${txt}</div>`;
+    return `<div class="slide" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${(x.vd||x.vm)?`<video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-vd="${esc(x.vd||'')}" data-vm="${esc(x.vm||'')}"></video>`:''}${txt}</div>`;
   }).join('');
   hd.innerHTML=list.map((_,i)=>`<i class="${i?'':'on'}" onclick="goSlide(${i})"></i>`).join('');
-  cur=0; sl.scrollTo({left:0});
+  cur=0; sl.scrollTo({left:0}); vsync();
 }
+/* Видео баннеров: грузим только у показанного слайда, остальные стоят на паузе. Без видео остаётся
+   картинка-постер: при «меньше движения» в системе, режиме экономии трафика и если ролик не заиграл. */
+const vcalm=matchMedia('(prefers-reduced-motion:reduce)').matches||(navigator.connection&&navigator.connection.saveData);
+const vwide=matchMedia('(min-width:900px)');
+function vsync(){
+  [...sl.children].forEach((sd,k)=>{
+    const v=sd.querySelector('video'); if(!v)return;
+    if(vcalm||k!==cur||document.hidden){v.pause();return}
+    const want=(vwide.matches?(v.dataset.vd||v.dataset.vm):(v.dataset.vm||v.dataset.vd));
+    if(want&&v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
+    v.onplaying=()=>v.classList.add('on');
+    const p=v.play(); if(p&&p.catch)p.catch(()=>{});
+  });
+}
+vwide.addEventListener&&vwide.addEventListener('change',vsync);
+document.addEventListener('visibilitychange',vsync);
 let cur=0, auto;
 function goSlide(i){cur=(i+N)%N;sl.scrollTo({left:cur*sl.clientWidth,behavior:'smooth'})}
 function slide(d){goSlide(cur+d);restart()}
 function restart(){clearInterval(auto);auto=setInterval(()=>goSlide(cur+1),7000)}
 sl.addEventListener('scroll',()=>{const i=Math.round(sl.scrollLeft/sl.clientWidth);
-  if(i!==cur){cur=i;[...hd.children].forEach((d,k)=>d.classList.toggle('on',k===i))}});
+  if(i!==cur){cur=i;[...hd.children].forEach((d,k)=>d.classList.toggle('on',k===i));vsync()}});
 sl.addEventListener('touchstart',()=>clearInterval(auto),{passive:true});
 sl.addEventListener('touchend',restart,{passive:true});
 addEventListener('resize',()=>sl.scrollTo({left:cur*sl.clientWidth}));
@@ -219,7 +239,7 @@ restart();
 /* Баннеры из админки; пока их нет или API недоступно — остаются стандартные слайды */
 fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():null).then(d=>{
   if(!d||!d.items||!d.items.length)return;
-  paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
+  paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
     theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart();
 }).catch(()=>{});
 

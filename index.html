@@ -210,8 +210,29 @@ function vsync(){
     const want=(vwide.matches?(v.dataset.vd||v.dataset.vm):(v.dataset.vm||v.dataset.vd));
     if(want&&v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
     v.onplaying=()=>v.classList.add('on');
-    const p=v.play(); if(p&&p.catch)p.catch(()=>{});
+    vplay(v);
   });
+}
+/* Телефоны строже к автозапуску: звук выключаем свойствами (атрибута из разметки им мало), а если
+   запуск всё же отклонён (экономия заряда на iPhone и т.п.) — повторяем при первом касании/прокрутке */
+function vplay(v){
+  v.muted=true; v.defaultMuted=true; v.playsInline=true; v.setAttribute('webkit-playsinline','');
+  const p=v.play();
+  if(p&&p.catch)p.catch(()=>{
+    const go=()=>{['touchstart','pointerdown','scroll','click'].forEach(e=>removeEventListener(e,go));if(!v.paused)return;v.play().catch(()=>{})};
+    ['touchstart','pointerdown','scroll','click'].forEach(e=>addEventListener(e,go,{passive:true}));
+  });
+}
+/* Диагностика на телефоне: открыть главную с ?vdebug=1 — внизу экрана видно, что делает видео */
+if(/[?&]vdebug\b/.test(location.search)){
+  const box=document.createElement('pre');
+  box.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;margin:0;padding:8px;font:11px/1.35 monospace;background:rgba(255,255,255,.95);color:#2c2b27;white-space:pre-wrap;max-height:40vh;overflow:auto';
+  document.body.appendChild(box);
+  setInterval(()=>{
+    const c=navigator.connection||{};
+    box.textContent=['reduceMotion='+matchMedia('(prefers-reduced-motion:reduce)').matches,'saveData='+c.saveData,'wide='+vwide.matches,'calm='+!!vcalm,'cur='+cur,
+      ...[...document.querySelectorAll('.slide video')].map((v,i)=>`#${i} src=${(v.currentSrc||v.getAttribute('src')||'—').split('/').pop()} ready=${v.readyState} net=${v.networkState} paused=${v.paused} muted=${v.muted} t=${v.currentTime.toFixed(1)} err=${v.error?v.error.code+' '+v.error.message:'—'}`)].join('\n');
+  },500);
 }
 vwide.addEventListener&&vwide.addEventListener('change',vsync);
 document.addEventListener('visibilitychange',vsync);

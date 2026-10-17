@@ -2,11 +2,11 @@ import { AdminError } from './types.js';
 
 export const BANNER_THEMES = ['light', 'dark'] as const;
 export type BannerTheme = (typeof BANNER_THEMES)[number];
-/** Где показывается баннер: слайдер вверху главной или баннер блока парфюмерии. */
-export const BANNER_PLACEMENTS = ['hero', 'perfume'] as const;
+/** Где показывается баннер: слайдер вверху, блок парфюмерии или промо между блоками. */
+export const BANNER_PLACEMENTS = ['hero', 'perfume', 'promo'] as const;
 export type BannerPlacement = (typeof BANNER_PLACEMENTS)[number];
 /** Не больше баннеров на место: слайдер не должен превращаться в ленту. */
-export const MAX_BANNERS: Record<BannerPlacement, number> = { hero: 12, perfume: 3 };
+export const MAX_BANNERS: Record<BannerPlacement, number> = { hero: 12, perfume: 3, promo: 3 };
 
 export type BannerFileKind = 'image' | 'imageMobile' | 'video' | 'videoMobile';
 
@@ -108,8 +108,10 @@ export class BannerService {
   }
 
   private static placement(v: unknown): BannerPlacement {
-    if (v === 'hero' || v === 'perfume') return v;
-    throw new AdminError('placement: hero или perfume');
+    if (typeof v === 'string' && (BANNER_PLACEMENTS as readonly string[]).includes(v)) {
+      return v as BannerPlacement;
+    }
+    throw new AdminError('placement: hero, perfume или promo');
   }
 
   private static theme(v: unknown): BannerTheme {

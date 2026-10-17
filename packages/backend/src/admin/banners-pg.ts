@@ -1,10 +1,12 @@
 import pg from 'pg';
 import { SITE_BANNER_PLACEMENT_DDL } from './banner-placement-schema.js';
+import { SITE_BANNER_PROMO_DDL } from './banner-promo-schema.js';
 import { SITE_BANNER_VIDEO_DDL } from './banner-video-schema.js';
 import { SITE_BANNERS_DDL } from './banners-schema.js';
 import type {
   BannerFileKind,
   BannerPatch,
+  BannerPlacement,
   BannerRepository,
   NewBanner,
   SiteBanner,
@@ -13,7 +15,7 @@ import { AdminError } from './types.js';
 
 interface Row {
   id: string;
-  placement: 'hero' | 'perfume';
+  placement: BannerPlacement;
   title: string;
   subtitle: string;
   button_text: string;
@@ -88,7 +90,9 @@ export class PgBannerRepository implements BannerRepository {
 
   ready(): Promise<void> {
     this.prepared ??= this.pool
-      .query(`${SITE_BANNERS_DDL}\n${SITE_BANNER_VIDEO_DDL}\n${SITE_BANNER_PLACEMENT_DDL}`)
+      .query(
+        `${SITE_BANNERS_DDL}\n${SITE_BANNER_VIDEO_DDL}\n${SITE_BANNER_PLACEMENT_DDL}\n${SITE_BANNER_PROMO_DDL}`,
+      )
       .catch((err: unknown) => {
         this.prepared = undefined;
         throw err;

@@ -157,6 +157,18 @@ describe('баннеры главной (HTTP)', () => {
     expect((await post('/admin/api/banners', { placement: 'perfume' })).statusCode).toBe(409);
     expect((await post('/admin/api/banners', { title: 'ещё в hero' })).statusCode).toBe(201);
     expect((await post('/admin/api/banners', { placement: 'footer' })).statusCode).toBe(400);
+
+    // промо между блоками: своё место и свой лимит (3)
+    const pr = (await post('/admin/api/banners', { title: 'Промо', placement: 'promo' })).json();
+    expect(pr.placement).toBe('promo');
+    await upload(`/admin/api/banners/${pr.id}/image/desktop`, 3);
+    const promo = (await app.inject({ method: 'GET', url: '/api/banners?placement=promo' })).json()
+      .items;
+    expect(promo.map((i: { title: string }) => i.title)).toEqual(['Промо']);
+    expect((await app.inject({ method: 'GET', url: '/api/banners' })).json().items.length).toBe(1);
+    await post('/admin/api/banners', { placement: 'promo' });
+    await post('/admin/api/banners', { placement: 'promo' });
+    expect((await post('/admin/api/banners', { placement: 'promo' })).statusCode).toBe(409);
   });
 
   it('замена и удаление картинки чистят файлы', async () => {

@@ -48,6 +48,8 @@ describe.skipIf(!url)('баннеры в PostgreSQL', () => {
     await repo.setFile(p.id, 'image', 'a.png');
     expect((await svc.publicList('perfume')).map((b) => b.id)).toEqual([p.id]);
     expect(await svc.publicList()).toEqual([]);
+    const q = await svc.create({ placement: 'promo' });
+    expect(q.placement).toBe('promo');
     await expect(
       pool.query("UPDATE site_banners SET placement = 'footer' WHERE id = $1", [h.id]),
     ).rejects.toThrow();

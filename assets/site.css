@@ -112,3 +112,5 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
 .msub a{display:block;padding:5px 0;font-size:13.5px;letter-spacing:.02em;color:var(--muted)}
 .msub a:hover{color:var(--graphite)}
 .msub a:first-child{color:var(--graphite)}
+.msub.mb a:first-child{color:var(--muted)}
+.msub.mb a:hover{color:var(--graphite)}

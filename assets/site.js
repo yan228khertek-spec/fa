@@ -29,16 +29,12 @@
   </div>
   <div class="mscroll">
     <div class="mgrp">
-      <a class="mlink" href="catalog.html">Новинки<sup>новое</sup></a>
+      <a class="mlink" href="catalog.html">Осень Зима 2026/27<sup>новое</sup></a>
       <a class="mlink red" href="catalog.html?sale=1">Распродажа</a>
     </div>
     <div class="mgrp">
-      <a class="mcap" href="brands.html" style="display:block">Бренды</a>
-      <div id="mbList"></div>
-      <a class="mlink" href="brands.html">Все бренды</a>
-    </div>
-    <div class="mgrp">
-      <a class="mcap" href="catalog.html" style="display:block">Каталог</a>
+      <div class="macc" id="mbAcc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Бренды<i></i></button>
+        <div class="msub mb" id="mbList"></div></div>
       <div class="macc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Одежда<i></i></button>
         <div class="msub" data-cat="Одежда"><a href="catalog.html?category=Одежда">Вся одежда</a></div></div>
       <div class="macc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Обувь<i></i></button>
@@ -153,8 +149,10 @@
     var box = document.getElementById('mbList');
     if (!box) return;
     var list = perfume ? [] : (topBrands[gender] || []);
+    var acc = document.getElementById('mbAcc');
+    if (acc) acc.style.display = list.length ? '' : 'none';
     box.innerHTML = list.map(function(b){
-      return '<a class="mlink" href="brand.html?slug=' + encodeURIComponent(b.slug) + '">' + esc(b.name) + '</a>';
+      return '<a href="brand.html?slug=' + encodeURIComponent(b.slug) + '">' + esc(b.name) + '</a>';
     }).join('');
   }
   function paintSwitchers(){

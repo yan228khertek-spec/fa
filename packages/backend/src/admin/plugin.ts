@@ -127,8 +127,12 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     });
 
     // Баннеры главной: включённые, с картинкой, по порядку. Точки фокуса — для обрезки под экран
-    pub.get('/api/banners', async (_req, reply) => {
-      const list = await banners.publicList();
+    pub.get('/api/banners', async (req, reply) => {
+      const place = (req.query as { placement?: string }).placement ?? 'hero';
+      if (place !== 'hero' && place !== 'perfume') {
+        return reply.code(400).send({ error: 'placement: hero или perfume' });
+      }
+      const list = await banners.publicList(place);
       reply.header('cache-control', 'public, max-age=30');
       return {
         items: list.map((b) => {

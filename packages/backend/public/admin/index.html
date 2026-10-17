@@ -257,6 +257,13 @@
         flex: 1;
         min-width: 120px;
       }
+      .bn-spot {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 26px 0 12px;
+        font-size: 15px;
+      }
       .bn-video {
         margin-top: 14px;
         padding-top: 12px;
@@ -858,15 +865,16 @@
 
       <section id="t-banners" class="hidden">
         <p class="muted" style="margin-top: 0">
-          Баннеры главной страницы идут слайдером в заданном порядке. Для каждого можно отдельно
-          подобрать кадр под компьютер и под телефон: нажмите на картинку в нужном месте — эта точка
-          останется в кадре при обрезке. Справа сразу видно, как баннер ляжет на экран. Для телефона
-          можно загрузить свою картинку (рекомендуем вертикальную 4:5, от 1080×1350).
+          Здесь два места: слайдер вверху главной и баннер блока парфюмерии перед карточками.
+          Баннеры слайдера идут в заданном порядке. Для каждого можно отдельно подобрать кадр под
+          компьютер и под телефон: нажмите на картинку в нужном месте — эта точка останется в кадре
+          при обрезке. Справа сразу видно, как баннер ляжет на экран. Для телефона можно загрузить
+          свою картинку (рекомендуем вертикальную 4:5, от 1080×1350).
         </p>
         <div class="row" style="margin-bottom: 16px">
-          <button class="btn" id="bnAdd">+ Новый баннер</button>
           <span class="hint muted"
-            >Для компьютера — от 2400×1050 (16:7), JPEG/PNG/WebP до 8 МБ</span
+            >Для компьютера — от 2400×1050 (16:7), JPEG/PNG/WebP до 8 МБ. Видео можно добавить в
+            любой баннер</span
           >
         </div>
         <div id="bnList"></div>
@@ -1118,7 +1126,7 @@
           ${kind === 'mobile' && !b.videoMobile && b.video ? '<div class="muted">Своего нет — на телефоне пойдёт компьютерное видео.</div>' : ''}
         </div>`;
       }
-      function bnCard(b, i) {
+      function bnCard(b, i, n) {
         const mob = b.imageMobile || b.image;
         const ph = (src, cls, x, y) =>
           `<div class="prev ${cls} ${b.theme}">${src ? `<img src="${esc(src)}" alt="" style="object-position:${bnPos(x, y)}">` : ''}
@@ -1135,7 +1143,7 @@
             <span class="tag ${b.active ? 'top' : ''}">${b.active ? 'Показывается' : 'Скрыт'}</span>
             <b>${i + 1}. ${esc(b.title) || 'Без заголовка'}</b>
             <button class="btn ghost sm" data-a="up" ${i ? '' : 'disabled'}>↑</button>
-            <button class="btn ghost sm" data-a="down" ${i < BN.length - 1 ? '' : 'disabled'}>↓</button>
+            <button class="btn ghost sm" data-a="down" ${i < n - 1 ? '' : 'disabled'}>↓</button>
             <button class="btn ghost sm" data-a="del">Удалить</button>
           </div>
           <div class="bn-fields">
@@ -1167,16 +1175,45 @@
           <div class="row"><button class="btn" data-a="save">Сохранить</button><span class="muted bn-state"></span></div>
         </div>`;
       }
+      /* два места: слайдер вверху главной и баннер блока парфюмерии (перед карточками) */
+      const BN_SPOTS = [
+        {
+          key: 'hero',
+          title: 'Слайдер вверху главной',
+          empty: 'Пока баннеров нет, на главной показывается оформление по умолчанию.',
+        },
+        {
+          key: 'perfume',
+          title: 'Баннер парфюмерии (перед карточками на главной)',
+          empty:
+            'Пока баннера нет, показывается обычный блок «Редкие ароматы». Показывается первый включённый баннер.',
+        },
+      ];
       function drawBanners() {
-        $('#bnList').innerHTML = BN.length
-          ? BN.map(bnCard).join('')
-          : '<div class="card muted">Баннеров пока нет. Пока их нет, на главной показывается оформление по умолчанию.</div>';
+        $('#bnList').innerHTML = BN_SPOTS.map((sp) => {
+          const list = BN.filter((b) => (b.placement || 'hero') === sp.key);
+          return `<h3 class="bn-spot">${sp.title}
+              <button class="btn sm" data-add="${sp.key}">+ Новый баннер</button></h3>
+            ${
+              list.length
+                ? list.map((b, i) => bnCard(b, i, list.length)).join('')
+                : `<div class="card muted">${sp.empty}</div>`
+            }`;
+        }).join('');
       }
-      $('#bnAdd').onclick = async () => {
-        await api('/banners', { method: 'POST', json: { title: 'Новый баннер' } });
+      $('#bnList').addEventListener('click', async (e) => {
+        const add = e.target.closest('button[data-add]');
+        if (!add) return;
+        await api('/banners', {
+          method: 'POST',
+          json: {
+            title: add.dataset.add === 'perfume' ? 'Парфюмерия' : 'Новый баннер',
+            placement: add.dataset.add,
+          },
+        });
         await loadBanners();
-        toast('Баннер создан — загрузите картинку');
-      };
+        toast('Баннер создан — загрузите картинку или видео');
+      });
       /* точка фокуса: нажатие и перетаскивание по картинке, превью обновляется на лету */
       (function () {
         let cur = null;
@@ -1345,9 +1382,14 @@
           return loadBanners();
         }
         if (a === 'up' || a === 'down') {
-          const ids = BN.map((v) => v.id),
+          /* двигаем внутри своего места: меняем местами соседей по группе */
+          const me = BN.find((v) => v.id === id),
+            group = BN.filter((v) => v.placement === me.placement).map((v) => v.id),
+            gi = group.indexOf(id),
+            other = group[a === 'up' ? gi - 1 : gi + 1],
+            ids = BN.map((v) => v.id),
             i = ids.indexOf(id),
-            j = a === 'up' ? i - 1 : i + 1;
+            j = ids.indexOf(other);
           [ids[i], ids[j]] = [ids[j], ids[i]];
           BN = await api('/banners-order', { method: 'PUT', json: { ids } });
           drawBanners();

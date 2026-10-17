@@ -132,6 +132,33 @@ describe('баннеры главной (HTTP)', () => {
     expect(Object.keys(items[0])).not.toContain('active');
   });
 
+  it('баннер парфюмерии: свой лимит, отдельная выдача, hero не смешивается', async () => {
+    const hero = (await post('/admin/api/banners', { title: 'Верх' })).json();
+    expect(hero.placement).toBe('hero');
+    const p1 = (await post('/admin/api/banners', { title: 'Аромат', placement: 'perfume' })).json();
+    expect(p1.placement).toBe('perfume');
+    await upload(`/admin/api/banners/${hero.id}/image/desktop`, 1);
+    await upload(`/admin/api/banners/${p1.id}/image/desktop`, 2);
+
+    const top = (await app.inject({ method: 'GET', url: '/api/banners' })).json().items;
+    expect(top.map((i: { title: string }) => i.title)).toEqual(['Верх']);
+    const perf = (await app.inject({ method: 'GET', url: '/api/banners?placement=perfume' })).json()
+      .items;
+    expect(perf.map((i: { title: string }) => i.title)).toEqual(['Аромат']);
+    expect((await app.inject({ method: 'GET', url: '/api/banners?placement=x' })).statusCode).toBe(
+      400,
+    );
+
+    // место не меняется правкой, а лимит у парфюмерии свой (3)
+    const u = await put(`/admin/api/banners/${p1.id}`, { placement: 'hero', title: 'Аромат 2' });
+    expect(u.json()).toMatchObject({ placement: 'perfume', title: 'Аромат 2' });
+    await post('/admin/api/banners', { placement: 'perfume' });
+    await post('/admin/api/banners', { placement: 'perfume' });
+    expect((await post('/admin/api/banners', { placement: 'perfume' })).statusCode).toBe(409);
+    expect((await post('/admin/api/banners', { title: 'ещё в hero' })).statusCode).toBe(201);
+    expect((await post('/admin/api/banners', { placement: 'footer' })).statusCode).toBe(400);
+  });
+
   it('замена и удаление картинки чистят файлы', async () => {
     const b = (await post('/admin/api/banners', {})).json();
     const first = (await upload(`/admin/api/banners/${b.id}/image/desktop`, 1)).json();

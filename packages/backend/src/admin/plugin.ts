@@ -11,7 +11,7 @@ import { registerTickerRoutes } from './ticker-routes.js';
 import type { TickerService } from './ticker.js';
 import { registerCardRoutes } from './cards-routes.js';
 import type { CardService } from './cards.js';
-import { MAX_VIDEO_UPLOAD_BYTES, type VideoCompressor } from './video.js';
+import { MAX_VIDEO_UPLOAD_BYTES, type PosterMaker, type VideoCompressor } from './video.js';
 import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
 import { seedBrands } from './seed.js';
 import type { BrandService } from './service.js';
@@ -31,6 +31,8 @@ export interface AdminPluginOptions {
   imageDirs: string[];
   /** Сжатие видео баннеров (ffmpeg); в тестах подменяется. */
   videoCompressor: VideoCompressor;
+  /** Кадр из видео для постера баннера (ffmpeg); в тестах подменяется. */
+  posterMaker: PosterMaker;
 }
 
 const MIME: Record<string, string> = {
@@ -60,7 +62,7 @@ function gender(v: unknown): Gender {
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service, cards, banners, ticker, imageDirs, videoCompressor } = opts;
+  const { admin, service, cards, banners, ticker, imageDirs, videoCompressor, posterMaker } = opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -401,7 +403,13 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       return { ok: true };
     });
 
-    registerBannerRoutes(adm, { banners, uploadsDir, uploadUrl, compress: videoCompressor });
+    registerBannerRoutes(adm, {
+      banners,
+      uploadsDir,
+      uploadUrl,
+      compress: videoCompressor,
+      poster: posterMaker,
+    });
     registerTickerRoutes(adm, ticker);
     registerCardRoutes(adm, { cards, uploadsDir, imageDirs, uploadUrl, modelPhoto });
 

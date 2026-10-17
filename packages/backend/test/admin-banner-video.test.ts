@@ -7,7 +7,12 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { buildApp } from '../src/app.js';
 import type { AppConfig } from '../src/config.js';
 import { sniffVideo } from '../src/admin/media.js';
-import { ffmpegCompressor, type VideoCompressor } from '../src/admin/video.js';
+import {
+  ffmpegCompressor,
+  ffmpegPoster,
+  type PosterMaker,
+  type VideoCompressor,
+} from '../src/admin/video.js';
 
 const auth = { authorization: `Basic ${Buffer.from('boss:secret').toString('base64')}` };
 const write = { ...auth, 'x-fa-admin': '1' };
@@ -47,8 +52,9 @@ describe('видео баннера (HTTP)', () => {
   let app: FastifyInstance;
   let dir: string;
   const calls: { maxWidth: number; size: number }[] = [];
+  const posters: { at: number; maxWidth: number }[] = [];
 
-  async function make(compress: VideoCompressor) {
+  async function make(compress: VideoCompressor, poster?: PosterMaker) {
     dir = await mkdtemp(path.join(tmpdir(), 'fa-bvideo-'));
     const config: AppConfig = {
       port: 0,
@@ -69,12 +75,13 @@ describe('видео баннера (HTTP)', () => {
         imagesBaseUrl: '',
       },
     };
-    app = await buildApp({ config, videoCompressor: compress });
+    app = await buildApp({ config, videoCompressor: compress, posterMaker: poster });
   }
   afterEach(async () => {
     await app.close();
     await rm(dir, { recursive: true, force: true });
     calls.length = 0;
+    posters.length = 0;
   });
 
   const post = (url: string, payload?: unknown) =>
@@ -90,10 +97,16 @@ describe('видео баннера (HTTP)', () => {
 
   describe('с подменённым сжатием', () => {
     beforeEach(async () => {
-      await make(async (input, o) => {
-        calls.push({ maxWidth: o.maxWidth, size: input.length });
-        return fakeMp4(7); // «сжатый» результат
-      });
+      await make(
+        async (input, o) => {
+          calls.push({ maxWidth: o.maxWidth, size: input.length });
+          return fakeMp4(7); // «сжатый» результат
+        },
+        async (_video, o) => {
+          posters.push(o);
+          return Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(20, 5)]);
+        },
+      );
     });
 
     it('загрузка: сжимает, хранит как .mp4, отдаёт в админку и в публичное API', async () => {
@@ -126,19 +139,64 @@ describe('видео баннера (HTTP)', () => {
       expect(list[0].videoBytes).toBe(fakeMp4(7).length);
     });
 
+    it('постер: сам берётся из кадра, если картинки нет; готовую картинку не трогает', async () => {
+      const a = (await post('/admin/api/banners', {})).json();
+      const r = (await video(a.id, 'desktop', fakeMp4(1))).json();
+      expect(r.posterMade).toBe(true);
+      expect(r.image).toMatch(/\.jpg$/);
+      expect(posters).toEqual([{ at: 1, maxWidth: 1920 }]);
+      // видео для телефона без своей картинки получает свой постер (ширина 960)
+      const m = (await video(a.id, 'mobile', fakeMp4(1))).json();
+      expect(m.imageMobile).toMatch(/\.jpg$/);
+      expect(posters[1]).toEqual({ at: 1, maxWidth: 960 });
+      // а если картинка уже есть — не перезаписываем
+      const b = (await post('/admin/api/banners', {})).json();
+      await app.inject({
+        method: 'POST',
+        url: `/admin/api/banners/${b.id}/image/desktop`,
+        headers: { ...write, 'content-type': 'image/png' },
+        payload: png,
+      });
+      const before = (await app.inject({ method: 'GET', url: '/admin/api/banners', headers: auth }))
+        .json()
+        .find((x: { id: number }) => x.id === b.id).image;
+      const r2 = (await video(b.id, 'desktop', fakeMp4(2))).json();
+      expect(r2.posterMade).toBe(false);
+      expect(r2.image).toBe(before);
+      expect(posters).toHaveLength(2);
+    });
+
+    it('постер из выбранного кадра: заменяет картинку и чистит старый файл', async () => {
+      const b = (await post('/admin/api/banners', {})).json();
+      await video(b.id, 'desktop', fakeMp4(1)); // постер уже создан автоматически
+      const first = (
+        await app.inject({ method: 'GET', url: '/admin/api/banners', headers: auth })
+      ).json()[0].image;
+      const r = await post(`/admin/api/banners/${b.id}/poster/desktop?t=2.5`);
+      expect(r.statusCode).toBe(200);
+      expect(r.json().image).not.toBe(first);
+      expect(posters.at(-1)).toEqual({ at: 2.5, maxWidth: 1920 });
+      expect((await files()).filter((f) => f.endsWith('.jpg'))).toHaveLength(1);
+      expect((await post(`/admin/api/banners/${b.id}/poster/desktop?t=-1`)).statusCode).toBe(400);
+      expect((await post(`/admin/api/banners/${b.id}/poster/tablet`)).statusCode).toBe(400);
+      expect((await post('/admin/api/banners/999/poster/desktop')).statusCode).toBe(404);
+      // видео для телефона нет — брать кадр не из чего
+      expect((await post(`/admin/api/banners/${b.id}/poster/mobile`)).statusCode).toBe(409);
+    });
+
     it('замена и удаление чистят файлы, удаление баннера — тоже', async () => {
       const b = (await post('/admin/api/banners', {})).json();
       await video(b.id, 'desktop', fakeMp4(1));
-      expect(await files()).toHaveLength(1);
+      expect(await files()).toHaveLength(2); // ролик + постер из кадра
       await video(b.id, 'desktop', fakeMp4(2));
-      expect(await files()).toHaveLength(1);
+      expect(await files()).toHaveLength(2);
       const del = await app.inject({
         method: 'DELETE',
         url: `/admin/api/banners/${b.id}/video/desktop`,
         headers: write,
       });
       expect(del.json().video).toBeNull();
-      expect(await files()).toHaveLength(0);
+      expect(await files()).toHaveLength(1); // постер остаётся картинкой баннера
       await video(b.id, 'mobile', fakeMp4(3));
       await app.inject({ method: 'DELETE', url: `/admin/api/banners/${b.id}`, headers: write });
       expect(await files()).toHaveLength(0);
@@ -183,7 +241,10 @@ describe('видео баннера (HTTP)', () => {
   });
 
   it('без ffmpeg принимает только готовый лёгкий MP4', async () => {
-    await make(async () => null);
+    await make(
+      async () => null,
+      async () => null,
+    );
     const b = (await post('/admin/api/banners', {})).json();
     expect((await video(b.id, 'desktop', fakeMp4(1))).statusCode).toBe(200);
     const webm = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3]), Buffer.alloc(100)]);
@@ -238,6 +299,22 @@ describe('видео баннера (HTTP)', () => {
       expect(streams.map((s) => s.codec_type)).toEqual(['video']);
       expect(streams[0]).toMatchObject({ codec_name: 'h264' });
       expect(streams[0]!.width).toBeLessThanOrEqual(960);
+    }, 60_000);
+
+    it('постер из настоящего кадра: JPEG нужной ширины, кадр за пределами ролика — ошибка', async () => {
+      await make(ffmpegCompressor(), ffmpegPoster());
+      const b = (await post('/admin/api/banners', {})).json();
+      const r = (await video(b.id, 'mobile', await readFile(src))).json();
+      expect(r.posterMade).toBe(true);
+      const jpg = await readFile(
+        path.join(dir, 'uploads', path.basename(new URL(r.imageMobile).pathname)),
+      );
+      expect(jpg.subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
+      const ok = await post(`/admin/api/banners/${b.id}/poster/mobile?t=1.5`);
+      expect(ok.statusCode).toBe(200);
+      const late = await post(`/admin/api/banners/${b.id}/poster/mobile?t=500`);
+      expect(late.statusCode).toBe(422);
+      expect(late.json().error).toContain('нет кадра');
     }, 60_000);
 
     it('мусор под видом видео не проходит', async () => {

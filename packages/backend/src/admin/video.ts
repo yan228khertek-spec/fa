@@ -118,6 +118,54 @@ export function ffmpegCompressor(bin = process.env.FFMPEG_PATH || 'ffmpeg'): Vid
   };
 }
 
+export interface PosterOptions {
+  /** Секунда ролика, с которой берём кадр. */
+  at: number;
+  /** Ширина кадра не больше: 1920 для компьютера, 960 для телефона. */
+  maxWidth: number;
+}
+/** Достаёт кадр из видео в JPEG. null — ffmpeg на сервере нет. */
+export type PosterMaker = (video: Buffer, opts: PosterOptions) => Promise<Buffer | null>;
+
+export function ffmpegPoster(bin = process.env.FFMPEG_PATH || 'ffmpeg'): PosterMaker {
+  return async (video, { at, maxWidth }) => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'fa-poster-'));
+    try {
+      const src = path.join(dir, 'in.mp4');
+      const out = path.join(dir, 'out.jpg');
+      await writeFile(src, video);
+      const res = await run(
+        bin,
+        [
+          '-nostdin',
+          '-y',
+          '-loglevel',
+          'error',
+          '-ss',
+          String(Math.max(0, at)),
+          '-i',
+          src,
+          '-frames:v',
+          '1',
+          '-vf',
+          `scale=min(${maxWidth}\\,iw):-2`,
+          '-q:v',
+          '3',
+          out,
+        ],
+        20_000,
+      );
+      if (res === 'missing') return null;
+      // кадр за пределами ролика — ffmpeg не падает, а просто ничего не пишет
+      const jpg = await readFile(out).catch(() => null);
+      if (!jpg || jpg.length === 0) throw new AdminError('В этом месте ролика нет кадра', 422);
+      return jpg;
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  };
+}
+
 export interface SavedVideo {
   file: string;
   before: number;

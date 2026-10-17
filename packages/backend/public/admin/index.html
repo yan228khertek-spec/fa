@@ -1110,9 +1110,9 @@
         const src = kind === 'desktop' ? b.video : b.videoMobile,
           size = kind === 'desktop' ? b.videoBytes : b.videoMobileBytes;
         return `<div class="bn-video">
-          <span class="bn-lab">Видео ${kind === 'desktop' ? 'для компьютера' : 'для телефона'} <span class="muted">· по желанию, вместо картинки</span></span>
+          <span class="bn-lab">Видео ${kind === 'desktop' ? 'для компьютера' : 'для телефона'} <span class="muted">· по желанию. Если картинки нет, постер возьмётся из кадра видео</span></span>
           <div class="row"><label class="btn sm">${src ? 'Заменить видео' : 'Загрузить видео'}<input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" data-vup="${kind}" hidden></label>
-          ${src ? `<button class="btn ghost sm" data-vrm="${kind}">Убрать видео</button><span class="muted">${size ? mb(size) : ''}</span>` : ''}
+          ${src ? `<button class="btn ghost sm" data-vposter="${kind}" title="Поставьте ролик на нужный момент и нажмите">Постер из этого кадра</button><button class="btn ghost sm" data-vrm="${kind}">Убрать видео</button><span class="muted">${size ? mb(size) : ''}</span>` : ''}
           <span class="muted bn-vstate"></span></div>
           ${src ? `<video src="${esc(src)}" poster="${esc((kind === 'mobile' && b.imageMobile) || b.image || '')}" muted loop playsinline controls preload="metadata" class="bn-vprev"></video>` : ''}
           ${kind === 'mobile' && !b.videoMobile && b.video ? '<div class="muted">Своего нет — на телефоне пойдёт компьютерное видео.</div>' : ''}
@@ -1148,7 +1148,7 @@
           </div>
           <div class="bn-grid">
             <div>
-              <span class="bn-lab">Картинка для компьютера ${b.image ? '<span class="muted">· она же постер видео</span>' : '<span class="err">· обязательна (и постер для видео)</span>'}</span>
+              <span class="bn-lab">Картинка для компьютера ${b.image ? '<span class="muted">· она же постер видео</span>' : '<span class="err">· обязательна, либо загрузите видео — постер возьмётся из него</span>'}</span>
               <div class="row"><label class="btn sm">${b.image ? 'Заменить' : 'Загрузить'}<input type="file" accept="image/*" data-up="desktop" hidden></label>
               ${b.image ? '<button class="btn ghost sm" data-rm="desktop">Убрать</button>' : ''}</div>
               <div class="bn-pv">${ed('d', b.image, b.focusX, b.focusY, 'Точка фокуса — нажмите на картинку')}
@@ -1272,7 +1272,10 @@
             body: file,
             type,
           });
-          toast(`Видео готово: ${mb(r.compression.before)} → ${mb(r.compression.after)}`);
+          toast(
+            `Видео готово: ${mb(r.compression.before)} → ${mb(r.compression.after)}` +
+              (r.posterMade ? '. Постер взят из кадра видео' : ''),
+          );
         } catch {
           inp.value = '';
           inp.disabled = false;
@@ -1303,6 +1306,14 @@
         const card = e.target.closest('.card[data-id]');
         if (!btn || !card) return;
         const id = +card.dataset.id;
+        if (btn.dataset.vposter) {
+          /* кадр берём с позиции превью-плеера: промотайте ролик и нажмите кнопку */
+          const pv = btn.closest('.bn-video').querySelector('video'),
+            t = pv ? pv.currentTime.toFixed(2) : 1;
+          await api(`/banners/${id}/poster/${btn.dataset.vposter}?t=${t}`, { method: 'POST' });
+          toast('Постер обновлён из кадра видео');
+          return keepBannerEdits(id);
+        }
         if (btn.dataset.vrm) {
           await api(`/banners/${id}/video/${btn.dataset.vrm}`, { method: 'DELETE' });
           return keepBannerEdits(id);

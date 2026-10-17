@@ -120,7 +120,7 @@ describe('карточки товаров (HTTP)', () => {
     expect(early.statusCode).toBe(409);
     expect((await app.inject({ url: '/api/cards' })).json()).toEqual({
       total: 0,
-      facets: { categories: [], kinds: [] },
+      facets: { brands: [], categories: [], colors: [], kinds: [], price: null, sizes: [] },
       items: [],
     });
 

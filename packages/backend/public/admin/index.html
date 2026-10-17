@@ -373,6 +373,127 @@
         flex: 1;
         min-width: 200px;
       }
+
+      /* бегущая строка */
+      .tkp {
+        overflow: hidden;
+        white-space: nowrap;
+        padding: 10px 14px;
+        font-size: 12px;
+        line-height: 1.4;
+        border: 1px solid var(--line);
+        text-overflow: ellipsis;
+      }
+      .tkp span + span::before {
+        content: '•';
+        margin: 0 14px;
+        opacity: 0.6;
+      }
+      .tk-now {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .tk-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 12px 0;
+      }
+      .tk-form .wide {
+        grid-column: 1 / -1;
+      }
+      .tk-form textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+      .tk-colors {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .tk-colors label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+      }
+      .tk-colors input[type='color'] {
+        width: 44px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--line);
+        background: #fff;
+        cursor: pointer;
+      }
+      .tk-colors code {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .tk-sched {
+        border: 1px solid var(--line);
+        padding: 16px;
+        margin-bottom: 14px;
+        background: #fff;
+      }
+      .tk-sched h3 {
+        margin: 0 0 4px;
+        font-size: 14px;
+      }
+      .tk-line {
+        height: 20px;
+        position: relative;
+        background: var(--soft);
+        margin-bottom: 4px;
+      }
+      .tk-line i {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        font-style: normal;
+        font-size: 11px;
+        line-height: 20px;
+        padding: 0 6px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        box-sizing: border-box;
+      }
+      .tk-line i.off {
+        opacity: 0.35;
+      }
+      .tk-months {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        font-size: 11px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 6px;
+      }
+      .tk-months span {
+        border-left: 1px solid var(--line);
+        padding-left: 6px;
+      }
+      .tk-tl {
+        position: relative;
+        margin-bottom: 18px;
+      }
+      .tk-today {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--red);
+        z-index: 2;
+      }
+      .tk-warn {
+        color: var(--red);
+        font-size: 12px;
+        margin-top: 4px;
+      }
       .toplist {
         list-style: none;
         margin: 0 0 14px;
@@ -635,6 +756,7 @@
           <button data-t="home" class="on">Обзор</button>
           <button data-t="cards">Карточки</button>
           <button data-t="banners">Баннеры</button>
+          <button data-t="ticker">Бегущая строка</button>
           <button data-t="brands">Бренды</button>
           <button data-t="top">Топ-бренды</button>
           <button data-t="unmatched">Без бренда</button>
@@ -736,6 +858,31 @@
           >
         </div>
         <div id="bnList"></div>
+      </section>
+
+      <section id="t-ticker" class="hidden">
+        <p class="muted" style="margin-top: 0">
+          Бегущая строка вверху главной страницы. Здесь можно поменять текст и цвет, а ещё заранее
+          расписать акции по датам: в период акции строка сама меняет содержание и цвет, а после
+          окончания возвращается к стандартной. Даты считаются по времени магазина (Омск).
+        </p>
+        <div class="card">
+          <h2>Сейчас на сайте</h2>
+          <div id="tkNow"></div>
+        </div>
+        <div class="card">
+          <h2>Стандартная строка</h2>
+          <div id="tkDefault"></div>
+        </div>
+        <div class="card">
+          <h2>График акций</h2>
+          <div id="tkTimeline"></div>
+          <div class="row" style="margin-bottom: 14px">
+            <button class="btn" id="tkAdd">+ Добавить период</button
+            ><span class="hint muted">Период — с даты по дату включительно</span>
+          </div>
+          <div id="tkList"></div>
+        </div>
       </section>
 
       <section id="t-brands" class="hidden">
@@ -925,6 +1072,7 @@
           home: loadHome,
           cards: loadCards,
           banners: loadBanners,
+          ticker: loadTicker,
           brands: loadBrands,
           top: loadTop,
           unmatched: loadUnmatched,
@@ -1131,6 +1279,226 @@
           drawBanners();
         }
       };
+
+      /* бегущая строка */
+      let TK = null,
+        TKNEW = null;
+      const TKDEF = { items: [{ text: '', link: '' }], bgColor: '#2c2b27', textColor: '#ffffff' };
+      const tkLines = (items) =>
+        items.map((i) => (i.link ? `${i.text} | ${i.link}` : i.text)).join('\n');
+      const tkParse = (txt) =>
+        txt
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .map((l) => {
+            const k = l.lastIndexOf('|');
+            return k < 0
+              ? { text: l, link: '' }
+              : { text: l.slice(0, k).trim(), link: l.slice(k + 1).trim() };
+          });
+      const lum = (h) => {
+        const c = [1, 3, 5]
+          .map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+          .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      };
+      const contrast = (a, b) => {
+        const x = lum(a),
+          y = lum(b);
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+      };
+      const tkStrip = (st) =>
+        `<div class="tkp" style="background:${esc(st.bgColor)};color:${esc(st.textColor)}">${(st.items.length ? st.items : [{ text: 'Текст строки' }]).map((i) => `<span>${esc(i.text || '…')}</span>`).join('')}</div>`;
+      const fmtDay = (d) => d.split('-').reverse().join('.');
+      function tkFields(key, st, extra = '') {
+        return `<div class="tk-form" data-k="${key}">
+          ${extra}
+          <div class="wide"><span class="bn-lab">Фразы — каждая с новой строки. Ссылку можно добавить после «|», например: Скидки до −50% | catalog.html?sale=1</span>
+            <textarea data-f="lines" spellcheck="false">${esc(tkLines(st.items))}</textarea></div>
+          <div class="wide tk-colors">
+            <label>Фон <input type="color" data-f="bgColor" value="${esc(st.bgColor)}"><code data-hex="bgColor">${esc(st.bgColor)}</code></label>
+            <label>Текст <input type="color" data-f="textColor" value="${esc(st.textColor)}"><code data-hex="textColor">${esc(st.textColor)}</code></label>
+          </div>
+          <div class="wide"><span class="bn-lab">Как будет выглядеть</span><div data-prev></div><div class="tk-warn" data-warn></div></div>
+        </div>`;
+      }
+      function tkRead(box) {
+        const v = (f) => box.querySelector(`[data-f="${f}"]`);
+        return {
+          title: v('title') ? v('title').value : '',
+          startsOn: v('startsOn') ? v('startsOn').value : undefined,
+          endsOn: v('endsOn') ? v('endsOn').value : undefined,
+          active: v('active') ? v('active').value === '1' : undefined,
+          items: tkParse(v('lines').value),
+          bgColor: v('bgColor').value,
+          textColor: v('textColor').value,
+        };
+      }
+      function tkRefresh(box) {
+        const st = tkRead(box);
+        box.querySelector('[data-prev]').innerHTML = tkStrip(st);
+        $$('[data-hex]', box).forEach((c) => (c.textContent = st[c.dataset.hex]));
+        box.querySelector('[data-warn]').textContent =
+          contrast(st.bgColor, st.textColor) < 3
+            ? 'Низкий контраст: текст будет плохо читаться. Выберите более светлый или тёмный цвет.'
+            : '';
+      }
+      const dayNum = (d) =>
+        Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 86400000;
+      function tkStatus(s, today) {
+        if (!s.active) return ['Выключен', ''];
+        if (s.endsOn < today) return ['Завершена', ''];
+        if (s.startsOn > today) return ['Запланирована', ''];
+        return ['Идёт сейчас', 'top'];
+      }
+      function drawTicker() {
+        const d = TK;
+        const c = d.current;
+        $('#tkNow').innerHTML =
+          `<div class="tk-now"><span class="tag ${c.source === 'schedule' ? 'top' : ''}">${c.source === 'schedule' ? 'По графику' : 'Стандартная'}</span>
+          <span class="muted">Сегодня ${fmtDay(d.today)} (Омск). ${c.source === 'schedule' ? `Акция «${esc(c.title || 'без названия')}» действует до ${fmtDay(c.until)}.` : 'Акций по графику сейчас нет — показывается стандартная строка.'}</span></div>${tkStrip(c)}`;
+        $('#tkDefault').innerHTML =
+          tkFields('def', d.default) +
+          `<div class="row"><button class="btn" data-a="saveDef">Сохранить</button>
+           <button class="btn ghost" data-a="resetDef">Вернуть стандартное содержание</button>
+           <span class="muted">${d.default.isBuiltin ? 'Сейчас стандартное содержание без правок' : 'Содержание изменено'}</span></div>`;
+        tkRefresh($('#tkDefault [data-k]'));
+        /* таймлайн на 6 месяцев вперёд от начала текущего месяца */
+        const y = +d.today.slice(0, 4),
+          m = +d.today.slice(5, 7) - 1;
+        const w0 = Date.UTC(y, m, 1) / 86400000,
+          w1 = Date.UTC(y, m + 6, 1) / 86400000,
+          span = w1 - w0;
+        const MN = [
+          'янв',
+          'фев',
+          'мар',
+          'апр',
+          'май',
+          'июн',
+          'июл',
+          'авг',
+          'сен',
+          'окт',
+          'ноя',
+          'дек',
+        ];
+        const months = [...Array(6)]
+          .map(
+            (_, i) =>
+              `<span>${MN[(m + i) % 12]}${(m + i) % 12 === 0 ? ' ' + (y + Math.floor((m + i) / 12)) : ''}</span>`,
+          )
+          .join('');
+        const pct = (n) => Math.min(100, Math.max(0, ((n - w0) / span) * 100));
+        const rows = d.schedules
+          .filter((s) => dayNum(s.endsOn) + 1 > w0 && dayNum(s.startsOn) < w1)
+          .map((s) => {
+            const a = pct(dayNum(s.startsOn)),
+              b = pct(dayNum(s.endsOn) + 1);
+            return `<div class="tk-line"><i class="${s.active ? '' : 'off'}" style="left:${a}%;width:${Math.max(b - a, 0.8)}%;background:${esc(s.bgColor)};color:${esc(s.textColor)}" title="${esc(s.title)} · ${fmtDay(s.startsOn)} – ${fmtDay(s.endsOn)}">${esc(s.title || 'Без названия')}</i></div>`;
+          })
+          .join('');
+        $('#tkTimeline').innerHTML =
+          `<div class="tk-tl"><div class="tk-months">${months}</div>${rows || '<div class="muted" style="padding:6px 0">В ближайшие 6 месяцев акций не запланировано</div>'}<div class="tk-today" style="left:${pct(dayNum(d.today))}%"></div></div>`;
+        const card = (s, isNew) => {
+          const [label, cls] = isNew ? ['Новый период', ''] : tkStatus(s, d.today);
+          const clash = isNew
+            ? []
+            : d.schedules.filter(
+                (o) =>
+                  o.id !== s.id &&
+                  o.active &&
+                  s.active &&
+                  o.startsOn <= s.endsOn &&
+                  s.startsOn <= o.endsOn,
+              );
+          const extra = `<div class="wide"><span class="bn-lab">Название акции (видно только вам)</span><input type="text" data-f="title" maxlength="120" value="${esc(s.title)}"></div>
+            <div><span class="bn-lab">С даты</span><input type="date" data-f="startsOn" value="${esc(s.startsOn)}"></div>
+            <div><span class="bn-lab">По дату включительно</span><input type="date" data-f="endsOn" value="${esc(s.endsOn)}"></div>
+            <div><span class="bn-lab">Показывать</span><select data-f="active"><option value="1" ${s.active ? 'selected' : ''}>Да</option><option value="0" ${s.active ? '' : 'selected'}>Нет, выключено</option></select></div>`;
+          return `<div class="tk-sched" data-id="${isNew ? 'new' : s.id}">
+            <div class="row"><span class="tag ${cls}">${label}</span><h3>${esc(s.title || 'Без названия')}</h3>${isNew ? '' : `<span class="muted">${fmtDay(s.startsOn)} – ${fmtDay(s.endsOn)}</span>`}</div>
+            ${tkFields('s' + (isNew ? 'new' : s.id), s, extra)}
+            ${clash.length ? `<div class="tk-warn">Пересекается с «${clash.map((o) => esc(o.title || 'без названия')).join('», «')}»: действует та акция, что началась позже.</div>` : ''}
+            <div class="row" style="margin-top:10px"><button class="btn" data-a="saveS">${isNew ? 'Добавить' : 'Сохранить'}</button><button class="btn ghost" data-a="${isNew ? 'cancelNew' : 'delS'}">${isNew ? 'Отмена' : 'Удалить'}</button></div></div>`;
+        };
+        $('#tkList').innerHTML =
+          (TKNEW ? card(TKNEW, true) : '') +
+          (d.schedules.map((s) => card(s, false)).join('') ||
+            (TKNEW
+              ? ''
+              : '<div class="muted">Периодов пока нет. Добавьте первую акцию — она включится сама в нужную дату.</div>'));
+        $$('#tkList [data-k]').forEach(tkRefresh);
+      }
+      async function loadTicker() {
+        TK = await api('/ticker');
+        drawTicker();
+      }
+      $('#tkAdd').onclick = () => {
+        const t = TK ? TK.today : new Date().toISOString().slice(0, 10);
+        const add = (n) => new Date(dayNum(t) * 86400000 + n * 86400000).toISOString().slice(0, 10);
+        TKNEW = {
+          ...TKDEF,
+          title: '',
+          startsOn: add(7),
+          endsOn: add(14),
+          active: true,
+          items: [{ text: 'Скидки до −50% на всё | catalog.html?sale=1', link: '' }],
+        };
+        TKNEW.items = [{ text: 'Скидки до −50% на всё', link: 'catalog.html?sale=1' }];
+        TKNEW.bgColor = '#c8452f';
+        drawTicker();
+        $('#tkList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      const tkInput = (e) => {
+        const box = e.target.closest('[data-k]');
+        if (box) tkRefresh(box);
+      };
+      $('#t-ticker').addEventListener('input', tkInput);
+      $('#t-ticker').addEventListener('change', tkInput);
+      $('#t-ticker').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-a]');
+        if (!btn) return;
+        const a = btn.dataset.a;
+        if (a === 'saveDef') {
+          const st = tkRead($('#tkDefault [data-k]'));
+          await api('/ticker/default', {
+            method: 'PUT',
+            json: { items: st.items, bgColor: st.bgColor, textColor: st.textColor },
+          });
+          toast('Стандартная строка сохранена');
+          return loadTicker();
+        }
+        if (a === 'resetDef') {
+          if (!confirm('Вернуть стандартное содержание и цвета, как были до редактора?')) return;
+          await api('/ticker/default', { method: 'DELETE' });
+          toast('Возвращено стандартное содержание');
+          return loadTicker();
+        }
+        const box = btn.closest('.tk-sched');
+        if (a === 'cancelNew') {
+          TKNEW = null;
+          return drawTicker();
+        }
+        if (!box) return;
+        const id = box.dataset.id;
+        if (a === 'saveS') {
+          const st = tkRead(box);
+          if (id === 'new') {
+            await api('/ticker/schedules', { method: 'POST', json: st });
+            TKNEW = null;
+          } else await api('/ticker/schedules/' + id, { method: 'PUT', json: st });
+          toast('Сохранено');
+          return loadTicker();
+        }
+        if (a === 'delS') {
+          if (!confirm('Удалить этот период?')) return;
+          await api('/ticker/schedules/' + id, { method: 'DELETE' });
+          toast('Удалено');
+          return loadTicker();
+        }
+      });
 
       /* обзор */
       async function loadHome() {
@@ -1751,7 +2119,7 @@
       }
 
       tab(
-        ['home', 'cards', 'banners', 'brands', 'top', 'unmatched', 'exchange'].includes(
+        ['home', 'cards', 'banners', 'ticker', 'brands', 'top', 'unmatched', 'exchange'].includes(
           location.hash.slice(1),
         )
           ? location.hash.slice(1)

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SITE_CARDS_DDL } from '../src/admin/cards-schema.js';
 import { SITE_CARD_CATEGORY_DDL } from '../src/admin/card-category-schema.js';
+import { SITE_TICKER_DDL } from '../src/admin/ticker-schema.js';
 import { SITE_BANNERS_DDL } from '../src/admin/banners-schema.js';
 import { SITE_BRAND_HOME_DDL } from '../src/admin/home-schema.js';
 import { SITE_BRANDS_DDL } from '../src/admin/schema.js';
@@ -90,5 +91,17 @@ describe('миграция 008 и SITE_CARD_CATEGORY_DDL', () => {
   it('идемпотентна и ничего не удаляет', () => {
     expect(SITE_CARD_CATEGORY_DDL).toContain('ADD COLUMN IF NOT EXISTS category');
     expect(SITE_CARD_CATEGORY_DDL).not.toMatch(/\bDROP\b/i);
+  });
+});
+
+describe('миграция 009 и SITE_TICKER_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/009', async () => {
+    const file = await readFile(path.join(root, 'migrations', '009_site_ticker.sql'), 'utf8');
+    expect(normalize(SITE_TICKER_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и ничего не удаляет', () => {
+    expect(SITE_TICKER_DDL).toContain('CREATE TABLE IF NOT EXISTS site_ticker_schedules');
+    expect(SITE_TICKER_DDL).not.toMatch(/\bDROP\b/i);
   });
 });

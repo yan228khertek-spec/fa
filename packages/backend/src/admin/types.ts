@@ -2,7 +2,7 @@
 
 export type Gender = 'men' | 'women';
 export const GENDERS: readonly Gender[] = ['men', 'women'];
-export type ImageKind = 'photo' | 'logo';
+export type ImageKind = 'photo' | 'logo' | 'cover' | 'coverMobile';
 
 export interface Placement {
   /** Бренд показывается в списке «Все бренды» раздела. */
@@ -24,6 +24,11 @@ export interface SiteBrand {
   aliases: string[];
   photo: string | null;
   logo: string | null;
+  /** Шапка страницы бренда: обложка (компьютер), своя обложка для телефона, заголовок, описание. */
+  cover: string | null;
+  coverMobile: string | null;
+  heroTitle: string;
+  description: string;
   placements: Placements;
   /** Бренд выводится отдельным блоком на главной странице сайта. */
   home: boolean;
@@ -44,6 +49,8 @@ export interface BrandPatch {
   aliases?: string[];
   placements?: Placements;
   home?: boolean;
+  heroTitle?: string;
+  description?: string;
 }
 
 /** Модель каталога: «Ид товара до #». Название — из products либо из названий SKU. */

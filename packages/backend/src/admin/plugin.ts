@@ -15,7 +15,7 @@ import { MAX_VIDEO_UPLOAD_BYTES, type PosterMaker, type VideoCompressor } from '
 import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
 import { seedBrands } from './seed.js';
 import type { BrandService } from './service.js';
-import { AdminError, type Gender } from './types.js';
+import { AdminError, type Gender, type ImageKind } from './types.js';
 
 export interface AdminPluginOptions {
   admin: AdminConfig;
@@ -95,6 +95,8 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     };
   };
 
+  const isImageKind = (k: string): k is ImageKind =>
+    k === 'photo' || k === 'logo' || k === 'cover' || k === 'coverMobile';
   const publicItem = <T extends { photo: string | null }>(c: T) => ({
     ...c,
     photo: uploadUrl(c.photo),
@@ -134,7 +136,16 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
         offset,
       });
       reply.header('cache-control', 'public, max-age=60');
-      return { brand, total: res.total, facets: res.facets, items: res.items.map(publicItem) };
+      return {
+        brand: {
+          ...brand,
+          cover: uploadUrl(brand.cover),
+          coverMobile: uploadUrl(brand.coverMobile),
+        },
+        total: res.total,
+        facets: res.facets,
+        items: res.items.map(publicItem),
+      };
     });
 
     // Главная страница: бренды с флагом «Показывать на главной» и их последние карточки
@@ -336,10 +347,21 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     adm.get('/admin', sendUi);
     adm.get('/admin/', sendUi);
 
-    const dto = <T extends { photo: string | null; logo: string | null }>(b: T) => ({
+    const dto = <
+      T extends {
+        photo: string | null;
+        logo: string | null;
+        cover: string | null;
+        coverMobile: string | null;
+      },
+    >(
+      b: T,
+    ) => ({
       ...b,
       photo: uploadUrl(b.photo),
       logo: uploadUrl(b.logo),
+      cover: uploadUrl(b.cover),
+      coverMobile: uploadUrl(b.coverMobile),
     });
     const modelDto = (m: { id: string; name: string; skus: number; photo: string | null }) => ({
       ...m,
@@ -368,6 +390,8 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       await service.repo.deleteBrand(brandId);
       await removeOwnFile(uploadsDir, brand?.photo ?? null);
       await removeOwnFile(uploadsDir, brand?.logo ?? null);
+      await removeOwnFile(uploadsDir, brand?.cover ?? null);
+      await removeOwnFile(uploadsDir, brand?.coverMobile ?? null);
       return { ok: true };
     });
 
@@ -388,7 +412,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     adm.post('/admin/api/brands/:id/image/:kind', async (req) => {
       const { id: rawId, kind } = req.params as { id: string; kind: string };
       const brandId = parseId(rawId);
-      if (kind !== 'photo' && kind !== 'logo') throw new AdminError('kind: photo или logo');
+      if (!isImageKind(kind)) throw new AdminError('kind: photo, logo, cover или coverMobile');
       const filename = await saveImage(uploadsDir, req.body);
       let old: string | null;
       try {
@@ -404,7 +428,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     adm.delete('/admin/api/brands/:id/image/:kind', async (req) => {
       const { id: rawId, kind } = req.params as { id: string; kind: string };
       const brandId = parseId(rawId);
-      if (kind !== 'photo' && kind !== 'logo') throw new AdminError('kind: photo или logo');
+      if (!isImageKind(kind)) throw new AdminError('kind: photo, logo, cover или coverMobile');
       await removeOwnFile(uploadsDir, await service.repo.setImage(brandId, kind, null));
       return dto(await viewOf(brandId));
     });

@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { SOURCE } from '../db/upsert.js';
+import { SITE_BRAND_HERO_DDL } from './brand-hero-schema.js';
 import { SITE_BRAND_HOME_DDL } from './home-schema.js';
 import { SITE_BRANDS_DDL } from './schema.js';
 import {
@@ -25,6 +26,10 @@ interface BrandRow {
   name: string;
   photo_file: string | null;
   logo_file: string | null;
+  cover_file: string | null;
+  cover_mobile_file: string | null;
+  hero_title: string;
+  description: string;
   show_on_home: boolean;
 }
 
@@ -102,6 +107,13 @@ async function writeAliases(c: pg.PoolClient, brandId: number, aliases: string[]
   }
 }
 
+const IMAGE_COLUMN: Record<ImageKind, string> = {
+  photo: 'photo_file',
+  logo: 'logo_file',
+  cover: 'cover_file',
+  coverMobile: 'cover_mobile_file',
+};
+
 export class PgSiteBrandRepository implements SiteBrandRepository {
   private readonly pool: pg.Pool;
   private prepared: Promise<unknown> | undefined;
@@ -115,6 +127,7 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
     this.prepared ??= this.pool
       .query(SITE_BRANDS_DDL)
       .then(() => this.pool.query(SITE_BRAND_HOME_DDL))
+      .then(() => this.pool.query(SITE_BRAND_HERO_DDL))
       .catch((err: unknown) => {
         this.prepared = undefined;
         throw err;
@@ -125,7 +138,8 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
   private async brandsWhere(where: string, params: unknown[]): Promise<SiteBrand[]> {
     await this.ready();
     const { rows } = await this.pool.query<BrandRow>(
-      `SELECT id::text, slug, name, photo_file, logo_file, show_on_home FROM site_brands ${where} ORDER BY name, id`,
+      `SELECT id::text, slug, name, photo_file, logo_file, cover_file, cover_mobile_file, hero_title,
+              description, show_on_home FROM site_brands ${where} ORDER BY name, id`,
       params,
     );
     if (!rows.length) return [];
@@ -159,6 +173,10 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
         aliases: aliases.rows.filter((a) => a.brand_id === r.id).map((a) => a.alias),
         photo: r.photo_file,
         logo: r.logo_file,
+        cover: r.cover_file,
+        coverMobile: r.cover_mobile_file,
+        heroTitle: r.hero_title,
+        description: r.description,
         placements,
         home: r.show_on_home,
       };
@@ -200,9 +218,17 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
       await inTx(this.pool, async (c) => {
         const { rowCount } = await c.query(
           `UPDATE site_brands SET name = coalesce($2, name), slug = coalesce($3, slug),
-             show_on_home = coalesce($4, show_on_home), updated_at = now()
+             show_on_home = coalesce($4, show_on_home), hero_title = coalesce($5, hero_title),
+             description = coalesce($6, description), updated_at = now()
            WHERE id = $1`,
-          [id, patch.name ?? null, patch.slug ?? null, patch.home ?? null],
+          [
+            id,
+            patch.name ?? null,
+            patch.slug ?? null,
+            patch.home ?? null,
+            patch.heroTitle ?? null,
+            patch.description ?? null,
+          ],
         );
         if (!rowCount) throw new AdminError('Бренд не найден', 404);
         if (patch.aliases) await writeAliases(c, id, patch.aliases);
@@ -222,7 +248,7 @@ export class PgSiteBrandRepository implements SiteBrandRepository {
 
   async setImage(id: number, kind: ImageKind, filename: string | null): Promise<string | null> {
     await this.ready();
-    const col = kind === 'photo' ? 'photo_file' : 'logo_file';
+    const col = IMAGE_COLUMN[kind];
     // Прежнее имя читаем и обновляем одним оператором, чтобы не потерять файл-сироту при гонке.
     const { rows } = await this.pool.query<{ prev: string | null }>(
       `UPDATE site_brands n SET ${col} = $2, updated_at = now()

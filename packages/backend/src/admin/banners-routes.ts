@@ -1,16 +1,19 @@
-import { stat } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { MAX_IMAGE_BYTES, parseId, removeOwnFile, saveImage } from './http.js';
 import type { BannerService, SiteBanner } from './banners.js';
 import { AdminError } from './types.js';
-import { saveVideo, type VideoCompressor } from './video.js';
+import { saveVideo, type PosterMaker, type VideoCompressor } from './video.js';
+import { sniffImage } from './media.js';
 
 interface Deps {
   banners: BannerService;
   uploadsDir: string;
   uploadUrl: (file: string | null) => string | null;
   compress: VideoCompressor;
+  poster: PosterMaker;
 }
 
 export const bannerDto = (b: SiteBanner, uploadUrl: Deps['uploadUrl']) => ({
@@ -23,7 +26,7 @@ export const bannerDto = (b: SiteBanner, uploadUrl: Deps['uploadUrl']) => ({
 
 /** Маршруты админки баннеров (внутри защищённой области /admin). */
 export function registerBannerRoutes(adm: FastifyInstance, deps: Deps): void {
-  const { banners, uploadsDir, uploadUrl, compress } = deps;
+  const { banners, uploadsDir, uploadUrl, compress, poster } = deps;
   const sizeOf = async (f: string | null) =>
     f ? ((await stat(path.join(uploadsDir, f)).catch(() => null))?.size ?? null) : null;
   /** Для админки к ссылкам добавляем вес роликов на диске. */
@@ -99,6 +102,37 @@ export function registerBannerRoutes(adm: FastifyInstance, deps: Deps): void {
     return one(id);
   });
 
+  /** Кадр из уже сохранённого ролика → картинка баннера (постер). Возвращает имя прежнего файла. */
+  const makePoster = async (
+    banner: SiteBanner,
+    kind: 'desktop' | 'mobile',
+    at: number,
+  ): Promise<void> => {
+    const videoFile = kind === 'desktop' ? banner.video : banner.videoMobile;
+    if (!videoFile) throw new AdminError('Сначала загрузите видео', 409);
+    const frame = await poster(await readFile(path.join(uploadsDir, videoFile)), {
+      at,
+      maxWidth: kind === 'mobile' ? 960 : 1920,
+    });
+    if (!frame) throw new AdminError('На сервере нет ffmpeg: кадр взять не из чего', 422);
+    const ext = sniffImage(frame);
+    if (ext !== 'jpg') throw new AdminError('Не удалось получить кадр', 422);
+    const file = `${randomBytes(8).toString('hex')}.jpg`;
+    await writeFile(path.join(uploadsDir, file), frame, { flag: 'wx' });
+    let old: string | null;
+    try {
+      old = await banners.repo.setFile(
+        banner.id,
+        kind === 'desktop' ? 'image' : 'imageMobile',
+        file,
+      );
+    } catch (err) {
+      await removeOwnFile(uploadsDir, file);
+      throw err;
+    }
+    await removeOwnFile(uploadsDir, old);
+  };
+
   const videoKind = (v: string): 'desktop' | 'mobile' => {
     if (v === 'desktop' || v === 'mobile') return v;
     throw new AdminError('kind: desktop или mobile');
@@ -123,7 +157,33 @@ export function registerBannerRoutes(adm: FastifyInstance, deps: Deps): void {
       throw err;
     }
     await removeOwnFile(uploadsDir, old);
-    return { ...(await one(id)), compression: { before: saved.before, after: saved.after } };
+    // Нет картинки — берём постер из кадра ролика сами (уже стоящую не трогаем).
+    let posterMade = false;
+    const fresh = (await banners.repo.get(id))!;
+    if (!(kind === 'desktop' ? fresh.image : fresh.imageMobile)) {
+      posterMade = await makePoster(fresh, kind, 1).then(
+        () => true,
+        () => false, // без постера ролик всё равно сохранён; кадр можно взять кнопкой
+      );
+    }
+    return {
+      ...(await one(id)),
+      compression: { before: saved.before, after: saved.after },
+      posterMade,
+    };
+  });
+
+  // Постер из кадра: ?t=секунда (по умолчанию 1) — админка шлёт текущую позицию превью-плеера.
+  adm.post('/admin/api/banners/:id/poster/:kind', async (req) => {
+    const { id: rawId, kind: rawKind } = req.params as { id: string; kind: string };
+    const id = parseId(rawId, 'баннера');
+    const kind = videoKind(rawKind);
+    const t = Number((req.query as { t?: string }).t ?? 1);
+    if (!Number.isFinite(t) || t < 0 || t > 3600) throw new AdminError('t: секунда от 0');
+    const banner = await banners.repo.get(id);
+    if (!banner) throw new AdminError('Баннер не найден', 404);
+    await makePoster(banner, kind, t);
+    return one(id);
   });
 
   adm.delete('/admin/api/banners/:id/video/:kind', async (req) => {

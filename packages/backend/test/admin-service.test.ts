@@ -126,7 +126,12 @@ describe('BrandService', () => {
 
   it('модели бренда и статистика', async () => {
     await service.createBrand({ name: 'Diesel' });
-    expect(await service.brandBySlug('diesel')).toEqual({ name: 'Diesel', slug: 'diesel' });
+    expect(await service.brandBySlug('diesel')).toMatchObject({
+      name: 'Diesel',
+      slug: 'diesel',
+      cover: null,
+      heroTitle: '',
+    });
     expect(await service.brandBySlug('nope')).toBeNull();
     expect(await service.stats()).toEqual({
       models: 5,

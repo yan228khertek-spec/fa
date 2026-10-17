@@ -19,6 +19,8 @@ export interface BrandInput {
   aliases?: unknown;
   placements?: unknown;
   home?: unknown;
+  heroTitle?: unknown;
+  description?: unknown;
 }
 
 export interface RecomputeResult {
@@ -63,6 +65,22 @@ function str(v: unknown, field: string, max: number): string {
   const s = v.trim().replace(/\s+/g, ' ');
   if (!s) throw new AdminError(`${field}: не может быть пустым`);
   if (s.length > max) throw new AdminError(`${field}: слишком длинное значение`);
+  return s;
+}
+
+/** Необязательный текст (можно пусто). Для многострочного сохраняем переносы абзацев. */
+function text(v: unknown, field: string, max: number, multiline = false): string {
+  if (typeof v !== 'string') throw new AdminError(`${field}: ожидается строка`);
+  const s = multiline
+    ? v
+        .replace(/\r\n?/g, '\n')
+        .split('\n')
+        .map((l) => l.replace(/[ \t]+/g, ' ').trim())
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+    : v.trim().replace(/\s+/g, ' ');
+  if (s.length > max) throw new AdminError(`${field}: слишком длинное значение (до ${max} знаков)`);
   return s;
 }
 
@@ -193,6 +211,10 @@ export class BrandService {
       patch.placements = mergePlacements(current.placements, input.placements);
     }
     if (input.home !== undefined) patch.home = bool(input.home, 'home');
+    if (input.heroTitle !== undefined) patch.heroTitle = text(input.heroTitle, 'heroTitle', 120);
+    if (input.description !== undefined) {
+      patch.description = text(input.description, 'description', 2000, true);
+    }
     await this.repo.updateBrand(id, patch);
     if (patch.name !== undefined || patch.aliases !== undefined) await this.recompute();
     return this.view(id);
@@ -242,9 +264,18 @@ export class BrandService {
   }
 
   /** Бренд по адресу для публичного API; null — такого нет. */
-  async brandBySlug(slug: string): Promise<{ name: string; slug: string } | null> {
+  async brandBySlug(slug: string): Promise<{
+    name: string;
+    slug: string;
+    cover: string | null;
+    coverMobile: string | null;
+    heroTitle: string;
+    description: string;
+  } | null> {
     const brand = (await this.repo.listBrands()).find((b) => b.slug === slug);
-    return brand ? { name: brand.name, slug: brand.slug } : null;
+    if (!brand) return null;
+    const { name, cover, coverMobile, heroTitle, description } = brand;
+    return { name, slug: brand.slug, cover, coverMobile, heroTitle, description };
   }
 
   async stats(): Promise<Stats> {

@@ -185,6 +185,25 @@ describe.skipIf(!url)('витринные бренды в PostgreSQL', () => {
     expect((await service.publicBrands('men')).all).toHaveLength(3);
   });
 
+  it('шапка бренда: заголовок, описание и обложки хранятся и обновляются по отдельности', async () => {
+    const b = await service.createBrand({ name: 'Miss Sixty' });
+    expect(b).toMatchObject({ heroTitle: '', description: '', cover: null, coverMobile: null });
+    const u = await service.updateBrand(b.id, {
+      heroTitle: 'Italian Retro',
+      description: 'О бренде',
+    });
+    expect(u).toMatchObject({ heroTitle: 'Italian Retro', description: 'О бренде' });
+    const same = await service.updateBrand(b.id, { name: 'Miss Sixty' }); // coalesce: поля не трогаем
+    expect(same).toMatchObject({ heroTitle: 'Italian Retro', description: 'О бренде' });
+    expect(await repo.setImage(b.id, 'cover', 'c.jpg')).toBeNull();
+    expect(await repo.setImage(b.id, 'coverMobile', 'm.jpg')).toBeNull();
+    expect(await repo.setImage(b.id, 'cover', 'c2.jpg')).toBe('c.jpg');
+    const [got] = (await repo.listBrands()).filter((x) => x.id === b.id);
+    expect(got).toMatchObject({ cover: 'c2.jpg', coverMobile: 'm.jpg', photo: null, logo: null });
+    const cleared = await service.updateBrand(b.id, { heroTitle: '' });
+    expect(cleared.heroTitle).toBe('');
+  });
+
   it('файлы: setImage возвращает прежнее имя', async () => {
     const a = await service.createBrand({ name: 'Aaa' });
     expect(await repo.setImage(a.id, 'photo', '0123456789abcdef.png')).toBeNull();

@@ -7,6 +7,7 @@ import { SITE_CARD_CATEGORY_DDL } from '../src/admin/card-category-schema.js';
 import { SITE_TICKER_DDL } from '../src/admin/ticker-schema.js';
 import { SITE_BANNER_PLACEMENT_DDL } from '../src/admin/banner-placement-schema.js';
 import { SITE_BANNER_PROMO_DDL } from '../src/admin/banner-promo-schema.js';
+import { SITE_BRAND_HERO_DDL } from '../src/admin/brand-hero-schema.js';
 import { SITE_BANNER_VIDEO_DDL } from '../src/admin/banner-video-schema.js';
 import { SITE_BANNERS_DDL } from '../src/admin/banners-schema.js';
 import { SITE_BRAND_HOME_DDL } from '../src/admin/home-schema.js';
@@ -146,5 +147,17 @@ describe('миграция 012 и SITE_BANNER_PROMO_DDL', () => {
   it('только расширяет список мест и не трогает данные', () => {
     expect(SITE_BANNER_PROMO_DDL).toContain("'promo'");
     expect(SITE_BANNER_PROMO_DDL).not.toMatch(/\b(DELETE|TRUNCATE|DROP TABLE|DROP COLUMN)\b/i);
+  });
+});
+
+describe('миграция 013 и SITE_BRAND_HERO_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/013', async () => {
+    const file = await readFile(path.join(root, 'migrations', '013_site_brand_hero.sql'), 'utf8');
+    expect(normalize(SITE_BRAND_HERO_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и только добавляет колонки', () => {
+    expect(SITE_BRAND_HERO_DDL.match(/ADD COLUMN IF NOT EXISTS/g)).toHaveLength(4);
+    expect(SITE_BRAND_HERO_DDL).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
   });
 });

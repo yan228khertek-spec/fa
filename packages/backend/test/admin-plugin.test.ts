@@ -142,7 +142,14 @@ describe('админка брендов (HTTP)', () => {
     // карточек ещё нет — на витрине бренда пусто
     const models = await app.inject({ url: '/api/brands/diesel/models' });
     expect(models.json()).toEqual({
-      brand: { name: 'Diesel', slug: 'diesel' },
+      brand: {
+        name: 'Diesel',
+        slug: 'diesel',
+        cover: null,
+        coverMobile: null,
+        heroTitle: '',
+        description: '',
+      },
       total: 0,
       facets: { brands: [], categories: [], colors: [], kinds: [], price: null, sizes: [] },
       items: [],
@@ -164,6 +171,81 @@ describe('админка брендов (HTTP)', () => {
       headers: write,
     });
     expect(del.statusCode).toBe(200);
+    expect(await readdir(path.join(dir, 'uploads'))).toHaveLength(0);
+  });
+
+  it('шапка страницы бренда: заголовок, описание и обложки уходят в публичное API', async () => {
+    await build();
+    const brand = (
+      await app.inject({
+        method: 'POST',
+        url: '/admin/api/brands',
+        headers: write,
+        payload: { name: 'Miss Sixty' },
+      })
+    ).json();
+    expect(brand).toMatchObject({ heroTitle: '', description: '', cover: null, coverMobile: null });
+    const put = (payload: unknown) =>
+      app.inject({
+        method: 'PUT',
+        url: `/admin/api/brands/${brand.id}`,
+        headers: write,
+        payload: payload as never,
+      });
+    const ok = await put({
+      heroTitle: '  Italian   Retro ',
+      description: 'Первый абзац.  \r\n\r\n\r\n\r\nВторой абзац.',
+    });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json()).toMatchObject({
+      heroTitle: 'Italian Retro',
+      description: 'Первый абзац.\n\nВторой абзац.',
+    });
+    // пустую строку можно сохранить — так шапку очищают; слишком длинное не пускаем
+    expect((await put({ heroTitle: '' })).json().heroTitle).toBe('');
+    expect((await put({ heroTitle: 'я'.repeat(121) })).statusCode).toBe(400);
+    expect((await put({ description: 'я'.repeat(2001) })).statusCode).toBe(400);
+    expect((await put({ description: 5 })).statusCode).toBe(400);
+    // название другого поля не затирается
+    expect((await put({ name: 'Miss Sixty' })).json().description).toBe(
+      'Первый абзац.\n\nВторой абзац.',
+    );
+
+    const up = (kind: string) =>
+      app.inject({
+        method: 'POST',
+        url: `/admin/api/brands/${brand.id}/image/${kind}`,
+        headers: { ...write, 'content-type': 'application/octet-stream' },
+        payload: PNG,
+      });
+    const withCover = (await up('cover')).json();
+    expect(withCover.cover).toMatch(/^https:\/\/api\.example\.test\/uploads\/[a-f0-9]{16}\.png$/);
+    expect(withCover.coverMobile).toBeNull();
+    const withMobile = (await up('coverMobile')).json();
+    expect(withMobile.coverMobile).toMatch(/\/uploads\//);
+    expect((await up('banner')).statusCode).toBe(400);
+
+    const pub = (await app.inject({ url: '/api/brands/miss-sixty/models' })).json();
+    expect(pub.brand).toEqual({
+      name: 'Miss Sixty',
+      slug: 'miss-sixty',
+      cover: withCover.cover,
+      coverMobile: withMobile.coverMobile,
+      heroTitle: '',
+      description: 'Первый абзац.\n\nВторой абзац.',
+    });
+
+    // замена обложки убирает прежний файл, удаление бренда — все
+    await up('cover');
+    expect(await readdir(path.join(dir, 'uploads'))).toHaveLength(2);
+    const rm = await app.inject({
+      method: 'DELETE',
+      url: `/admin/api/brands/${brand.id}/image/coverMobile`,
+      headers: write,
+    });
+    expect(rm.json().coverMobile).toBeNull();
+    expect(await readdir(path.join(dir, 'uploads'))).toHaveLength(1);
+    await app.inject({ method: 'DELETE', url: `/admin/api/brands/${brand.id}`, headers: write });
     expect(await readdir(path.join(dir, 'uploads'))).toHaveLength(0);
   });
 

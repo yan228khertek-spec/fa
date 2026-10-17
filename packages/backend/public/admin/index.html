@@ -1750,6 +1750,17 @@
       ${img('photo', 'Загрузить фото', 'Квадрат, от 800×800; JPEG/PNG/WebP, до 8 МБ', '')}
       ${img('logo', 'Загрузить логотип', 'PNG/WebP на прозрачном фоне', 'logo')}</div></div>`
           : '<p class="hint">Фото и логотип можно загрузить после создания бренда.</p>';
+        const hero = `<div class="fld"><label>Шапка страницы бренда (над фильтром и товарами)</label>
+      <input type="text" id="fHTitle" maxlength="120" placeholder="Заголовок, например: Italian Retro" value="${esc(b.heroTitle)}">
+      <textarea id="fDesc" maxlength="2000" rows="5" style="margin-top:8px" placeholder="Описание бренда или коллекции. Пустая строка — новый абзац.">${esc(b.description)}</textarea>
+      ${
+        id
+          ? `<div class="imgs" style="margin-top:10px">
+      ${img('cover', 'Загрузить фото шапки', 'Широкое или квадратное, от 1600 px по ширине; JPEG/PNG/WebP, до 8 МБ', '')}
+      ${img('coverMobile', 'Загрузить для телефона', 'Необязательно: вертикальное или квадратное. Нет — берётся основное фото', '')}</div>`
+          : '<p class="hint">Фото шапки можно загрузить после создания бренда.</p>'
+      }
+      <p class="hint">Блок показывается, если заполнено хотя бы что-то одно: фото, заголовок или описание. Пусто — страница бренда начинается сразу с товаров.</p></div>`;
         $('#dlgBody').innerHTML =
           `<h3>${id ? esc(b.name) : 'Новый бренд'}</h3><div class="sub">${id ? `Моделей: ${b.models}` : 'Заполните название и, если нужно, написания'}</div>
     <div class="fld"><label>Название на сайте</label><input type="text" id="fName" maxlength="120" value="${esc(b.name)}"></div>
@@ -1760,6 +1771,7 @@
     <div class="fld"><label><input type="checkbox" id="fHome" ${b.home ? 'checked' : ''}> Показывать на главной странице</label>
       <p class="hint">На главной появится блок с последними опубликованными карточками бренда (до 4 штук; одновременно показываются не более трёх брендов). Бренд без опубликованных карточек в блок не попадает.</p></div>
     ${images}
+    ${hero}
     <div class="fld"><label>Адрес страницы бренда: /brands/…</label>
       <input type="text" id="fSlug" maxlength="80" value="${esc(b.slug)}" placeholder="по умолчанию — из названия"></div>
     <div class="row" style="justify-content:space-between;margin-top:20px">
@@ -1782,6 +1794,8 @@
               .filter((s) => s.trim()),
             placements,
             home: $('#fHome').checked,
+            heroTitle: $('#fHTitle').value,
+            description: $('#fDesc').value,
           };
           const slug = $('#fSlug').value.trim();
           if (slug && slug !== b.slug) payload.slug = slug;
@@ -1801,6 +1815,11 @@
             if (preset) loadUnmatched();
           } else openBrand(saved.id);
         };
+        const saveHero = () =>
+          api('/brands/' + id, {
+            method: 'PUT',
+            json: { heroTitle: $('#fHTitle').value, description: $('#fDesc').value },
+          });
         if (id) {
           $('#fDel').onclick = async () => {
             if (!confirm(`Удалить бренд «${b.name}»? Привязки моделей к нему пропадут.`)) return;
@@ -1815,6 +1834,7 @@
                 const f = inp.files[0];
                 if (!f) return;
                 try {
+                  await saveHero(); // набранный текст шапки не пропадёт при перерисовке окна
                   await api(`/brands/${id}/image/${inp.dataset.up}`, {
                     method: 'POST',
                     body: f,
@@ -1832,6 +1852,7 @@
           $$('#dlgBody [data-rm]').forEach(
             (btn) =>
               (btn.onclick = async () => {
+                await saveHero().catch(() => {});
                 await api(`/brands/${id}/image/${btn.dataset.rm}`, { method: 'DELETE' });
                 await refresh();
                 openBrand(id);

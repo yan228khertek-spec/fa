@@ -53,6 +53,10 @@ export class MemorySiteBrandRepository implements SiteBrandRepository {
       aliases: [...input.aliases],
       photo: null,
       logo: null,
+      cover: null,
+      coverMobile: null,
+      heroTitle: '',
+      description: '',
       placements: structuredClone(input.placements),
       home: input.home,
     };
@@ -68,6 +72,8 @@ export class MemorySiteBrandRepository implements SiteBrandRepository {
     if (patch.aliases !== undefined) b.aliases = [...patch.aliases];
     if (patch.placements !== undefined) b.placements = structuredClone(patch.placements);
     if (patch.home !== undefined) b.home = patch.home;
+    if (patch.heroTitle !== undefined) b.heroTitle = patch.heroTitle;
+    if (patch.description !== undefined) b.description = patch.description;
     return clone(b);
   }
 

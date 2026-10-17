@@ -6,7 +6,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AdminConfig } from '../config.js';
 import { FailureLimiter, checkAdminAuth } from './auth.js';
 import { bannerDto, registerBannerRoutes } from './banners-routes.js';
-import type { BannerService } from './banners.js';
+import { BANNER_PLACEMENTS, type BannerPlacement, type BannerService } from './banners.js';
 import { registerTickerRoutes } from './ticker-routes.js';
 import type { TickerService } from './ticker.js';
 import { registerCardRoutes } from './cards-routes.js';
@@ -129,10 +129,10 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     // Баннеры главной: включённые, с картинкой, по порядку. Точки фокуса — для обрезки под экран
     pub.get('/api/banners', async (req, reply) => {
       const place = (req.query as { placement?: string }).placement ?? 'hero';
-      if (place !== 'hero' && place !== 'perfume') {
-        return reply.code(400).send({ error: 'placement: hero или perfume' });
+      if (!(BANNER_PLACEMENTS as readonly string[]).includes(place)) {
+        return reply.code(400).send({ error: 'placement: hero, perfume или promo' });
       }
-      const list = await banners.publicList(place);
+      const list = await banners.publicList(place as BannerPlacement);
       reply.header('cache-control', 'public, max-age=30');
       return {
         items: list.map((b) => {

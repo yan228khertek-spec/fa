@@ -11,6 +11,7 @@ import { registerTickerRoutes } from './ticker-routes.js';
 import type { TickerService } from './ticker.js';
 import { registerCardRoutes } from './cards-routes.js';
 import type { CardService } from './cards.js';
+import { MAX_VIDEO_UPLOAD_BYTES, type VideoCompressor } from './video.js';
 import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage } from './http.js';
 import { seedBrands } from './seed.js';
 import type { BrandService } from './service.js';
@@ -28,6 +29,8 @@ export interface AdminPluginOptions {
    * чистится следующим обменом (запасной путь, пока media не наполнено).
    */
   imageDirs: string[];
+  /** Сжатие видео баннеров (ffmpeg); в тестах подменяется. */
+  videoCompressor: VideoCompressor;
 }
 
 const MIME: Record<string, string> = {
@@ -35,6 +38,7 @@ const MIME: Record<string, string> = {
   png: 'image/png',
   webp: 'image/webp',
   avif: 'image/avif',
+  mp4: 'video/mp4',
 };
 /** Без этого заголовка запросы на изменение отклоняются (CSRF при Basic-авторизации). */
 const CSRF_HEADER = 'x-fa-admin';
@@ -56,7 +60,7 @@ function gender(v: unknown): Gender {
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service, cards, banners, ticker, imageDirs } = opts;
+  const { admin, service, cards, banners, ticker, imageDirs, videoCompressor } = opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -136,6 +140,8 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
             theme: d.theme,
             image: d.image,
             imageMobile: d.imageMobile,
+            video: d.video,
+            videoMobile: d.videoMobile,
             focus: { x: d.focusX, y: d.focusY },
             mobileFocus: { x: d.mobileFocusX, y: d.mobileFocusY },
           };
@@ -188,16 +194,34 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const { file } = req.params as { file: string };
       if (!OWN_FILE_RE.test(file)) return reply.code(404).send({ error: 'Не найдено' });
       const full = path.join(uploadsDir, file);
+      let size: number;
       try {
-        await stat(full);
+        size = (await stat(full)).size;
       } catch {
         return reply.code(404).send({ error: 'Не найдено' });
       }
-      return reply
+      reply
         .header('content-type', MIME[file.split('.')[1]!])
         .header('x-content-type-options', 'nosniff')
-        .header('cache-control', 'public, max-age=604800, immutable')
-        .send(createReadStream(full));
+        .header('cache-control', 'public, max-age=604800, immutable');
+      if (!file.endsWith('.mp4')) return reply.send(createReadStream(full));
+      // Видео: Safari и iOS не играют ролик без частичных ответов (Range).
+      reply.header('accept-ranges', 'bytes');
+      const m = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ''));
+      if (!m || (m[1] === '' && m[2] === ''))
+        return reply.header('content-length', size).send(createReadStream(full));
+      let start = m[1] === '' ? Math.max(size - Number(m[2]), 0) : Number(m[1]);
+      let end = m[1] === '' || m[2] === '' ? size - 1 : Math.min(Number(m[2]), size - 1);
+      if (start > end || start >= size) {
+        return reply.code(416).header('content-range', `bytes */${size}`).send();
+      }
+      start = Math.max(start, 0);
+      end = Math.max(end, start);
+      return reply
+        .code(206)
+        .header('content-range', `bytes ${start}-${end}/${size}`)
+        .header('content-length', end - start + 1)
+        .send(createReadStream(full, { start, end }));
     });
   });
 
@@ -227,6 +251,14 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       adm.addContentTypeParser(
         type,
         { parseAs: 'buffer', bodyLimit: MAX_IMAGE_BYTES },
+        (_req, body, done) => done(null, body),
+      );
+    }
+    // Видео — тот же «сырой» приём, но с большим лимитом (потом сжимается).
+    for (const type of ['video/mp4', 'video/webm', 'video/quicktime']) {
+      adm.addContentTypeParser(
+        type,
+        { parseAs: 'buffer', bodyLimit: MAX_VIDEO_UPLOAD_BYTES },
         (_req, body, done) => done(null, body),
       );
     }
@@ -369,7 +401,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       return { ok: true };
     });
 
-    registerBannerRoutes(adm, { banners, uploadsDir, uploadUrl });
+    registerBannerRoutes(adm, { banners, uploadsDir, uploadUrl, compress: videoCompressor });
     registerTickerRoutes(adm, ticker);
     registerCardRoutes(adm, { cards, uploadsDir, imageDirs, uploadUrl, modelPhoto });
 

@@ -17,6 +17,7 @@ import { BrandService } from './admin/service.js';
 import { BannerService, type BannerRepository } from './admin/banners.js';
 import { MemoryBannerRepository } from './admin/banners-memory.js';
 import { PgBannerRepository } from './admin/banners-pg.js';
+import { ffmpegCompressor, type VideoCompressor } from './admin/video.js';
 import { TickerService, type TickerRepository } from './admin/ticker.js';
 import { MemoryTickerRepository } from './admin/ticker-memory.js';
 import { PgTickerRepository } from './admin/ticker-pg.js';
@@ -41,6 +42,8 @@ export interface BuildAppOptions {
   bannerRepo?: BannerRepository;
   /** Бегущая строка главной (миграция 009). */
   tickerRepo?: TickerRepository;
+  /** Сжатие видео баннеров; по умолчанию ffmpeg (в тестах подменяется). */
+  videoCompressor?: VideoCompressor;
   /** Часы для календаря акций (тесты). */
   now?: () => Date;
 }
@@ -116,6 +119,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       cards: new CardService(cardRepo, catalogReader, service),
       banners: new BannerService(bannerRepo),
       ticker: new TickerService(tickerRepo, opts.now),
+      videoCompressor: opts.videoCompressor ?? ffmpegCompressor(),
       // Фото из 1С берём из постоянного хранилища, спул — запасной путь.
       imageDirs: [config.mediaDir, path.join(config.spoolDir, 'unpacked')].filter(Boolean),
     });

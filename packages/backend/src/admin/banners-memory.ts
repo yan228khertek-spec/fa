@@ -1,4 +1,10 @@
-import type { BannerPatch, BannerRepository, NewBanner, SiteBanner } from './banners.js';
+import type {
+  BannerFileKind,
+  BannerPatch,
+  BannerRepository,
+  NewBanner,
+  SiteBanner,
+} from './banners.js';
 import { AdminError } from './types.js';
 
 /** Хранилище баннеров в памяти: dev без БД и тесты (контракт как у PgBannerRepository). */
@@ -33,6 +39,8 @@ export class MemoryBannerRepository implements BannerRepository {
       id: ++this.seq,
       image: null,
       imageMobile: null,
+      video: null,
+      videoMobile: null,
       sort,
       createdAt: now,
       updatedAt: now,
@@ -50,10 +58,10 @@ export class MemoryBannerRepository implements BannerRepository {
   async delete(id: number): Promise<string[]> {
     const b = this.row(id);
     this.rows.delete(id);
-    return [b.image, b.imageMobile].filter((f): f is string => !!f);
+    return [b.image, b.imageMobile, b.video, b.videoMobile].filter((f): f is string => !!f);
   }
 
-  async setImage(id: number, kind: 'image' | 'imageMobile', file: string | null) {
+  async setFile(id: number, kind: BannerFileKind, file: string | null) {
     const b = this.row(id);
     const old = b[kind];
     b[kind] = file;

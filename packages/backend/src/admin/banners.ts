@@ -5,6 +5,8 @@ export type BannerTheme = (typeof BANNER_THEMES)[number];
 /** Не больше баннеров: слайдер на главной не должен превращаться в ленту. */
 export const MAX_BANNERS = 12;
 
+export type BannerFileKind = 'image' | 'imageMobile' | 'video' | 'videoMobile';
+
 export interface SiteBanner {
   id: number;
   title: string;
@@ -15,6 +17,9 @@ export interface SiteBanner {
   /** Имена файлов в uploads. */
   image: string | null;
   imageMobile: string | null;
+  /** Видео (MP4) вместо картинки на экране; картинка служит постером. */
+  video: string | null;
+  videoMobile: string | null;
   /** Точка фокуса 0–100 % — какая часть картинки остаётся в кадре при обрезке. */
   focusX: number;
   focusY: number;
@@ -28,7 +33,7 @@ export interface SiteBanner {
 
 export type NewBanner = Omit<
   SiteBanner,
-  'id' | 'image' | 'imageMobile' | 'sort' | 'createdAt' | 'updatedAt'
+  'id' | 'image' | 'imageMobile' | 'video' | 'videoMobile' | 'sort' | 'createdAt' | 'updatedAt'
 >;
 export type BannerPatch = Partial<NewBanner>;
 
@@ -40,8 +45,8 @@ export interface BannerRepository {
   update(id: number, patch: BannerPatch): Promise<SiteBanner>;
   /** Удаляет баннер и возвращает его файлы, чтобы убрать их с диска. */
   delete(id: number): Promise<string[]>;
-  /** Подменяет картинку и возвращает прежнее имя файла (null — не было). */
-  setImage(id: number, kind: 'image' | 'imageMobile', file: string | null): Promise<string | null>;
+  /** Подменяет файл (картинку или видео) и возвращает прежнее имя (null — не было). */
+  setFile(id: number, kind: BannerFileKind, file: string | null): Promise<string | null>;
   /** ids — ровно все баннеры, в нужном порядке. */
   reorder(ids: number[]): Promise<void>;
   close(): Promise<void>;

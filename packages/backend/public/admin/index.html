@@ -257,6 +257,18 @@
         flex: 1;
         min-width: 120px;
       }
+      .bn-video {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--line, #ddd);
+      }
+      .bn-vprev {
+        display: block;
+        margin-top: 8px;
+        max-width: 100%;
+        max-height: 200px;
+        background: var(--graphite);
+      }
       .bn-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1092,6 +1104,20 @@
         drawBanners();
       }
       const bnPos = (x, y) => `${x}% ${y}%`;
+      const mb = (n) => (n / 1048576).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' МБ';
+      /* видео вместо картинки: грузим любой ролик, сервер сам сожмёт до лёгкого MP4 без звука */
+      function bnVideo(b, kind) {
+        const src = kind === 'desktop' ? b.video : b.videoMobile,
+          size = kind === 'desktop' ? b.videoBytes : b.videoMobileBytes;
+        return `<div class="bn-video">
+          <span class="bn-lab">Видео ${kind === 'desktop' ? 'для компьютера' : 'для телефона'} <span class="muted">· по желанию, вместо картинки</span></span>
+          <div class="row"><label class="btn sm">${src ? 'Заменить видео' : 'Загрузить видео'}<input type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" data-vup="${kind}" hidden></label>
+          ${src ? `<button class="btn ghost sm" data-vrm="${kind}">Убрать видео</button><span class="muted">${size ? mb(size) : ''}</span>` : ''}
+          <span class="muted bn-vstate"></span></div>
+          ${src ? `<video src="${esc(src)}" poster="${esc((kind === 'mobile' && b.imageMobile) || b.image || '')}" muted loop playsinline controls preload="metadata" class="bn-vprev"></video>` : ''}
+          ${kind === 'mobile' && !b.videoMobile && b.video ? '<div class="muted">Своего нет — на телефоне пойдёт компьютерное видео.</div>' : ''}
+        </div>`;
+      }
       function bnCard(b, i) {
         const mob = b.imageMobile || b.image;
         const ph = (src, cls, x, y) =>
@@ -1122,11 +1148,12 @@
           </div>
           <div class="bn-grid">
             <div>
-              <span class="bn-lab">Картинка для компьютера ${b.image ? '' : '<span class="err">· обязательна</span>'}</span>
+              <span class="bn-lab">Картинка для компьютера ${b.image ? '<span class="muted">· она же постер видео</span>' : '<span class="err">· обязательна (и постер для видео)</span>'}</span>
               <div class="row"><label class="btn sm">${b.image ? 'Заменить' : 'Загрузить'}<input type="file" accept="image/*" data-up="desktop" hidden></label>
               ${b.image ? '<button class="btn ghost sm" data-rm="desktop">Убрать</button>' : ''}</div>
               <div class="bn-pv">${ed('d', b.image, b.focusX, b.focusY, 'Точка фокуса — нажмите на картинку')}
               <div><span class="bn-lab">Как выглядит на компьютере</span>${ph(b.image, 'd', b.focusX, b.focusY)}</div></div>
+              ${bnVideo(b, 'desktop')}
             </div>
             <div>
               <span class="bn-lab">Картинка для телефона <span class="muted">· по желанию</span></span>
@@ -1134,6 +1161,7 @@
               ${b.imageMobile ? '<button class="btn ghost sm" data-rm="mobile">Убрать (взять компьютерную)</button>' : ''}</div>
               <div class="bn-pv">${ed('m', mob, b.mobileFocusX, b.mobileFocusY, b.imageMobile ? 'Точка фокуса — нажмите на картинку' : 'Своей нет — берём компьютерную. Нажмите на картинку: что оставить в кадре')}
               <div><span class="bn-lab">Как выглядит на телефоне</span>${ph(mob, 'm', b.mobileFocusX, b.mobileFocusY)}</div></div>
+              ${bnVideo(b, 'mobile')}
             </div>
           </div>
           <div class="row"><button class="btn" data-a="save">Сохранить</button><span class="muted bn-state"></span></div>
@@ -1222,6 +1250,37 @@
         toast('Загружено');
         await keepBannerEdits(id);
       };
+      /* видео: сервер сжимает его в лёгкий MP4 — запрос может идти около минуты */
+      const VTYPE = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime' };
+      $('#bnList').addEventListener('change', async (e) => {
+        const inp = e.target.closest('input[data-vup]');
+        if (!inp || !inp.files[0]) return;
+        const file = inp.files[0],
+          id = +inp.closest('.card').dataset.id,
+          state = inp.closest('.bn-video').querySelector('.bn-vstate'),
+          ext = (file.name.split('.').pop() || '').toLowerCase();
+        const type = VTYPE[ext] || (file.type.startsWith('video/') ? file.type : 'video/mp4');
+        if (file.size > 80 * 1048576) {
+          inp.value = '';
+          return toast('Видео больше 80 МБ — сократите ролик перед загрузкой');
+        }
+        inp.disabled = true;
+        state.textContent = `Загружаю и сжимаю (${mb(file.size)})… не закрывайте страницу`;
+        try {
+          const r = await api(`/banners/${id}/video/${inp.dataset.vup}`, {
+            method: 'POST',
+            body: file,
+            type,
+          });
+          toast(`Видео готово: ${mb(r.compression.before)} → ${mb(r.compression.after)}`);
+        } catch {
+          inp.value = '';
+          inp.disabled = false;
+          state.textContent = '';
+          return;
+        }
+        await keepBannerEdits(id);
+      });
       /* перерисовка после загрузки не должна терять несохранённый текст */
       async function keepBannerEdits(id) {
         const card = $(`#bnList .card[data-id="${id}"]`);
@@ -1244,6 +1303,10 @@
         const card = e.target.closest('.card[data-id]');
         if (!btn || !card) return;
         const id = +card.dataset.id;
+        if (btn.dataset.vrm) {
+          await api(`/banners/${id}/video/${btn.dataset.vrm}`, { method: 'DELETE' });
+          return keepBannerEdits(id);
+        }
         if (btn.dataset.rm) {
           await api(`/banners/${id}/image/${btn.dataset.rm}`, { method: 'DELETE' });
           return keepBannerEdits(id);

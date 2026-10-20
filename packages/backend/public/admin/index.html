@@ -241,6 +241,55 @@
         }
       }
 
+      /* блог */
+      .pp {
+        max-width: 320px;
+        background: #fff;
+        border: 1px solid var(--line, #ddd);
+      }
+      .pp .ph {
+        aspect-ratio: 4 / 3;
+        background: #e9e9e9;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 12px;
+        overflow: hidden;
+      }
+      .pp .ph img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .pp .pt {
+        padding: 14px;
+      }
+      .pp h4 {
+        margin: 0 0 6px;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      .pp h4 i {
+        font-style: normal;
+        color: #7cd400;
+        font-size: 12px;
+        margin-left: 6px;
+      }
+      .pp p {
+        margin: 0 0 12px;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .pp .pb {
+        display: inline-block;
+        background: #000;
+        color: #fff;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 10px 22px;
+      }
       /* баннеры */
       .bn {
         display: grid;
@@ -775,6 +824,7 @@
           <button data-t="home" class="on">Обзор</button>
           <button data-t="cards">Карточки</button>
           <button data-t="banners">Баннеры</button>
+          <button data-t="posts">Блог</button>
           <button data-t="ticker">Бегущая строка</button>
           <button data-t="brands">Бренды</button>
           <button data-t="top">Топ-бренды</button>
@@ -878,6 +928,23 @@
           >
         </div>
         <div id="bnList"></div>
+      </section>
+
+      <section id="t-posts" class="hidden">
+        <p class="muted" style="margin-top: 0">
+          Блог показывается на главной под блоками брендов: лента постов из фото, заголовка,
+          короткого описания и кнопки. Новые посты встают в начало ленты, порядок можно менять
+          стрелками. «Для кого» решает, в каком разделе сайта виден пост: женском, мужском или в
+          обоих. Пост без фото или без заголовка, а также скрытый на сайте не показывается.
+        </p>
+        <div class="row" style="margin-bottom: 16px">
+          <button class="btn" id="pAdd">+ Новый пост</button>
+          <span class="hint muted"
+            >Фото — горизонтальное 4:3 (например, 1600×1200), JPEG/PNG/WebP до 8 МБ. На сайте фото
+            обрезается по центру, как в превью ниже</span
+          >
+        </div>
+        <div id="pList"></div>
       </section>
 
       <section id="t-ticker" class="hidden">
@@ -1092,6 +1159,7 @@
           home: loadHome,
           cards: loadCards,
           banners: loadBanners,
+          posts: loadPosts,
           ticker: loadTicker,
           brands: loadBrands,
           top: loadTop,
@@ -1406,6 +1474,134 @@
           [ids[i], ids[j]] = [ids[j], ids[i]];
           BN = await api('/banners-order', { method: 'PUT', json: { ids } });
           drawBanners();
+        }
+      };
+
+      /* блог */
+      let PS = [];
+      async function loadPosts() {
+        PS = await api('/posts');
+        drawPosts();
+      }
+      const PB_TEXTS = ['Купить', 'Смотреть', 'Читать', 'Подробнее', 'Перейти'];
+      function postPreview(p) {
+        return `<div class="pp"><div class="ph">${p.image ? `<img src="${esc(p.image)}" alt="">` : 'Загрузите фото'}</div>
+          <div class="pt"><h4><span class="pp-t">${esc(p.title) || 'Заголовок'}</span><i class="pp-b">${esc(p.badge)}</i></h4>
+          <p class="pp-d">${esc(p.description)}</p>
+          <span class="pb pp-btn" ${p.link || p.buttonText ? '' : 'hidden'}>${esc(p.buttonText) || 'Смотреть'}</span></div></div>`;
+      }
+      function postCard(p, i, n) {
+        return `<div class="card bn" data-id="${p.id}">
+          <div class="bn-head">
+            <span class="tag ${p.active ? 'top' : ''}">${p.active ? 'Показывается' : 'Скрыт'}</span>
+            <b>${i + 1}. ${esc(p.title) || 'Без заголовка'}</b>
+            <button class="btn ghost sm" data-a="up" ${i ? '' : 'disabled'}>↑</button>
+            <button class="btn ghost sm" data-a="down" ${i < n - 1 ? '' : 'disabled'}>↓</button>
+            <button class="btn ghost sm" data-a="del">Удалить</button>
+          </div>
+          <div class="bn-pv">
+            <div>
+              <div class="bn-fields">
+                <div class="wide"><span class="bn-lab">Заголовок</span><input type="text" data-f="title" maxlength="120" value="${esc(p.title)}"></div>
+                <div><span class="bn-lab">Метка рядом с заголовком <span class="muted">· по желанию</span></span><input type="text" data-f="badge" maxlength="20" value="${esc(p.badge)}" placeholder="New"></div>
+                <div><span class="bn-lab">Для кого</span><select data-f="gender">${AUD.map(([v, t]) => `<option value="${v}" ${(p.gender || 'all') === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+                <div class="wide"><span class="bn-lab">Короткое описание</span><textarea data-f="description" maxlength="400" rows="3" style="width:100%">${esc(p.description)}</textarea></div>
+                <div><span class="bn-lab">Надпись на кнопке</span><input type="text" data-f="buttonText" maxlength="40" list="pbTexts" value="${esc(p.buttonText)}" placeholder="Смотреть"></div>
+                <div><span class="bn-lab">Ссылка кнопки</span><input type="text" data-f="link" maxlength="300" value="${esc(p.link)}" placeholder="brand.html?slug=diesel"></div>
+                <div><span class="bn-lab">Показывать на сайте</span><select data-f="active"><option value="1" ${p.active ? 'selected' : ''}>Да</option><option value="0" ${p.active ? '' : 'selected'}>Нет</option></select></div>
+              </div>
+              <div class="row" style="margin-top:12px"><label class="btn sm">${p.image ? 'Заменить фото' : 'Загрузить фото'}<input type="file" accept="image/*" data-pup hidden></label>
+                ${p.image ? '<button class="btn ghost sm" data-prm>Убрать фото</button>' : '<span class="err">Без фото пост не показывается</span>'}</div>
+            </div>
+            <div><span class="bn-lab">Как выглядит на сайте</span>${postPreview(p)}</div>
+          </div>
+          <div class="row"><button class="btn" data-a="save">Сохранить</button><span class="muted bn-state"></span></div>
+        </div>`;
+      }
+      function drawPosts() {
+        $('#pList').innerHTML =
+          `<datalist id="pbTexts">${PB_TEXTS.map((t) => `<option value="${t}">`).join('')}</datalist>` +
+          (PS.length
+            ? PS.map((p, i) => postCard(p, i, PS.length)).join('')
+            : '<div class="card muted">Постов пока нет. Блог на главной не показывается, пока нет ни одного поста с фото и заголовком.</div>');
+      }
+      function postFields(card) {
+        const f = {};
+        $$('[data-f]', card).forEach((el) => (f[el.dataset.f] = el.value));
+        f.active = f.active === '1';
+        return f;
+      }
+      $('#pAdd').onclick = async () => {
+        await api('/posts', { method: 'POST', json: { title: 'Новый пост' } });
+        await loadPosts();
+        toast('Пост создан — добавьте фото и сохраните');
+      };
+      /* перерисовка после загрузки фото не должна терять несохранённый текст */
+      async function keepPostEdits(id) {
+        const card = $(`#pList .card[data-id="${id}"]`);
+        const typed = card ? postFields(card) : null;
+        PS = await api('/posts');
+        const p = PS.find((v) => v.id === id);
+        if (p && typed) Object.assign(p, typed);
+        drawPosts();
+      }
+      $('#pList').oninput = (e) => {
+        const card = e.target.closest('.card');
+        if (!card || !e.target.dataset.f) return;
+        card.querySelector('.bn-state').textContent = 'Не сохранено';
+        const f = postFields(card),
+          q = (s) => card.querySelector(s);
+        q('.pp-t').textContent = f.title || 'Заголовок';
+        q('.pp-b').textContent = f.badge;
+        q('.pp-d').textContent = f.description;
+        q('.pp-btn').textContent = f.buttonText || 'Смотреть';
+        q('.pp-btn').hidden = !(f.link || f.buttonText);
+      };
+      $('#pList').onchange = async (e) => {
+        const inp = e.target.closest('input[data-pup]');
+        if (!inp || !inp.files[0]) return;
+        const id = +inp.closest('.card').dataset.id;
+        try {
+          await api(`/posts/${id}/image`, {
+            method: 'POST',
+            body: inp.files[0],
+            type: 'application/octet-stream',
+          });
+        } catch {
+          inp.value = '';
+          return;
+        }
+        toast('Фото загружено');
+        await keepPostEdits(id);
+      };
+      $('#pList').onclick = async (e) => {
+        const btn = e.target.closest('button');
+        const card = e.target.closest('.card[data-id]');
+        if (!btn || !card) return;
+        const id = +card.dataset.id;
+        if (btn.dataset.prm !== undefined) {
+          await api(`/posts/${id}/image`, { method: 'DELETE' });
+          return keepPostEdits(id);
+        }
+        const a = btn.dataset.a;
+        if (a === 'save') {
+          await api('/posts/' + id, { method: 'PUT', json: postFields(card) });
+          toast('Сохранено');
+          return loadPosts();
+        }
+        if (a === 'del') {
+          if (!confirm('Удалить пост вместе с фото?')) return;
+          await api('/posts/' + id, { method: 'DELETE' });
+          toast('Удалено');
+          return loadPosts();
+        }
+        if (a === 'up' || a === 'down') {
+          const ids = PS.map((v) => v.id),
+            i = ids.indexOf(id),
+            j = a === 'up' ? i - 1 : i + 1;
+          [ids[i], ids[j]] = [ids[j], ids[i]];
+          PS = await api('/posts-order', { method: 'PUT', json: { ids } });
+          drawPosts();
         }
       };
 
@@ -2272,9 +2468,17 @@
       }
 
       tab(
-        ['home', 'cards', 'banners', 'ticker', 'brands', 'top', 'unmatched', 'exchange'].includes(
-          location.hash.slice(1),
-        )
+        [
+          'home',
+          'cards',
+          'banners',
+          'posts',
+          'ticker',
+          'brands',
+          'top',
+          'unmatched',
+          'exchange',
+        ].includes(location.hash.slice(1))
           ? location.hash.slice(1)
           : 'home',
       );

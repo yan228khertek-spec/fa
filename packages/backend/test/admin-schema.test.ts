@@ -8,6 +8,7 @@ import { SITE_TICKER_DDL } from '../src/admin/ticker-schema.js';
 import { SITE_BANNER_PLACEMENT_DDL } from '../src/admin/banner-placement-schema.js';
 import { SITE_BANNER_PROMO_DDL } from '../src/admin/banner-promo-schema.js';
 import { SITE_AUDIENCE_DDL } from '../src/admin/audience-schema.js';
+import { SITE_POSTS_DDL } from '../src/admin/posts-schema.js';
 import { SITE_BRAND_HERO_DDL } from '../src/admin/brand-hero-schema.js';
 import { SITE_BANNER_VIDEO_DDL } from '../src/admin/banner-video-schema.js';
 import { SITE_BANNERS_DDL } from '../src/admin/banners-schema.js';
@@ -173,5 +174,17 @@ describe('миграция 015 и SITE_AUDIENCE_DDL', () => {
     expect(SITE_AUDIENCE_DDL.match(/ADD COLUMN IF NOT EXISTS gender/g)).toHaveLength(2);
     expect(SITE_AUDIENCE_DDL).toContain("DEFAULT 'all'");
     expect(SITE_AUDIENCE_DDL).not.toMatch(/\b(DROP|DELETE|TRUNCATE)\b/i);
+  });
+});
+
+describe('миграция 016 и SITE_POSTS_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/016', async () => {
+    const file = await readFile(path.join(root, 'migrations', '016_site_posts.sql'), 'utf8');
+    expect(normalize(SITE_POSTS_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и ничего не удаляет', () => {
+    expect(SITE_POSTS_DDL).toContain('CREATE TABLE IF NOT EXISTS site_posts');
+    expect(SITE_POSTS_DDL).not.toMatch(/\b(DELETE|TRUNCATE|DROP)\b/i);
   });
 });

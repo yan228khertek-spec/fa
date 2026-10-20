@@ -14,6 +14,9 @@ import { MemoryOffersRepository } from './offers/memory.js';
 import { PgOffersRepository } from './offers/pg.js';
 import { adminPlugin } from './admin/plugin.js';
 import { BrandService } from './admin/service.js';
+import { PostService, type PostRepository } from './admin/posts.js';
+import { MemoryPostRepository } from './admin/posts-memory.js';
+import { PgPostRepository } from './admin/posts-pg.js';
 import { BannerService, type BannerRepository } from './admin/banners.js';
 import { MemoryBannerRepository } from './admin/banners-memory.js';
 import { PgBannerRepository } from './admin/banners-pg.js';
@@ -50,6 +53,8 @@ export interface BuildAppOptions {
   cardRepo?: CardRepository;
   /** Баннеры главной (миграция 007). */
   bannerRepo?: BannerRepository;
+  /** Блог главной (миграция 016). */
+  postRepo?: PostRepository;
   /** Бегущая строка главной (миграция 009). */
   tickerRepo?: TickerRepository;
   /** Сжатие видео баннеров; по умолчанию ffmpeg (в тестах подменяется). */
@@ -109,6 +114,10 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       ? new PgBannerRepository(config.databaseUrl)
       : new MemoryBannerRepository());
 
+  const postRepo =
+    opts.postRepo ??
+    (config.databaseUrl ? new PgPostRepository(config.databaseUrl) : new MemoryPostRepository());
+
   const tickerRepo =
     opts.tickerRepo ??
     (config.databaseUrl
@@ -136,6 +145,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       service: brandService,
       cards: cardService,
       banners: new BannerService(bannerRepo),
+      posts: new PostService(postRepo),
       ticker: new TickerService(tickerRepo, opts.now),
       videoCompressor: opts.videoCompressor ?? ffmpegCompressor(),
       posterMaker: opts.posterMaker ?? ffmpegPoster(),
@@ -157,6 +167,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     await siteBrands.close();
     await cardRepo.close();
     await bannerRepo.close();
+    await postRepo.close();
     await tickerRepo.close();
     await orderRepo.close();
     await catalogReader.close();

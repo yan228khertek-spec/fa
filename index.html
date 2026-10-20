@@ -122,6 +122,20 @@
 @media(min-width:600px){.tbgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 14px}}
 @media(min-width:900px){.tbgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:28px 16px}.tb-logo{width:48px;height:48px}}
 
+/* блог: лента постов под «Брендами галереи», подгружается при прокрутке */
+.blog{display:grid;grid-template-columns:minmax(0,1fr);gap:40px 18px}
+.bp-ph{display:block;aspect-ratio:4/3;background:var(--soft);overflow:hidden}
+.bp-ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}
+@media(hover:hover){a.bp-ph:hover img{transform:scale(1.03)}}
+.bp-t{margin:18px 0 8px;font-size:22px;font-weight:500;line-height:1.25;letter-spacing:.01em}
+.bp-t i{font-style:normal;font-size:13px;font-weight:600;color:#5fb300;margin-left:8px;letter-spacing:.04em}
+.bp-d{margin:0;font-size:15px;line-height:1.55;color:#4a4945}
+.bp-btn{display:inline-block;margin-top:20px;padding:15px 34px;background:var(--graphite);color:#fff;font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--graphite)}
+@media(hover:hover){.bp-btn:hover{background:#fff;color:var(--graphite)}}
+.blog-more{text-align:center;margin-top:28px}
+.blog-more button{font:inherit;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:14px 30px;background:#fff;border:1px solid var(--graphite);cursor:pointer}
+@media(min-width:700px){.blog{grid-template-columns:repeat(2,minmax(0,1fr));gap:48px 24px}}
+@media(min-width:1100px){.blog{grid-template-columns:repeat(3,minmax(0,1fr))}.bp-t{font-size:20px}}
 </style>
 </head>
 <body>
@@ -170,6 +184,15 @@
   <div class="sec">
     <div class="sh"><h2>Бренды галереи</h2><a href="brands.html">Все бренды</a></div>
     <div class="tbgrid" id="brg"></div>
+  </div>
+</div>
+
+<div class="wrap" id="blogSec" hidden>
+  <div class="sec">
+    <div class="sh"><h2>Блог</h2></div>
+    <div class="blog" id="blog"></div>
+    <div id="blogEnd" style="height:1px"></div>
+    <div class="blog-more" id="blogMore" hidden><button type="button">Показать ещё</button></div>
   </div>
 </div>
 
@@ -438,6 +461,57 @@ function card(p){
   /* Запасной путь: если в кэше старый site.js без события — перехватываем смену раздела сами */
   const orig=window.faSetGender;
   if(typeof orig==='function')window.faSetGender=function(){const r=orig.apply(this,arguments);load(cur());return r};
+})();
+
+/* Блог: посты из админки для выбранного раздела; лента подгружается по мере прокрутки */
+(function(){
+  const E=t=>String(t??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const A=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;
+  const sec=document.getElementById('blogSec'),box=document.getElementById('blog'),
+        end=document.getElementById('blogEnd'),more=document.getElementById('blogMore');
+  const PAGE=6;
+  let seq=0,shown=0,total=0,busy=false,gen='women';
+  const post=p=>{
+    const href=safeHref(p.link),img=A(p.image);
+    const ph=`<img src="${E(img)}" alt="${E(p.title)}" loading="lazy">`;
+    return `<article class="bp">
+      ${href?`<a class="bp-ph" href="${E(href)}">${ph}</a>`:`<div class="bp-ph">${ph}</div>`}
+      <h3 class="bp-t">${E(p.title)}${p.badge?`<i>${E(p.badge)}</i>`:''}</h3>
+      ${p.description?`<p class="bp-d">${E(p.description)}</p>`:''}
+      ${href?`<a class="bp-btn" href="${E(href)}">${E(p.buttonText||'Смотреть')}</a>`:''}
+    </article>`;
+  };
+  const hasMore=()=>shown<total;
+  function next(reset){
+    if(busy&&!reset)return;
+    const my=reset?++seq:seq,g=gen;
+    if(reset){shown=0;total=0;box.innerHTML='';sec.hidden=true;more.hidden=true}
+    busy=true;
+    fetch(API_BASE+'/api/posts?gender='+g+'&limit='+PAGE+'&offset='+shown)
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(d=>{
+        if(my!==seq)return;
+        total=d.total;shown+=d.items.length;
+        box.insertAdjacentHTML('beforeend',d.items.map(post).join(''));
+        sec.hidden=!shown;
+      })
+      .catch(()=>{})
+      .then(()=>{
+        if(my!==seq)return;
+        busy=false;
+        more.hidden=!(hasMore()&&!io);
+        /* лента закончилась не дальше экрана — сразу догружаем */
+        if(io&&hasMore()&&end.getBoundingClientRect().top<innerHeight+500)next();
+      });
+  }
+  const io='IntersectionObserver' in window?new IntersectionObserver(es=>{
+    if(es.some(e=>e.isIntersecting)&&hasMore())next();
+  },{rootMargin:'600px 0px'}):null;
+  if(io)io.observe(end);
+  more.querySelector('button').onclick=()=>next();
+  const cur=()=>window.faGender?window.faGender():'women';
+  gen=cur();next(true);
+  document.addEventListener('fa:gender',e=>{gen=e.detail;next(true)});
 })();
 
 /* смена ракурса: наведение на десктопе, тап на телефоне */

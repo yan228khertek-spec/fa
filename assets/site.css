@@ -109,6 +109,11 @@ footer a,footer p{display:block;color:var(--muted);margin-bottom:8px}
 .macc.open>button i{transform:rotate(-135deg);margin-top:3px}
 .msub{display:none;padding:2px 0 10px 14px}
 .macc.open .msub{display:block}
+.mrow{display:flex;align-items:center;justify-content:space-between}
+.mrow .mlink{flex:1}
+.mchev{background:none;padding:10px 0 10px 22px;display:flex;align-items:center}
+.mchev i{width:8px;height:8px;border-right:1.5px solid var(--graphite);border-bottom:1.5px solid var(--graphite);transform:rotate(45deg);margin:-3px 4px 0 0;transition:transform .2s}
+.macc.open>.mrow .mchev i{transform:rotate(-135deg);margin-top:3px}
 .msub a{display:block;padding:5px 0;font-size:13.5px;letter-spacing:.02em;color:var(--muted)}
 .msub a:hover{color:var(--graphite)}
 .msub a:first-child{color:var(--graphite)}

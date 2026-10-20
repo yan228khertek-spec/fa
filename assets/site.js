@@ -33,7 +33,7 @@
       <a class="mlink red" href="catalog.html?sale=1">Распродажа</a>
     </div>
     <div class="mgrp">
-      <div class="macc" id="mbAcc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Бренды<i></i></button>
+      <div class="macc" id="mbAcc"><div class="mrow"><a class="mlink" href="brands.html">Бренды</a><button class="mchev" onclick="faAcc(this)" aria-expanded="false" aria-label="Показать бренды"><i></i></button></div>
         <div class="msub mb" id="mbList"></div></div>
       <div class="macc"><button class="mlink" onclick="faAcc(this)" aria-expanded="false">Одежда<i></i></button>
         <div class="msub" data-cat="Одежда"><a href="catalog.html?category=Одежда">Вся одежда</a></div></div>
@@ -198,7 +198,7 @@
   };
   // Подкатегории меню («Одежда», «Обувь») — реальные типы товаров из витрины; раскрываются по клику
   window.faAcc = function(b){
-    var open = b.parentNode.classList.toggle('open');
+    var open = b.closest('.macc').classList.toggle('open');
     b.setAttribute('aria-expanded', open ? 'true' : 'false');
   };
   function loadMenuKinds(){

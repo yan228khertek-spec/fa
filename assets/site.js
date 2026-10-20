@@ -204,7 +204,10 @@
   function loadMenuKinds(){
     [].forEach.call(document.querySelectorAll('.msub[data-cat]'), function(box){
       var cat = box.getAttribute('data-cat');
-      fetch(API_BASE + '/api/cards?limit=1&category=' + encodeURIComponent(cat)).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      // первая ссылка («Вся одежда») остаётся, виды изделий подставляются заново при смене раздела
+      if (!box._head) box._head = box.innerHTML;
+      box.innerHTML = box._head;
+      fetch(API_BASE + '/api/cards?limit=1&gender=' + gender + '&category=' + encodeURIComponent(cat)).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
         if (!d || !d.facets.kinds.length) return;
         box.innerHTML += d.facets.kinds.map(function(k){
           return '<a href="catalog.html?category=' + encodeURIComponent(cat) + '&kind=' + encodeURIComponent(k.name) + '">' + esc(window.faKind(k.name)) + '</a>';
@@ -217,7 +220,7 @@
     gender = g === 'men' ? 'men' : 'women';
     perfume = false;
     try { sessionStorage.setItem('fa_gender', gender); } catch (e) {}
-    paintSwitchers(); renderMenuBrands();
+    paintSwitchers(); renderMenuBrands(); loadMenuKinds();
     try { document.dispatchEvent(new CustomEvent('fa:gender', { detail: gender })); } catch (e) {}
     if (!quiet) window.toast((gender === 'men' ? 'Мужское' : 'Женское') + ' — раздел переключён');
   };

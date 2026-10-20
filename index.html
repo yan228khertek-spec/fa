@@ -276,41 +276,58 @@ addEventListener('resize',()=>sl.scrollTo({left:cur*sl.clientWidth}));
 })();
 paintSlides(SLIDES);
 restart();
+/* Раздел сайта (Женское/Мужское): баннеры, карточки и блоки брендов зависят от него */
+const GEN=()=>window.faGender?window.faGender():'women';
 /* Баннеры из админки; пока их нет или API недоступно — остаются стандартные слайды */
 window.__bn='запрос баннеров отправлен';
-fetch(API_BASE+'/api/banners').then(r=>r.ok?r.json():Promise.reject('HTTP '+r.status)).then(d=>{
-  if(!d||!d.items||!d.items.length){window.__bn='в админке нет показываемых баннеров';return}
-  paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
-    theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart(); window.__bn='баннеров из админки: '+d.items.length;
-}).catch(e=>{window.__bn='баннеры не загрузились: '+e});
+let heroSeq=0;
+function loadHero(g){
+  const my=++heroSeq;
+  fetch(API_BASE+'/api/banners?gender='+g).then(r=>r.ok?r.json():Promise.reject('HTTP '+r.status)).then(d=>{
+    if(my!==heroSeq)return;
+    if(!d||!d.items||!d.items.length){window.__bn='в админке нет показываемых баннеров';paintSlides(SLIDES);restart();return}
+    paintSlides(d.items.map(b=>({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
+      theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link}))); restart(); window.__bn='баннеров из админки: '+d.items.length;
+  }).catch(e=>{if(my===heroSeq)window.__bn='баннеры не загрузились: '+e});
+}
+loadHero(GEN());
 
 /* Баннеры из админки (/api/banners?placement=…): первый включённый. Пока его нет — остаётся прежний
    статичный блок: для парфюмерии «Редкие ароматы», для промо — стандартный баннер Diesel. */
-function placeBanner(place,boxId,statId,cls){
+function placeBanner(place,boxId,statId){
   const box=document.getElementById(boxId),stat=document.getElementById(statId);
-  if(!box)return;
-  fetch(API_BASE+'/api/banners?placement='+place).then(r=>r.ok?r.json():null).then(d=>{
-    const b=d&&d.items&&d.items[0]; if(!b)return;
-    box.innerHTML=slideHTML({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
-      theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link},'pbn','h2');
-    box.hidden=false; if(stat)stat.hidden=true;
-    const v=box.querySelector('video'); if(!v||vcalm)return;
-    /* видео играет, пока баннер на экране; звук всегда выключен */
-    const pick=()=>vwide.matches?v.dataset.vd:(v.dataset.vm||v.dataset.vd);
-    let vis=false;
-    const sync=()=>{
-      const want=pick();
-      if(!want||!vis||document.hidden){v.pause();return}
-      if(v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
-      v.onplaying=()=>v.classList.add('on'); vplay(v);
-    };
-    if(window.IntersectionObserver)new IntersectionObserver(es=>{vis=es[0].isIntersecting;sync()},{threshold:.25}).observe(box);
-    else{vis=true;sync()}
-    vwide.addEventListener&&vwide.addEventListener('change',sync); document.addEventListener('visibilitychange',sync);
-  }).catch(()=>{});
+  if(!box)return()=>{};
+  let seq=0,off=null;
+  return function(g){
+    const my=++seq;
+    fetch(API_BASE+'/api/banners?placement='+place+'&gender='+g).then(r=>r.ok?r.json():null).then(d=>{
+      if(my!==seq)return;
+      if(off){off();off=null}
+      const b=d&&d.items&&d.items[0];
+      if(!b){box.hidden=true;box.innerHTML='';if(stat)stat.hidden=false;return}   // для этого раздела баннера нет — стандартный блок
+      box.innerHTML=slideHTML({im:b.image,imM:b.imageMobile,vd:b.video,vm:b.videoMobile,fx:b.focus.x,fy:b.focus.y,mfx:b.mobileFocus.x,mfy:b.mobileFocus.y,
+        theme:b.theme,t:b.title,s:b.subtitle,cta:b.buttonText||(b.link?'Смотреть':''),link:b.link},'pbn','h2');
+      box.hidden=false; if(stat)stat.hidden=true;
+      const v=box.querySelector('video'); if(!v||vcalm)return;
+      /* видео играет, пока баннер на экране; звук всегда выключен */
+      const pick=()=>vwide.matches?v.dataset.vd:(v.dataset.vm||v.dataset.vd);
+      let vis=false,io=null;
+      const sync=()=>{
+        const want=pick();
+        if(!want||!vis||document.hidden){v.pause();return}
+        if(v.getAttribute('src')!==want){v.classList.remove('on');v.src=want;v.load()}
+        v.onplaying=()=>v.classList.add('on'); vplay(v);
+      };
+      if(window.IntersectionObserver){io=new IntersectionObserver(es=>{vis=es[0].isIntersecting;sync()},{threshold:.25});io.observe(box)}
+      else{vis=true;sync()}
+      vwide.addEventListener&&vwide.addEventListener('change',sync); document.addEventListener('visibilitychange',sync);
+      off=()=>{if(io)io.disconnect();vwide.removeEventListener&&vwide.removeEventListener('change',sync);document.removeEventListener('visibilitychange',sync)};
+    }).catch(()=>{});
+  };
 }
-placeBanner('perfume','perfBanner','perfStatic');
-placeBanner('promo','promoBanner','promoStatic');
+const loadPerfBanner=placeBanner('perfume','perfBanner','perfStatic');
+const loadPromoBanner=placeBanner('promo','promoBanner','promoStatic');
+loadPerfBanner(GEN()); loadPromoBanner(GEN());
 
 /* Бегущая строка: стандартная или текущая акция из админки (/api/ticker). Пока API не ответил или
    недоступен — встроенная строка, та же, что в админке по умолчанию. */
@@ -368,20 +385,29 @@ function card(p){
    <div class="ci"><div class="br">${E(i.brand?i.brand.name:'')}</div><div class="nm"><a href="product.html?id=${i.id}">${E(i.title)}</a></div>
     ${i.price!=null?`<div class="prs"><span class="now">${rub(i.price)}</span></div>`:''}</div></div>`;
   };
-  fetch(API_BASE+'/api/cards?limit=8').then(r=>r.ok?r.json():null).then(d=>{
-    if(!d||!d.items.length)return;
-    document.getElementById('g1').innerHTML=d.items.map(i=>real(i,'Новое')).join('');
-    document.getElementById('new').hidden=false;
-  }).catch(()=>{});
-  fetch(API_BASE+'/api/cards?limit=4&category='+encodeURIComponent('Парфюмерия')).then(r=>r.ok?r.json():null).then(d=>{
-    if(d&&d.items.length)document.getElementById('gperf').innerHTML=d.items.map(i=>real(i)).join('');
-  }).catch(()=>{});
-  fetch(API_BASE+'/api/home').then(r=>r.ok?r.json():null).then(d=>{
-    if(!d||!d.brands.length)return;
-    document.getElementById('homeBrands').innerHTML=d.brands.map(b=>`<div class="sec">
+  let seq=0;
+  const getJ=u=>fetch(API_BASE+u).then(r=>r.ok?r.json():null).catch(()=>null);
+  function load(g){
+    const my=++seq,q='&gender='+g;
+    getJ('/api/cards?limit=8'+q).then(d=>{
+      if(my!==seq||!d)return;
+      document.getElementById('g1').innerHTML=d.items.map(i=>real(i,'Новое')).join('');
+      document.getElementById('new').hidden=!d.items.length;
+    });
+    getJ('/api/cards?limit=4&category='+encodeURIComponent('Парфюмерия')+q).then(d=>{
+      if(my!==seq||!d)return;
+      document.getElementById('gperf').innerHTML=d.items.map(i=>real(i)).join('');
+    });
+    getJ('/api/home?gender='+g).then(d=>{
+      if(my!==seq||!d)return;
+      document.getElementById('homeBrands').innerHTML=d.brands.map(b=>`<div class="sec">
     <div class="sh"><h2>${E(b.name)}</h2><a href="brand.html?slug=${encodeURIComponent(b.slug)}">Все</a></div>
     <div class="grid">${b.items.map(i=>real(i)).join('')}</div></div>`).join('');
-  }).catch(()=>{});
+    });
+  }
+  load(GEN());
+  /* смена раздела в шапке или меню: баннеры, карточки и блоки брендов перезагружаются */
+  document.addEventListener('fa:gender',e=>{const g=e.detail;load(g);loadHero(g);loadPerfBanner(g);loadPromoBanner(g)});
 })();
 /* «Бренды галереи» — топ-бренды выбранного раздела (как на странице «Бренды»), из админки */
 (function(){

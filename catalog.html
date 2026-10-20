@@ -113,7 +113,7 @@ async function load(reset){
   S.loading=true;
   if(reset){S.items=[];document.getElementById('more').hidden=true;showState('Загружаем товары…')}
   const url=`${API_BASE}/api/cards?limit=${PAGE}&offset=${S.items.length}`
-    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'')+FAList.qs(S);
+    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'')+'&gender='+(window.faGender?faGender():'women')+FAList.qs(S);
   try{
     const r=await fetch(url);
     if(my!==S.seq)return;
@@ -179,6 +179,8 @@ document.getElementById('cats').addEventListener('click',e=>{
   S.kind=b.dataset.k;load(true);
 });
 FAList.init(S,{showBrands:true,onChange:()=>load(true)});
+/* Женское/Мужское в шапке: каталог показывает товары выбранного раздела */
+document.addEventListener('fa:gender',()=>load(true));
 document.getElementById('more').addEventListener('click',()=>{if(!S.loading)load(false)});
 load(true);
 </script>

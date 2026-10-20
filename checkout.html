@@ -337,6 +337,12 @@ function setSubmitting(on){
 async function submitOrder(){
   if(submitting)return;
   if(!FACart.items().length){location.href='cart.html';return;}
+  // позиция без цены на сервер не уйдёт (сервер ответит на items[].price) — ловим заранее и отправляем в корзину
+  if(FACart.items().some(i=>i.price==null)){
+    showFormErr('Часть товаров без цены. Открываем корзину, чтобы поправить состав.');
+    setTimeout(()=>{location.href='cart.html';},1400);
+    return;
+  }
   if(!validateClient()){showFormErr('Проверьте выделенные поля.');return;}
 
   const body=buildBody();
@@ -376,8 +382,15 @@ async function submitOrder(){
 function handleError(status,err){
   const code=err&&err.error;
   if(code==='VALIDATION_ERROR'&&Array.isArray(err.fields)){
-    err.fields.forEach(f=>setFieldErr(f.field,FIELD_MSG[f.code]||'Проверьте поле'));
-    showFormErr('Проверьте выделенные поля.');
+    // ошибки на позициях (items[...]) не привязать к полям формы — ведём в корзину
+    if(err.fields.some(f=>/^items\b/.test(f.field||''))){
+      showFormErr('С товарами в корзине что-то не так. Открываем корзину, чтобы проверить состав.');
+      setTimeout(()=>{location.href='cart.html';},1400);
+      return;
+    }
+    let shown=0;
+    err.fields.forEach(f=>{if(FIELD_MSG[f.code]!==undefined||/^(customer|delivery|consents|comment)\b/.test(f.field||'')){setFieldErr(f.field,FIELD_MSG[f.code]||'Проверьте поле');shown++;}});
+    showFormErr(shown?'Проверьте выделенные поля.':'Проверьте данные заказа и попробуйте ещё раз.');
     return;
   }
   if(code==='PAYMENT_METHOD_UNAVAILABLE'){

@@ -55,6 +55,21 @@ describe.skipIf(!url)('баннеры в PostgreSQL', () => {
     ).rejects.toThrow();
   });
 
+  it('«для кого»: по умолчанию all, фильтр публичной выдачи по разделу, мусор БД не пускает', async () => {
+    const a = await svc.create({});
+    const w = await svc.create({ gender: 'women' });
+    const m = await svc.create({ gender: 'men' });
+    expect([a.gender, w.gender, m.gender]).toEqual(['all', 'women', 'men']);
+    for (const b of [a, w, m]) await repo.setFile(b.id, 'image', `${b.id}.png`);
+    expect((await svc.publicList('hero', 'women')).map((b) => b.id)).toEqual([a.id, w.id]);
+    expect((await svc.publicList('hero', 'men')).map((b) => b.id)).toEqual([a.id, m.id]);
+    expect(await svc.publicList('hero')).toHaveLength(3);
+    expect((await svc.update(a.id, { gender: 'men' })).gender).toBe('men');
+    await expect(
+      pool.query("UPDATE site_banners SET gender = 'kids' WHERE id = $1", [a.id]),
+    ).rejects.toThrow();
+  });
+
   it('БД не пускает фокус вне 0–100', async () => {
     const b = await svc.create({});
     await expect(

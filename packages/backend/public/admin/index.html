@@ -1152,6 +1152,7 @@
             <div><span class="bn-lab">Текст кнопки</span><input type="text" data-f="buttonText" maxlength="40" value="${esc(b.buttonText)}" placeholder="Смотреть"></div>
             <div><span class="bn-lab">Ссылка</span><input type="text" data-f="link" maxlength="300" value="${esc(b.link)}" placeholder="catalog.html?category=Обувь"></div>
             <div><span class="bn-lab">Цвет текста</span><select data-f="theme"><option value="light" ${b.theme === 'light' ? 'selected' : ''}>Светлый (на тёмной картинке)</option><option value="dark" ${b.theme === 'dark' ? 'selected' : ''}>Тёмный (на светлой картинке)</option></select></div>
+            <div><span class="bn-lab">Для кого</span><select data-f="gender">${AUD.map(([v, t]) => `<option value="${v}" ${(b.gender || 'all') === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
             <div><span class="bn-lab">Показывать на сайте</span><select data-f="active"><option value="1" ${b.active ? 'selected' : ''}>Да</option><option value="0" ${b.active ? '' : 'selected'}>Нет</option></select></div>
           </div>
           <div class="bn-grid">
@@ -1175,6 +1176,12 @@
           <div class="row"><button class="btn" data-a="save">Сохранить</button><span class="muted bn-state"></span></div>
         </div>`;
       }
+      /* «Для кого»: баннеры и карточки показываются в женском, мужском или в обоих разделах сайта */
+      const AUD = [
+        ['all', 'Женское и мужское'],
+        ['women', 'Только женское'],
+        ['men', 'Только мужское'],
+      ];
       /* три места: слайдер вверху главной, баннер парфюмерии и промо между блоками */
       const BN_SPOTS = [
         {
@@ -1895,7 +1902,7 @@
               (c) => `<tr class="click" data-id="${c.id}">
     <td>${c.photos[0] ? `<img class="thumb" loading="lazy" src="${esc(c.photos[0].url)}" alt="">` : '<div class="thumb"></div>'}</td>
     <td><b>${esc(c.title || c.model?.name || c.modelId)}</b><div class="muted" style="font-size:12px">${esc(c.model?.article || '')}</div></td>
-    <td>${esc(c.model?.brand?.name || '—')}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
+    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
             )
             .join('') ||
           '<tr><td colspan="6" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
@@ -1978,6 +1985,8 @@
     <div class="fld"><label>Название на сайте (пусто — как в 1С)</label><input type="text" id="kTitle" maxlength="200" value="${esc(c.title || '')}"></div>
     <div class="fld"><label>Раздел на сайте</label><select id="kCat">${['', 'Одежда', 'Обувь', 'Сумки', 'Аксессуары', 'Парфюмерия'].map((v) => `<option value="${v}" ${(c.category || '') === v ? 'selected' : ''}>${v || 'Определить автоматически по названию из 1С'}</option>`).join('')}</select>
       <div class="hint muted">Для парфюмерии выберите «Парфюмерия»: она попадёт в блок на главной и в раздел каталога.</div></div>
+    <div class="fld"><label>Для кого</label><select id="kGender">${AUD.map(([v, t]) => `<option value="${v}" ${(c.gender || 'all') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <div class="hint muted">Где карточка видна на сайте: в женском разделе, в мужском или в обоих. Сайт показывает покупателю только товары выбранного раздела.</div></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
       <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
@@ -1994,6 +2003,7 @@
         const fields = () => ({
           title: $('#kTitle').value,
           category: $('#kCat').value,
+          gender: $('#kGender').value,
           description: $('#kDesc').value,
           characteristics: $$('#kKv .kv')
             .map((r) => {

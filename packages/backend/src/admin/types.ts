@@ -2,6 +2,15 @@
 
 export type Gender = 'men' | 'women';
 export const GENDERS: readonly Gender[] = ['men', 'women'];
+/** Для кого баннер или карточка: оба раздела сайта, только женское или только мужское. */
+export const AUDIENCES = ['all', 'women', 'men'] as const;
+export type Audience = (typeof AUDIENCES)[number];
+
+export function parseAudience(v: unknown, field = 'gender'): Audience {
+  if (typeof v === 'string' && (AUDIENCES as readonly string[]).includes(v)) return v as Audience;
+  throw new AdminError(`${field}: all, women или men`);
+}
+
 export type ImageKind = 'photo' | 'logo' | 'cover' | 'coverMobile';
 
 export interface Placement {
@@ -153,6 +162,8 @@ export interface SiteCard {
   characteristics: CardCharacteristic[];
   /** Раздел, заданный вручную; null — определяется по названию из 1С. */
   category: string | null;
+  /** Раздел сайта, где карточка видна: all — в обоих. */
+  gender: Audience;
   status: CardStatus;
   publishedAt: string | null;
   createdAt: string;
@@ -172,6 +183,7 @@ export interface CardPatch {
   description?: string;
   characteristics?: CardCharacteristic[];
   category?: string | null;
+  gender?: Audience;
   status?: CardStatus;
 }
 

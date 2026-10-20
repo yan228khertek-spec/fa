@@ -3,6 +3,8 @@ import { normalizeText } from './matcher.js';
 import type { BrandService, Page } from './service.js';
 import {
   AdminError,
+  parseAudience,
+  type Audience,
   type CardCharacteristic,
   type CardPatch,
   type CardRepository,
@@ -63,6 +65,8 @@ export interface PublicCardItem {
   /** Раздел витрины и вид изделия — определяются по названию из 1С. */
   category: Category;
   kind: string;
+  /** Для кого карточка: all — видна и в женском, и в мужском разделе. */
+  gender: Audience;
 }
 
 export interface PublicCardFacets {
@@ -133,6 +137,7 @@ export interface CardInput {
   characteristics?: unknown;
   status?: unknown;
   category?: unknown;
+  gender?: unknown;
 }
 
 function parseTitle(v: unknown): string | null {
@@ -318,6 +323,7 @@ export class CardService {
       patch.characteristics = parseCharacteristics(input.characteristics);
     }
     if (input.category !== undefined) patch.category = parseCategory(input.category);
+    if (input.gender !== undefined) patch.gender = parseAudience(input.gender);
     if (input.status !== undefined) {
       patch.status = parseStatus(input.status);
       if (patch.status === 'published') {
@@ -367,6 +373,7 @@ export class CardService {
       category: (x.card.category as Category | null) ?? categoryOf(m.name),
       // у карточки с ручным разделом первое слово названия — не вид изделия (часто бренд)
       kind: x.card.category ?? kindOf(m.name),
+      gender: x.card.gender,
     };
   }
 
@@ -377,6 +384,8 @@ export class CardService {
    */
   async publicList(opts: {
     brandSlug?: string;
+    /** Раздел сайта: показываем карточки «для всех» и для этого раздела. */
+    gender?: 'women' | 'men';
     category?: string;
     kind?: string;
     /** Фильтры страницы: бренды (slug), размеры и цвета «любой из», цена «от и до». */
@@ -393,6 +402,7 @@ export class CardService {
     const sizesOf = new Map<number, { sizes: Set<string>; colors: Set<string> }>();
     const byBrand = (await this.visibleCards())
       .filter((x) => !opts.brandSlug || x.view.model?.brand?.slug === opts.brandSlug)
+      .filter((x) => !opts.gender || x.card.gender === 'all' || x.card.gender === opts.gender)
       .map((x) => {
         const v = (x.view.model?.variants ?? []).filter((w) => w.inStock !== false);
         sizesOf.set(x.card.id, {
@@ -484,12 +494,15 @@ export class CardService {
   async homeSections(
     perBrand = 4,
     maxBrands = 3,
+    gender?: 'women' | 'men',
   ): Promise<{ brand: BrandRef; total: number; items: PublicCardItem[] }[]> {
     const brands = (await this.brands.repo.listBrands())
       .filter((b) => b.home)
       .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     if (!brands.length) return [];
-    const items = (await this.visibleCards()).map((x) => this.item(x));
+    const items = (await this.visibleCards())
+      .filter((x) => !gender || x.card.gender === 'all' || x.card.gender === gender)
+      .map((x) => this.item(x));
     return brands
       .map((b) => {
         const mine = items.filter((i) => i.brand?.slug === b.slug);

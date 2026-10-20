@@ -95,6 +95,9 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     };
   };
 
+  /** Раздел сайта из ?gender=: только men или women, иначе не фильтруем (как раньше). */
+  const siteGender = (q: Record<string, string | undefined>): 'women' | 'men' | undefined =>
+    q.gender === 'men' || q.gender === 'women' ? q.gender : undefined;
   const isImageKind = (k: string): k is ImageKind =>
     k === 'photo' || k === 'logo' || k === 'cover' || k === 'coverMobile';
   const publicItem = <T extends { photo: string | null }>(c: T) => ({
@@ -129,6 +132,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const { category, kind } = req.query as { category?: string; kind?: string };
       const res = await cards.publicList({
         brandSlug: slug,
+        gender: siteGender(req.query as Record<string, string | undefined>),
         category: category?.slice(0, 40),
         kind: kind?.slice(0, 60),
         ...listFilters(req.query as Record<string, string | undefined>),
@@ -149,8 +153,12 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     });
 
     // Главная страница: бренды с флагом «Показывать на главной» и их последние карточки
-    pub.get('/api/home', async (_req, reply) => {
-      const sections = await cards.homeSections();
+    pub.get('/api/home', async (req, reply) => {
+      const sections = await cards.homeSections(
+        undefined,
+        undefined,
+        siteGender(req.query as Record<string, string | undefined>),
+      );
       reply.header('cache-control', 'public, max-age=30');
       return {
         brands: sections.map((s) => ({
@@ -167,7 +175,10 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       if (!(BANNER_PLACEMENTS as readonly string[]).includes(place)) {
         return reply.code(400).send({ error: 'placement: hero, perfume или promo' });
       }
-      const list = await banners.publicList(place as BannerPlacement);
+      const list = await banners.publicList(
+        place as BannerPlacement,
+        siteGender(req.query as Record<string, string | undefined>),
+      );
       reply.header('cache-control', 'public, max-age=30');
       return {
         items: list.map((b) => {
@@ -207,6 +218,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const { limit, offset } = page(req.query as { limit?: string; offset?: string }, 100, 24);
       const { category, kind } = req.query as { category?: string; kind?: string };
       const res = await cards.publicList({
+        gender: siteGender(req.query as Record<string, string | undefined>),
         category: category?.slice(0, 40),
         kind: kind?.slice(0, 60),
         ...listFilters(req.query as Record<string, string | undefined>),

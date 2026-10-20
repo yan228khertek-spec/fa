@@ -200,7 +200,8 @@ export async function ordersPlugin(app: FastifyInstance, opts: OrdersPluginOptio
     },
   );
 
-  app.get('/api/orders/:token', async (req, reply) => {
+  // Токен в пути = доступ к заказу: не пишем его в журнал (info-лог запроса содержит URL).
+  app.get('/api/orders/:token', { logLevel: 'warn' }, async (req, reply) => {
     reply.header('cache-control', 'no-store');
     const order = await orders.byToken((req.params as { token: string }).token);
     if (!order)

@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { MemoryCardRepository } from '../src/admin/cards-memory.js';
@@ -10,6 +10,8 @@ import type { LiveModel } from '../src/admin/types.js';
 import type { AppConfig } from '../src/config.js';
 import { loadOrdersConfig } from '../src/config.js';
 import { MemoryOrderRepository } from '../src/orders/memory.js';
+import { ordersPlugin } from '../src/orders/plugin.js';
+import { OrderService } from '../src/orders/service.js';
 import { DEFAULT_ORDERS_CONFIG, type OrdersConfig } from '../src/orders/types.js';
 
 const KEY = '7f9c2ba4-e88f-4c6f-9f2a-000000000001';
@@ -299,6 +301,8 @@ describe('API заказов (HTTP, хранилища в памяти)', () => 
       const big = await post(body({ comment: 'x'.repeat(40 * 1024) }));
       expect(big.statusCode).toBe(413);
       expect(big.json().error).toBe('PAYLOAD_TOO_LARGE');
+      // Без CORS-заголовка браузер спрячет от витрины код ошибки.
+      expect(big.headers['access-control-allow-origin']).toBe('*');
 
       const v = await post(body({ customer: { name: 'Анна', phone: '123', email: 'x' } }));
       expect(v.statusCode).toBe(422);
@@ -331,6 +335,7 @@ describe('API заказов (HTTP, хранилища в памяти)', () => 
     const res = await post(body());
     expect(res.statusCode).toBe(503);
     expect(res.json().error).toBe('ORDERS_DISABLED');
+    expect(res.headers['access-control-allow-origin']).toBe('*');
     expect((await app.inject({ url: '/api/checkout/config' })).json().ordersEnabled).toBe(false);
   });
 
@@ -342,6 +347,7 @@ describe('API заказов (HTTP, хранилища в памяти)', () => 
     expect(third.statusCode).toBe(429);
     expect(third.headers['retry-after']).toBe('60');
     expect(third.json().error).toBe('RATE_LIMITED');
+    expect(third.headers['access-control-allow-origin']).toBe('*');
   });
 });
 
@@ -371,5 +377,28 @@ describe('loadOrdersConfig', () => {
     expect(() => loadOrdersConfig({ ORDER_RATE_LIMIT: '0' })).toThrow();
     // Пустой тариф СДЭК — не «бесплатно», а ошибка конфигурации.
     expect(() => loadOrdersConfig({ ORDER_CDEK_FEE: '' })).toThrow(/ORDER_CDEK_FEE/);
+  });
+});
+
+describe('журнал запросов', () => {
+  it('токен заказа из пути не попадает в журнал (контракт: токен = доступ к заказу)', async () => {
+    const lines: string[] = [];
+    const app = Fastify({
+      logger: { level: 'info', stream: { write: (l: string) => lines.push(l) } },
+    });
+    await app.register(ordersPlugin, {
+      orders: new OrderService(
+        new MemoryOrderRepository(),
+        { orderable: async () => new Map() },
+        DEFAULT_ORDERS_CONFIG,
+      ),
+    });
+    const token = 'T'.repeat(43);
+    expect((await app.inject({ url: `/api/orders/${token}` })).statusCode).toBe(404);
+    // Контроль, что журнал вообще пишется: обычная ручка в нём есть.
+    expect((await app.inject({ url: '/api/checkout/config' })).statusCode).toBe(200);
+    await app.close();
+    expect(lines.join('\n')).toContain('/api/checkout/config');
+    expect(lines.join('\n')).not.toContain(token);
   });
 });

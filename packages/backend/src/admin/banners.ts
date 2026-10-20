@@ -59,7 +59,7 @@ export interface BannerRepository {
   close(): Promise<void>;
 }
 
-function text(v: unknown, field: string, max: number): string {
+export function text(v: unknown, field: string, max: number): string {
   if (v === undefined || v === null) return '';
   if (typeof v !== 'string') throw new AdminError(`${field}: ожидается строка`);
   const s = v.trim();
@@ -73,7 +73,7 @@ function pct(v: unknown, field: string): number {
 }
 
 /** Ссылка: путь внутри сайта или http(s); javascript: и прочее не принимаем. */
-function link(v: unknown): string {
+export function link(v: unknown): string {
   const s = text(v, 'link', 300);
   if (s && !/^(https?:\/\/|\/|[\w.-]+\.html\b|#)/i.test(s)) {
     throw new AdminError('link: адрес страницы сайта или http(s)-ссылка');

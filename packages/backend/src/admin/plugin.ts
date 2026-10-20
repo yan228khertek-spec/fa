@@ -6,6 +6,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AdminConfig } from '../config.js';
 import { FailureLimiter, checkAdminAuth } from './auth.js';
 import { bannerDto, registerBannerRoutes } from './banners-routes.js';
+import { postDto, registerPostRoutes } from './posts-routes.js';
+import type { PostService } from './posts.js';
 import { BANNER_PLACEMENTS, type BannerPlacement, type BannerService } from './banners.js';
 import { registerTickerRoutes } from './ticker-routes.js';
 import type { TickerService } from './ticker.js';
@@ -22,6 +24,7 @@ export interface AdminPluginOptions {
   service: BrandService;
   cards: CardService;
   banners: BannerService;
+  posts: PostService;
   ticker: TickerService;
   /**
    * Где лежат картинки выгрузки 1С, в порядке поиска. Первый каталог —
@@ -62,7 +65,8 @@ function gender(v: unknown): Gender {
  * Пустые ADMIN_LOGIN/ADMIN_PASSWORD выключают админку, публичное API остаётся.
  */
 export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions): Promise<void> {
-  const { admin, service, cards, banners, ticker, imageDirs, videoCompressor, posterMaker } = opts;
+  const { admin, service, cards, banners, posts, ticker, imageDirs, videoCompressor, posterMaker } =
+    opts;
   const uploadsDir = path.resolve(admin.uploadsDir);
   await mkdir(uploadsDir, { recursive: true });
 
@@ -196,6 +200,29 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
             videoMobile: d.videoMobile,
             focus: { x: d.focusX, y: d.focusY },
             mobileFocus: { x: d.mobileFocusX, y: d.mobileFocusY },
+          };
+        }),
+      };
+    });
+
+    // Блог главной: включённые посты с картинкой, по порядку; ?gender=, ?limit=, ?offset= (лента подгружается порциями)
+    pub.get('/api/posts', async (req, reply) => {
+      const q = req.query as Record<string, string | undefined>;
+      const { limit, offset } = page(q, 50, 12);
+      const res = await posts.publicList({ gender: siteGender(q), limit, offset });
+      reply.header('cache-control', 'public, max-age=30');
+      return {
+        total: res.total,
+        items: res.items.map((p) => {
+          const d = postDto(p, uploadUrl);
+          return {
+            id: d.id,
+            title: d.title,
+            badge: d.badge,
+            description: d.description,
+            buttonText: d.buttonText,
+            link: d.link,
+            image: d.image,
           };
         }),
       };
@@ -475,6 +502,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       compress: videoCompressor,
       poster: posterMaker,
     });
+    registerPostRoutes(adm, { posts, uploadsDir, uploadUrl });
     registerTickerRoutes(adm, ticker);
     registerCardRoutes(adm, { cards, uploadsDir, imageDirs, uploadUrl, modelPhoto });
 

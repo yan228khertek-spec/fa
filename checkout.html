@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#2C2B27">
+<title>Оформление заказа — FASHION AVENUE, Омск</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ═════ ОФОРМЛЕНИЕ ═════ */
+header .gender{display:none}
+.co{max-width:1100px;margin:0 auto;padding:calc(60px + 24px) 12px 60px}
+.co h1{font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.co-crumbs{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:22px}
+.co-crumbs a:hover{color:var(--graphite)}
+.co-state{text-align:center;color:var(--muted);padding:70px 0;line-height:1.6}
+.co-state .b{display:inline-block;margin-top:20px;padding:14px 34px;border:1px solid var(--graphite);
+  font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite)}
+.co-state .b:hover{background:var(--graphite);color:#fff}
+.co-body{display:block}
+.co-form{min-width:0}
+.fsec{margin-bottom:30px}
+.fsec>h2{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px;
+  padding-bottom:10px;border-bottom:1px solid var(--line)}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+.fld label .req{color:var(--red)}
+.fld input,.fld textarea{width:100%;border:1px solid var(--line2);background:#fff;padding:12px 14px;font-size:15px;
+  color:var(--graphite);border-radius:0;-webkit-appearance:none}
+.fld input:focus,.fld textarea:focus{outline:none;border-color:var(--graphite)}
+.fld textarea{resize:vertical;min-height:72px;line-height:1.45}
+.fld.bad input,.fld.bad textarea{border-color:var(--red)}
+.fld-err{margin-top:5px;font-size:12px;color:var(--red);min-height:0}
+.fld.bad .fld-err{min-height:16px}
+/* выбор способа доставки / оплаты — плитки-радио */
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:flex-start;gap:12px;border:1px solid var(--line2);padding:14px;cursor:pointer;transition:border-color .15s}
+.opt.on{border-color:var(--graphite)}
+.opt.dis{opacity:.5;cursor:not-allowed}
+.opt input{margin-top:2px;width:18px;height:18px;accent-color:var(--graphite);flex:none}
+.opt-main{flex:1;min-width:0}
+.opt-t{font-size:14px;font-weight:500}
+.opt-d{margin-top:3px;font-size:12.5px;color:var(--muted)}
+.opt-cost{font-size:14px;font-weight:600;white-space:nowrap}
+.cdek-extra{margin-top:14px}
+.cdek-extra[hidden]{display:none}
+/* чекбоксы согласий */
+.consent{display:flex;align-items:flex-start;gap:11px;margin-bottom:14px;font-size:13px;line-height:1.5;color:#3a3936}
+.consent input{margin-top:2px;width:18px;height:18px;accent-color:var(--graphite);flex:none}
+.consent a{text-decoration:underline;text-underline-offset:2px;color:var(--graphite)}
+.consent.bad{color:var(--red)}
+.consent.bad input{outline:2px solid var(--red);outline-offset:1px}
+/* сводка заказа */
+.co-sum .sum-inner{border:1px solid var(--line);padding:22px}
+.sum-items{margin-bottom:16px}
+.sum-item{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;color:#3a3936}
+.sum-item .t{min-width:0}
+.sum-item .t b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum-item .t small{color:var(--muted);font-size:11.5px}
+.sum-item .a{white-space:nowrap;font-weight:500}
+.sum-line{display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;color:#3a3936;padding-top:14px;border-top:1px solid var(--line)}
+.sum-line.bonus{color:var(--accent)}
+.sum-total{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-top:4px;padding-top:12px;border-top:1px solid var(--graphite)}
+.pay-note{margin-top:16px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.submit{display:block;width:100%;min-height:54px;background:var(--graphite);color:#fff;font-size:13px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;margin-top:18px;text-align:center}
+.submit:disabled{background:var(--soft);color:var(--muted);cursor:not-allowed}
+.form-err{margin-top:14px;font-size:13px;color:var(--red);line-height:1.5}
+.form-err[hidden]{display:none}
+.back{display:block;text-align:center;margin-top:16px;font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.back:hover{color:var(--graphite)}
+@media(min-width:900px){
+  .co{padding:calc(72px + 32px) 24px 80px}
+  .co h1{font-size:30px}
+  .co-body{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:0 48px;align-items:start}
+  .co-sum{position:sticky;top:130px}
+}
+</style>
+</head>
+<body>
+
+<script src="assets/site.js"></script>
+<script src="assets/cart.js"></script>
+
+<main class="co">
+  <div class="co-crumbs"><a href="cart.html">Корзина</a> / <span>Оформление</span></div>
+  <h1>Оформление заказа</h1>
+
+  <div class="co-state" id="state">Загружаем…</div>
+
+  <div class="co-body" id="body" hidden>
+    <form class="co-form" id="form" novalidate autocomplete="on">
+      <div class="fsec">
+        <h2>Контактные данные</h2>
+        <div class="fld" data-f="customer.name">
+          <label for="fName">Имя и фамилия <span class="req">*</span></label>
+          <input id="fName" name="name" type="text" autocomplete="name" maxlength="100">
+          <div class="fld-err"></div>
+        </div>
+        <div class="fld" data-f="customer.phone">
+          <label for="fPhone">Телефон <span class="req">*</span></label>
+          <input id="fPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="+7 900 000-00-00">
+          <div class="fld-err"></div>
+        </div>
+        <div class="fld" data-f="customer.email">
+          <label for="fEmail">E-mail <span class="req">*</span></label>
+          <input id="fEmail" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.ru">
+          <div class="fld-err"></div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <h2>Доставка</h2>
+        <div class="opts" id="deliveryOpts"></div>
+        <div class="cdek-extra" id="cdekExtra" hidden>
+          <div class="fld" data-f="delivery.city">
+            <label for="fCity">Город <span class="req">*</span></label>
+            <input id="fCity" name="city" type="text" autocomplete="address-level2" maxlength="100">
+            <div class="fld-err"></div>
+          </div>
+          <div class="fld" data-f="delivery.address">
+            <label for="fAddr">Адрес или пункт выдачи <span class="req">*</span></label>
+            <input id="fAddr" name="address" type="text" autocomplete="street-address" maxlength="300" placeholder="улица, дом, квартира — или адрес ПВЗ СДЭК">
+            <div class="fld-err"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsec" id="paySec">
+        <h2>Оплата</h2>
+        <div class="opts" id="paymentOpts"></div>
+      </div>
+
+      <div class="fsec">
+        <h2>Комментарий к заказу</h2>
+        <div class="fld" data-f="comment">
+          <label for="fComment">Необязательно</label>
+          <textarea id="fComment" name="comment" maxlength="1000" placeholder="Например: позвоните за час до доставки"></textarea>
+          <div class="fld-err"></div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <h2>Согласия</h2>
+        <label class="consent" id="consentPd" data-f="consents.personalData">
+          <input type="checkbox" id="fPd">
+          <span>Я согласен на обработку персональных данных в соответствии с <a href="privacy.html" target="_blank" rel="noopener">политикой конфиденциальности</a> и принимаю условия <a href="offer.html" target="_blank" rel="noopener">публичной оферты</a>. <span class="req">*</span></span>
+        </label>
+        <label class="consent">
+          <input type="checkbox" id="fMarketing">
+          <span>Хочу получать новости и персональные предложения Fashion Avenue.</span>
+        </label>
+      </div>
+    </form>
+
+    <aside class="co-sum">
+      <div class="sum-inner">
+        <div class="sum-items" id="sumItems"></div>
+        <div class="sum-line"><span>Товары</span><span id="sumGoods">—</span></div>
+        <div class="sum-line" id="sumDeliveryLine"><span id="sumDeliveryLabel">Доставка</span><span id="sumDelivery">—</span></div>
+        <div class="sum-line bonus" id="sumBonusLine" hidden><span>Списано бонусов</span><span id="sumBonus">—</span></div>
+        <div class="sum-total"><span>Итого</span><span id="sumTotal">—</span></div>
+        <div class="pay-note" id="payNote"></div>
+        <button class="submit" id="submit" type="submit" form="form">Оформить заказ</button>
+        <div class="form-err" id="formErr" hidden></div>
+        <a class="back" href="cart.html">Вернуться в корзину</a>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<script>
+/* ───── ОФОРМЛЕНИЕ: конфиг из /api/checkout/config, заказ в POST /api/orders ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const $=id=>document.getElementById(id);
+
+let CFG=null;                 // ответ /api/checkout/config
+let delivery='pickup';        // выбранный способ доставки
+let payment='on_receipt';     // выбранный способ оплаты
+let submitting=false;
+let lastBodyKey=null;         // отпечаток тела последней отправки — чтобы понять, нужен ли новый idem-ключ
+
+function stateFail(msg,link){
+  $('state').innerHTML=esc(msg)+(link?'<br><a class="b" href="'+link.href+'">'+esc(link.text)+'</a>':'');
+  $('state').hidden=false;$('body').hidden=true;
+}
+
+// ── стоимость доставки по конфигу ──
+function deliveryMethod(id){return (CFG.delivery&&CFG.delivery.methods||[]).find(m=>m.id===id)||null;}
+function itemsTotal(){
+  return FACart.items().reduce((s,i)=>s+((i.price!=null?i.price:0)*i.qty),0);
+}
+function deliveryCost(){
+  const m=deliveryMethod(delivery);
+  if(!m)return 0;
+  let c=Number(m.cost)||0;
+  if(m.freeFrom!=null&&itemsTotal()>=m.freeFrom)c=0;   // бесплатно от порога
+  return c;
+}
+
+function renderSummary(){
+  const items=FACart.items();
+  $('sumItems').innerHTML=items.map(i=>{
+    const price=i.price!=null?i.price:null;
+    return `<div class="sum-item">
+      <div class="t"><b>${esc(i.title)}</b><small>Размер ${esc(i.size||'—')}${i.color?' · '+esc(i.color):''} · ${i.qty} шт.</small></div>
+      <div class="a">${price!=null?rub(price*i.qty):'—'}</div>
+    </div>`;
+  }).join('');
+  const goods=itemsTotal(),dc=deliveryCost();
+  $('sumGoods').textContent=rub(goods);
+  const m=deliveryMethod(delivery);
+  $('sumDeliveryLabel').textContent=m&&m.id==='pickup'?'Самовывоз':'Доставка';
+  $('sumDelivery').textContent=dc===0?(m&&m.id==='pickup'?'бесплатно':(goods>0?'бесплатно':rub(0))):rub(dc);
+  $('sumTotal').textContent=rub(goods+dc);
+}
+
+// ── отрисовка способов доставки/оплаты из конфига ──
+function renderDelivery(){
+  const methods=(CFG.delivery&&CFG.delivery.methods)||[];
+  $('deliveryOpts').innerHTML=methods.map(m=>{
+    const free=m.freeFrom!=null;
+    const cost=m.id==='pickup'?'Бесплатно':(Number(m.cost)||0)===0?'Бесплатно':rub(Number(m.cost)||0);
+    const desc=m.id==='pickup'
+      ?(m.address?esc(m.address):'Заберите заказ в магазине в Омске')
+      :(free?'Бесплатно от '+rub(m.freeFrom):'Тариф уточняется при подтверждении');
+    return `<label class="opt" data-m="${esc(m.id)}">
+      <input type="radio" name="delivery" value="${esc(m.id)}" ${m.id===delivery?'checked':''}>
+      <div class="opt-main"><div class="opt-t">${esc(m.title)}</div><div class="opt-d">${desc}</div></div>
+      <div class="opt-cost">${cost}</div>
+    </label>`;
+  }).join('');
+  $('deliveryOpts').querySelectorAll('input[name="delivery"]').forEach(r=>{
+    r.addEventListener('change',()=>{delivery=r.value;paintOpts('delivery');$('cdekExtra').hidden=(delivery!=='cdek');renderSummary();invalidateBody();});
+  });
+  paintOpts('delivery');
+  $('cdekExtra').hidden=(delivery!=='cdek');
+}
+function renderPayment(){
+  const methods=((CFG.payment&&CFG.payment.methods)||[]).filter(m=>m.available!==false); // online скрываем, пока available=false
+  // если по какой-то причине остался только недоступный способ — показываем «при получении» как единственный
+  const list=methods.length?methods:[{id:'on_receipt',title:'Оплата при получении',available:true}];
+  payment=list.some(m=>m.id===payment)?payment:list[0].id;
+  $('paymentOpts').innerHTML=list.map(m=>`<label class="opt" data-m="${esc(m.id)}">
+      <input type="radio" name="payment" value="${esc(m.id)}" ${m.id===payment?'checked':''}>
+      <div class="opt-main"><div class="opt-t">${esc(m.title)}</div></div>
+    </label>`).join('');
+  $('paymentOpts').querySelectorAll('input[name="payment"]').forEach(r=>{
+    r.addEventListener('change',()=>{payment=r.value;paintOpts('payment');invalidateBody();});
+  });
+  paintOpts('payment');
+}
+function paintOpts(group){
+  const sel=group==='delivery'?delivery:payment;
+  document.querySelectorAll('#'+group+'Opts .opt').forEach(o=>o.classList.toggle('on',o.dataset.m===sel));
+}
+
+// ── валидация полей формы на клиенте (сервер проверит повторно) ──
+function val(id){return $(id).value.trim();}
+function setFieldErr(fkey,msg){
+  const box=document.querySelector('.fld[data-f="'+fkey+'"],.consent[data-f="'+fkey+'"]');
+  if(!box)return;
+  box.classList.toggle('bad',!!msg);
+  const e=box.querySelector('.fld-err');
+  if(e)e.textContent=msg||'';
+}
+function clearErrors(){
+  document.querySelectorAll('.fld.bad,.consent.bad').forEach(b=>b.classList.remove('bad'));
+  document.querySelectorAll('.fld-err').forEach(e=>e.textContent='');
+  $('formErr').hidden=true;$('formErr').textContent='';
+}
+const PHONE_RE=/^(\+7|7|8)?[\s\-()]*\d(?:[\s\-()]*\d){9}$/;
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateClient(){
+  clearErrors();
+  let ok=true;
+  const name=val('fName');
+  if(name.length<2){setFieldErr('customer.name','Укажите имя');ok=false;}
+  const phone=val('fPhone');
+  if(!phone){setFieldErr('customer.phone','Укажите телефон');ok=false;}
+  else if(!PHONE_RE.test(phone)){setFieldErr('customer.phone','Проверьте номер телефона');ok=false;}
+  const email=val('fEmail');
+  if(!email){setFieldErr('customer.email','Укажите e-mail');ok=false;}
+  else if(!EMAIL_RE.test(email)){setFieldErr('customer.email','Проверьте e-mail');ok=false;}
+  if(delivery==='cdek'){
+    if(val('fCity').length<2){setFieldErr('delivery.city','Укажите город');ok=false;}
+    if(val('fAddr').length<5){setFieldErr('delivery.address','Укажите адрес или ПВЗ');ok=false;}
+  }
+  if(!$('fPd').checked){setFieldErr('consents.personalData','Нужно согласие на обработку данных');ok=false;}
+  return ok;
+}
+
+// ── сборка тела запроса ──
+function buildBody(){
+  const b={
+    customer:{name:val('fName'),phone:val('fPhone'),email:val('fEmail')},
+    delivery:delivery==='cdek'
+      ?{method:'cdek',city:val('fCity'),address:val('fAddr'),pvzCode:null}
+      :{method:'pickup'},
+    payment:{method:payment},
+    items:FACart.orderItems(),
+    expectedTotal:itemsTotal()+deliveryCost(),
+    consents:{personalData:$('fPd').checked,marketing:$('fMarketing').checked}
+  };
+  const comment=val('fComment');
+  if(comment)b.comment=comment;
+  return b;
+}
+// если тело изменилось с прошлой отправки — это НОВЫЙ заказ, нужен новый idem-ключ
+function invalidateBody(){lastBodyKey=null;}
+
+// ── карта серверных кодов полей в наши поля/сообщения ──
+const FIELD_MSG={
+  REQUIRED:'Заполните поле',INVALID_TYPE:'Неверное значение',TOO_SHORT:'Слишком коротко',
+  TOO_LONG:'Слишком длинно',INVALID_FORMAT:'Неверный формат',INVALID_PHONE:'Проверьте номер телефона',
+  INVALID_EMAIL:'Проверьте e-mail',INVALID_VALUE:'Неверное значение',PD_CONSENT_REQUIRED:'Нужно согласие на обработку данных',
+  INVALID_QUANTITY:'Неверное количество'
+};
+
+function showFormErr(msg){$('formErr').hidden=false;$('formErr').textContent=msg;}
+
+function setSubmitting(on){
+  submitting=on;
+  const b=$('submit');
+  b.disabled=on;
+  b.textContent=on?'Оформляем…':'Оформить заказ';
+}
+
+async function submitOrder(){
+  if(submitting)return;
+  if(!FACart.items().length){location.href='cart.html';return;}
+  if(!validateClient()){showFormErr('Проверьте выделенные поля.');return;}
+
+  const body=buildBody();
+  const bodyKey=JSON.stringify(body);
+  // тот же ключ — только для ретрая ТОГО ЖЕ тела (двойной клик, обрыв сети); иначе новый ключ
+  if(bodyKey!==lastBodyKey){FACart.idemKey(true);lastBodyKey=bodyKey;}
+  const key=FACart.idemKey(false);
+
+  setSubmitting(true);
+  clearErrors();
+  let r;
+  try{
+    r=await fetch(API_BASE+'/api/orders',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Idempotency-Key':key},
+      body:bodyKey
+    });
+  }catch(e){
+    setSubmitting(false);
+    showFormErr('Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.');
+    return;
+  }
+
+  if(r.status===201||r.status===200){
+    let data;try{data=await r.json();}catch(e){data=null;}
+    FACart.clear();FACart.dropIdemKey();
+    if(data&&data.token)location.href='thanks.html?order='+encodeURIComponent(data.token);
+    else location.href='thanks.html';
+    return;
+  }
+
+  let err={};try{err=await r.json();}catch(e){}
+  setSubmitting(false);
+  handleError(r.status,err);
+}
+
+function handleError(status,err){
+  const code=err&&err.error;
+  if(code==='VALIDATION_ERROR'&&Array.isArray(err.fields)){
+    err.fields.forEach(f=>setFieldErr(f.field,FIELD_MSG[f.code]||'Проверьте поле'));
+    showFormErr('Проверьте выделенные поля.');
+    return;
+  }
+  if(code==='PAYMENT_METHOD_UNAVAILABLE'){
+    showFormErr('Этот способ оплаты сейчас недоступен. Выберите «Оплата при получении».');
+    renderPayment();
+    return;
+  }
+  if(code==='ITEMS_UNAVAILABLE'){
+    // переносим проблемы в корзину и возвращаем покупателя туда
+    const map={CARD_NOT_AVAILABLE:'Товар больше недоступен',VARIANT_NOT_FOUND:'Этого размера больше нет',
+      NO_PRICE:'Товар не в продаже',OUT_OF_STOCK:'Нет в наличии',INSUFFICIENT_STOCK:'Недостаточно на складе',
+      PRICE_CHANGED:'Цена изменилась'};
+    showFormErr('Часть товаров нельзя заказать. Открываем корзину, чтобы поправить состав.');
+    setTimeout(()=>{location.href='cart.html';},1400);
+    return;
+  }
+  if(code==='TOTAL_CHANGED'){
+    // обновляем итог из ответа и просим подтвердить (новое тело → новый ключ при след. отправке)
+    if(err.total!=null)$('sumTotal').textContent=rub(err.total);
+    if(err.deliveryCost!=null)$('sumDelivery').textContent=err.deliveryCost===0?'бесплатно':rub(err.deliveryCost);
+    invalidateBody();
+    showFormErr('Итог изменился — теперь '+(err.total!=null?rub(err.total):'другой')+'. Проверьте сумму и нажмите «Оформить заказ» ещё раз, чтобы подтвердить.');
+    return;
+  }
+  if(code==='IDEMPOTENCY_KEY_REUSED'){
+    // наш отпечаток разошёлся с серверным — берём новый ключ и даём повторить
+    FACart.idemKey(true);lastBodyKey=null;
+    showFormErr('Повторите оформление ещё раз.');
+    return;
+  }
+  if(status===429||code==='RATE_LIMITED'){
+    showFormErr('Слишком много попыток. Подождите немного и попробуйте снова.');
+    return;
+  }
+  if(status===503||code==='ORDERS_DISABLED'){
+    showFormErr('Оформление временно недоступно. Попробуйте позже.');
+    return;
+  }
+  if(status===413){showFormErr('Слишком большой заказ. Уменьшите число позиций.');return;}
+  if(status>=500||code==='INTERNAL_ERROR'){
+    // заказ НЕ создан — можно повторить с тем же ключом
+    showFormErr('Ошибка на сервере. Попробуйте оформить ещё раз.');
+    return;
+  }
+  showFormErr((err&&err.message)?err.message:'Не удалось оформить заказ. Попробуйте ещё раз.');
+}
+
+// правка любого поля формы делает прежний idem-ключ недействительным (это уже другой заказ)
+function wireFormInvalidation(){
+  ['fName','fPhone','fEmail','fCity','fAddr','fComment','fPd','fMarketing'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    el.addEventListener('input',invalidateBody);
+    el.addEventListener('change',invalidateBody);
+  });
+}
+
+(async()=>{
+  // пустая корзина — незачем оформлять
+  if(!FACart.items().length){
+    stateFail('Корзина пуста — оформлять нечего.',{href:'catalog.html',text:'Перейти в каталог'});
+    return;
+  }
+  try{
+    const r=await fetch(API_BASE+'/api/checkout/config');
+    if(!r.ok)throw new Error(r.status);
+    CFG=await r.json();
+  }catch(e){
+    stateFail('Не удалось загрузить параметры оформления. Попробуйте обновить страницу.',{href:'cart.html',text:'Вернуться в корзину'});
+    return;
+  }
+
+  // приём заказов выключен — кнопку «Оформить» не показываем
+  if(CFG.ordersEnabled===false){
+    stateFail('Оформление заказов временно приостановлено. Загляните позже или свяжитесь с магазином.',{href:'cart.html',text:'Вернуться в корзину'});
+    return;
+  }
+
+  $('state').hidden=true;$('body').hidden=false;
+  renderDelivery();renderPayment();renderSummary();wireFormInvalidation();
+
+  // способ оплаты один (при получении) — секцию оставляем информативной; подпись про чек
+  $('payNote').textContent='Оплата при получении заказа. Цены указаны без НДС (продавец на УСН).';
+
+  $('form').addEventListener('submit',e=>{e.preventDefault();submitOrder();});
+})();
+</script>
+</body>
+</html>

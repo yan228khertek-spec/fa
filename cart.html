@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#2C2B27">
+<title>Корзина — FASHION AVENUE, Омск</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ═════ КОРЗИНА ═════ */
+/* на служебных страницах переключатель Женское/Мужское ни на что не влияет — прячем */
+header .gender{display:none}
+.cp{max-width:1100px;margin:0 auto;padding:calc(60px + 24px) 12px 60px}
+.cp h1{font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.cp-count{color:var(--muted);font-size:13px;margin-bottom:24px;min-height:18px}
+.cp-state{text-align:center;color:var(--muted);padding:70px 0}
+.cp-state .b{display:inline-block;margin-top:20px;padding:14px 34px;border:1px solid var(--graphite);
+  font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite)}
+.cp-state .b:hover{background:var(--graphite);color:#fff}
+.cp-body{display:block}
+.rows{min-width:0}
+.row{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:14px;padding:18px 0;border-bottom:1px solid var(--line);align-items:start}
+.row-ph{width:84px;aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:10px}
+.row-ph img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.row-ph a{display:block;width:100%;height:100%}
+.row-mid{min-width:0}
+.row-brand{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--graphite)}
+.row-title{margin-top:3px;font-size:14px;line-height:1.35;color:#3a3936}
+.row-title a:hover{text-decoration:underline;text-underline-offset:3px}
+.row-sz{margin-top:6px;font-size:12.5px;color:var(--muted)}
+.row-warn{margin-top:8px;font-size:12.5px;color:#a33;line-height:1.4}
+.row-warn.ok{color:var(--accent)}
+.row-ctl{margin-top:12px;display:flex;align-items:center;gap:16px}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--line2)}
+.qty button{width:34px;height:34px;display:grid;place-items:center;font-size:17px;color:var(--graphite)}
+.qty button:disabled{color:var(--line2);cursor:not-allowed}
+.qty span{min-width:34px;text-align:center;font-size:14px}
+.row-del{font-size:12px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;background:none}
+.row-del:hover{color:#a33}
+.row-right{text-align:right;white-space:nowrap}
+.row-price{font-size:15px;font-weight:600}
+.row-each{margin-top:3px;font-size:11.5px;color:var(--muted)}
+.row.gone{opacity:.65}
+.row.gone .row-price{color:var(--muted);font-weight:400}
+/* итог */
+.sum{margin-top:26px;border-top:1px solid var(--graphite);padding-top:18px}
+.sum-line{display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;color:#3a3936}
+.sum-total{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-top:4px}
+.sum-note{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5}
+.sum-err{margin-top:14px;font-size:13px;color:#a33;line-height:1.5}
+.sum-err.note{color:var(--accent)}
+.checkout{display:block;width:100%;min-height:54px;background:var(--graphite);color:#fff;font-size:13px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;margin-top:18px;text-align:center;line-height:54px}
+.checkout.off{background:var(--soft);color:var(--muted);pointer-events:none}
+.cont{display:block;text-align:center;margin-top:16px;font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.cont:hover{color:var(--graphite)}
+@media(min-width:900px){
+  .cp{padding:calc(72px + 32px) 24px 80px}
+  .cp h1{font-size:30px}
+  .cp-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:0 48px;align-items:start}
+  .sum{margin-top:0;position:sticky;top:130px;border-top:0;padding-top:0}
+  .sum-inner{border:1px solid var(--line);padding:22px}
+}
+</style>
+</head>
+<body>
+
+<script src="assets/site.js"></script>
+<script src="assets/cart.js"></script>
+
+<main class="cp">
+  <h1>Корзина</h1>
+  <div class="cp-count" id="count"></div>
+
+  <div class="cp-state" id="empty" hidden>
+    В корзине пока пусто.
+    <br><a class="b" href="catalog.html">Перейти в каталог</a>
+  </div>
+
+  <div class="cp-body" id="body" hidden>
+    <div class="rows" id="rows"></div>
+    <div class="sum">
+      <div class="sum-inner">
+        <div class="sum-line"><span>Товары</span><span id="sumItems">—</span></div>
+        <div class="sum-line" id="sumBonusLine" hidden><span>Списано бонусов</span><span id="sumBonus">—</span></div>
+        <div class="sum-total"><span>Итого</span><span id="sumTotal">—</span></div>
+        <div class="sum-note">Доставку рассчитаем на следующем шаге.</div>
+        <div class="sum-err" id="sumErr" hidden></div>
+        <a class="checkout" id="checkout" href="checkout.html">Оформить заказ</a>
+        <a class="cont" href="catalog.html">Продолжить покупки</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<script>
+/* ───── КОРЗИНА: позиции из localStorage (assets/cart.js), перепроверка через /api/cards/:id ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const abs=u=>u?(/^https?:\/\//.test(u)?u:API_BASE+u):null;
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const $=id=>document.getElementById(id);
+const plural=(n,a,b,c)=>{const m=n%100,d=n%10;return (m>10&&m<15)?c:d===1?a:(d>1&&d<5)?b:c};
+
+// статус перепроверки по каждой строке корзины, ключ cardId+'|'+variantId → {state, available?, price?}
+// state: 'ok' | 'price' (цена изменилась) | 'stock' (осталось меньше) | 'oos' (нет в наличии) | 'gone' (нет позиции)
+let CHK={};
+
+function lineKey(i){return i.cardId+'|'+i.variantId;}
+
+async function recheck(items){
+  CHK={};
+  // по одной карточке на уникальный cardId
+  const ids=[...new Set(items.map(i=>i.cardId))];
+  const cards={};
+  await Promise.all(ids.map(async id=>{
+    try{
+      const r=await fetch(API_BASE+'/api/cards/'+id);
+      if(r.status===404){cards[id]=null;return;}      // карточки нет / скрыта правилом A5
+      if(!r.ok){cards[id]=undefined;return;}          // сетевой сбой — не трогаем снимок
+      cards[id]=await r.json();
+    }catch(e){cards[id]=undefined;}
+  }));
+  items.forEach(i=>{
+    const c=cards[i.cardId];
+    if(c===undefined){CHK[lineKey(i)]={state:'ok'};return;}   // не смогли проверить — доверяем снимку
+    if(c===null){CHK[lineKey(i)]={state:'gone'};return;}      // карточка исчезла/скрыта
+    const sz=(c.sizes||[]).find(s=>s.id===i.variantId);
+    if(!sz){CHK[lineKey(i)]={state:'gone'};return;}           // размера больше нет
+    if(sz.price==null){CHK[lineKey(i)]={state:'oos'};return;} // нет цены = не продаётся
+    if(sz.inStock===false){CHK[lineKey(i)]={state:'oos'};return;}
+    if(sz.price!==i.price){CHK[lineKey(i)]={state:'price',price:sz.price};return;}
+    CHK[lineKey(i)]={state:'ok'};
+  });
+}
+
+function warnText(chk){
+  switch(chk.state){
+    case 'gone':return 'Товара больше нет в продаже';
+    case 'oos':return 'Нет в наличии';
+    case 'stock':return 'Осталось '+chk.available+' шт.';
+    case 'price':return 'Цена изменилась — теперь '+rub(chk.price);
+    default:return '';
+  }
+}
+
+function render(){
+  const items=FACart.items();
+  if(!items.length){$('empty').hidden=false;$('body').hidden=true;$('count').textContent='';return;}
+  $('empty').hidden=true;$('body').hidden=false;
+  const n=FACart.count();
+  $('count').textContent=n+' '+plural(n,'товар','товара','товаров');
+
+  $('rows').innerHTML=items.map(i=>{
+    const chk=CHK[lineKey(i)]||{state:'ok'};
+    const gone=chk.state==='gone'||chk.state==='oos';
+    const price=chk.state==='price'?chk.price:i.price;   // показываем актуальную цену
+    const img=abs(i.photo);
+    const href='product.html?id='+i.cardId;
+    const warn=warnText(chk);
+    const warnCls=chk.state==='price'?'row-warn ok':'row-warn';
+    return `<div class="row${gone?' gone':''}" data-k="${esc(lineKey(i))}">
+      <div class="row-ph">${img?`<a href="${href}"><img src="${esc(img)}" alt="${esc(i.title)}"></a>`:'Нет фото'}</div>
+      <div class="row-mid">
+        <div class="row-brand">${esc(i.brand||'')}</div>
+        <div class="row-title"><a href="${href}">${esc(i.title)}</a></div>
+        <div class="row-sz">Размер: ${esc(i.size||'—')}${i.color?' · '+esc(i.color):''}</div>
+        ${warn?`<div class="${warnCls}">${esc(warn)}</div>`:''}
+        <div class="row-ctl">
+          <div class="qty">
+            <button type="button" data-act="dec" aria-label="Меньше" ${i.qty<=1?'disabled':''}>−</button>
+            <span>${i.qty}</span>
+            <button type="button" data-act="inc" aria-label="Больше" ${i.qty>=FACart.MAX_QTY?'disabled':''}>+</button>
+          </div>
+          <button type="button" class="row-del" data-act="del">Удалить</button>
+        </div>
+      </div>
+      <div class="row-right">
+        ${price!=null?`<div class="row-price">${rub(price*i.qty)}</div>`:'<div class="row-price">—</div>'}
+        ${price!=null&&i.qty>1?`<div class="row-each">${rub(price)} / шт.</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // итог — по актуальным ценам корзины, только по покупаемым строкам
+  let itemsTotal=0,hasBlocking=false,hasPriceChange=false;
+  items.forEach(i=>{
+    const chk=CHK[lineKey(i)]||{state:'ok'};
+    if(chk.state==='gone'||chk.state==='oos'){hasBlocking=true;return;}
+    const price=chk.state==='price'?chk.price:i.price;
+    if(chk.state==='price')hasPriceChange=true;
+    if(price!=null)itemsTotal+=price*i.qty;
+  });
+  $('sumItems').textContent=rub(itemsTotal);
+  $('sumTotal').textContent=rub(itemsTotal);
+
+  const err=$('sumErr'),btn=$('checkout');
+  err.classList.remove('note');
+  if(hasBlocking){
+    err.hidden=false;
+    err.textContent='Часть товаров нельзя заказать. Удалите их из корзины, чтобы продолжить.';
+    btn.classList.add('off');btn.setAttribute('aria-disabled','true');
+  }else if(hasPriceChange){
+    err.hidden=false;err.classList.add('note');
+    err.textContent='Цены обновлены по данным магазина. Проверьте итог и переходите к оформлению.';
+    btn.classList.remove('off');btn.removeAttribute('aria-disabled');
+  }else{
+    err.hidden=true;btn.classList.remove('off');btn.removeAttribute('aria-disabled');
+  }
+}
+
+// изменения количества/удаление синхронизируем со снимками CHK (цена могла обновиться)
+function syncPricesFromCheck(){
+  // при расхождении цены фиксируем новую цену в самой корзине — чтобы заказ ушёл с тем, что видит покупатель
+  FACart.items().forEach(i=>{
+    const chk=CHK[lineKey(i)];
+    if(chk&&chk.state==='price'&&chk.price!=null&&chk.price!==i.price){
+      FACart.refresh(i.cardId,i.variantId,{price:chk.price});  // обновить только цену, qty не трогаем
+      chk.state='ok';
+    }
+  });
+}
+
+$('rows').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-act]');if(!btn)return;
+  const row=btn.closest('.row');const key=row.getAttribute('data-k');
+  const i=FACart.items().find(x=>lineKey(x)===key);if(!i)return;
+  const act=btn.dataset.act;
+  if(act==='del'){FACart.remove(i.cardId,i.variantId);delete CHK[key];render();return;}
+  if(act==='inc'&&i.qty<FACart.MAX_QTY)FACart.setQty(i.cardId,i.variantId,i.qty+1);
+  if(act==='dec'&&i.qty>1)FACart.setQty(i.cardId,i.variantId,i.qty-1);
+  render();
+});
+
+// переход к оформлению блокируем, если остались непродаваемые строки
+$('checkout').addEventListener('click',e=>{
+  if($('checkout').classList.contains('off')){e.preventDefault();return;}
+  syncPricesFromCheck();
+});
+
+(async()=>{
+  const items=FACart.items();
+  render();                       // мгновенно по снимку
+  if(items.length){await recheck(items);render();}  // затем сверка с магазином
+})();
+</script>
+</body>
+</html>

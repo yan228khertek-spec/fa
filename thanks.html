@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#2C2B27">
+<meta name="robots" content="noindex">
+<title>Заказ оформлен — FASHION AVENUE, Омск</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+/* ═════ СПАСИБО ЗА ЗАКАЗ ═════ */
+header .gender{display:none}
+.tp{max-width:760px;margin:0 auto;padding:calc(60px + 36px) 12px 70px}
+.tp-state{text-align:center;color:var(--muted);padding:70px 0;line-height:1.6}
+.tp-state .b{display:inline-block;margin-top:20px;padding:14px 34px;border:1px solid var(--graphite);
+  font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--graphite)}
+.tp-state .b:hover{background:var(--graphite);color:#fff}
+.tp-head{text-align:center;margin-bottom:34px}
+.tp-check{width:56px;height:56px;border-radius:50%;background:var(--graphite);display:grid;place-items:center;margin:0 auto 18px}
+.tp-check svg{stroke:#fff}
+.tp-head h1{font-size:24px;font-weight:700;letter-spacing:.02em}
+.tp-num{margin-top:12px;font-size:15px;color:#3a3936}
+.tp-num b{font-size:20px;font-weight:700;letter-spacing:.02em;display:block;margin-top:4px}
+.tp-sub{margin-top:14px;font-size:13.5px;color:var(--muted);line-height:1.6;max-width:480px;margin-left:auto;margin-right:auto}
+.tp-card{border:1px solid var(--line);padding:22px}
+.tp-card h2{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px}
+.ti{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ti:first-of-type{padding-top:0}
+.ti .t{min-width:0}
+.ti .t b{font-weight:500;display:block}
+.ti .t small{color:var(--muted);font-size:12px}
+.ti .a{white-space:nowrap;font-weight:500}
+.tl{display:flex;justify-content:space-between;font-size:14px;margin-top:12px;color:#3a3936}
+.tl.bonus{color:var(--accent)}
+.tt{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-top:10px;padding-top:12px;border-top:1px solid var(--graphite)}
+.tp-info{margin-top:22px;font-size:13px;color:var(--muted);line-height:1.6}
+.tp-back{display:block;width:100%;min-height:54px;background:var(--graphite);color:#fff;font-size:13px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;margin-top:26px;text-align:center;line-height:54px}
+@media(min-width:900px){.tp{padding:calc(72px + 44px) 24px 90px}.tp-head h1{font-size:28px}}
+</style>
+</head>
+<body>
+
+<script src="assets/site.js"></script>
+<script src="assets/cart.js"></script>
+
+<main class="tp">
+  <div class="tp-state" id="state">Загружаем заказ…</div>
+  <div id="body" hidden>
+    <div class="tp-head">
+      <div class="tp-check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h1>Спасибо за заказ!</h1>
+      <div class="tp-num">Номер заказа<b id="num">—</b></div>
+      <div class="tp-sub">Мы приняли заказ и скоро свяжемся с вами для подтверждения. Запишите или запомните номер — по нему удобно уточнять статус.</div>
+    </div>
+
+    <div class="tp-card">
+      <h2>Состав заказа</h2>
+      <div id="items"></div>
+      <div class="tl"><span id="goodsLabel">Товары</span><span id="goods">—</span></div>
+      <div class="tl" id="deliveryLine"><span id="deliveryLabel">Доставка</span><span id="delivery">—</span></div>
+      <div class="tl bonus" id="bonusLine" hidden><span>Списано бонусов</span><span id="bonus">—</span></div>
+      <div class="tt"><span>Итого</span><span id="total">—</span></div>
+    </div>
+
+    <div class="tp-info" id="payInfo"></div>
+    <a class="tp-back" href="catalog.html">Вернуться в каталог</a>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<script>
+/* ───── СПАСИБО: заказ по токену из GET /api/orders/:token. Токен не показываем и не шлём в аналитику. ───── */
+const API_BASE='https://1c-dev.avenuefashion.online';
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+const rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₽';
+const $=id=>document.getElementById(id);
+
+function fail(msg){
+  $('state').innerHTML=esc(msg)+'<br><a class="b" href="catalog.html">Перейти в каталог</a>';
+  $('state').hidden=false;$('body').hidden=true;
+}
+
+function render(o){
+  $('num').textContent=o.number||'—';
+  $('items').innerHTML=(o.items||[]).map(it=>`<div class="ti">
+    <div class="t"><b>${esc(it.title)}</b><small>${it.size?'Размер '+esc(it.size):''}${it.color?' · '+esc(it.color):''}${it.quantity?' · '+it.quantity+' шт.':''}${it.article?' · арт. '+esc(it.article):''}</small></div>
+    <div class="a">${it.amount!=null?rub(it.amount):'—'}</div>
+  </div>`).join('');
+  $('goods').textContent=o.itemsTotal!=null?rub(o.itemsTotal):'—';
+  const pickup=o.delivery&&o.delivery.method==='pickup';
+  $('deliveryLabel').textContent=pickup?'Самовывоз':'Доставка';
+  $('delivery').textContent=o.deliveryCost!=null?(o.deliveryCost===0?'бесплатно':rub(o.deliveryCost)):'—';
+  // строку «Списано бонусов» показываем только при bonusAmount > 0
+  if(o.bonusAmount!=null&&o.bonusAmount>0){$('bonusLine').hidden=false;$('bonus').textContent='−'+rub(o.bonusAmount);}
+  $('total').textContent=o.total!=null?rub(o.total):'—';
+
+  const payTitle=o.paymentMethod==='on_receipt'?'Оплата при получении':'Оплата картой онлайн';
+  $('payInfo').textContent=payTitle+'. Цены указаны без НДС (продавец на УСН). Мы отправим подтверждение на указанный e-mail.';
+
+  $('state').hidden=true;$('body').hidden=false;
+  document.title='Заказ '+(o.number||'')+' оформлен — FASHION AVENUE, Омск';
+}
+
+(async()=>{
+  const token=new URLSearchParams(location.search).get('order');
+  // корзину после оформления очищаем в любом случае (checkout уже очистил; подстраховка на случай возврата по ссылке)
+  FACart.clear();
+  if(!token){fail('Ссылка на заказ неполная. Если вы только что оформили заказ, проверьте e-mail.');return;}
+  try{
+    const r=await fetch(API_BASE+'/api/orders/'+encodeURIComponent(token));
+    if(r.status===404){fail('Заказ не найден. Возможно, ссылка устарела — номер заказа есть в письме на вашу почту.');return;}
+    if(!r.ok)throw new Error(r.status);
+    render(await r.json());
+  }catch(e){fail('Не удалось загрузить заказ. Обновите страницу или проверьте e-mail — мы продублировали заказ туда.');}
+})();
+</script>
+</body>
+</html>

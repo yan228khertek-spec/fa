@@ -40,9 +40,22 @@ header .gender{display:none}
 .pp-sec{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
 .pp-sec h2{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
 .sizes{display:flex;flex-wrap:wrap;gap:8px}
-.sz{min-width:46px;padding:10px 12px;border:1px solid var(--line2);font-size:13px;text-align:center}
-.sz.off{color:#b5b3ad;text-decoration:line-through;background:var(--soft)}
+.sz{min-width:46px;padding:10px 12px;border:1px solid var(--line2);font-size:13px;text-align:center;
+  background:#fff;color:var(--graphite);transition:border-color .15s,background .15s}
+.sz:not(:disabled):hover{border-color:var(--graphite)}
+.sz.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.sz:disabled,.sz.off{color:#b5b3ad;text-decoration:line-through;background:var(--soft);cursor:not-allowed;border-color:var(--line)}
 .sz small{display:block;font-size:10.5px;color:var(--muted);text-decoration:none}
+.sz.on small{color:#d8d5cf}
+/* блок покупки */
+.buy{margin-top:22px}
+.buy-btn{width:100%;min-height:54px;background:var(--graphite);color:#fff;font-size:13px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.buy-btn:disabled{background:var(--soft);color:var(--muted);cursor:not-allowed}
+.buy-hint{margin-top:10px;font-size:12.5px;color:var(--muted);text-align:center}
+.buy-hint.err{color:#a33}
+.buy-selprice{margin-top:12px;font-size:16px;font-weight:600;text-align:center}
+@media(min-width:900px){.buy-btn{max-width:380px}}
 .desc{font-size:14px;line-height:1.6;color:#3a3936;white-space:pre-line}
 .chars{width:100%;border-collapse:collapse;font-size:13.5px}
 .chars td{padding:8px 0;border-bottom:1px solid var(--line);vertical-align:top}
@@ -66,6 +79,7 @@ header .gender{display:none}
 <body>
 
 <script src="assets/site.js"></script>
+<script src="assets/cart.js"></script>
 
 <main class="pp">
   <div class="crumbs" id="crumbs"><a href="brands.html">Бренды</a></div>
@@ -82,6 +96,11 @@ header .gender{display:none}
       <div class="pp-price" id="pPrice"></div>
       <div class="pp-stock" id="pStock"></div>
       <div class="pp-sec" id="secSizes" hidden><h2>Размеры</h2><div class="sizes" id="sizes"></div></div>
+      <div class="buy" id="buy" hidden>
+        <div class="buy-selprice" id="buySelPrice" hidden></div>
+        <button class="buy-btn" id="buyBtn" type="button" disabled>В корзину</button>
+        <div class="buy-hint" id="buyHint"></div>
+      </div>
       <div class="pp-sec" id="secDesc" hidden><h2>Описание</h2><div class="desc" id="desc"></div></div>
       <div class="pp-sec" id="secChars" hidden><h2>Характеристики</h2><table class="chars" id="chars"></table></div>
       <div class="pp-note">Наличие, размеры и примерку уточняйте в бутике FASHION AVENUE, Омск.</div>
@@ -121,7 +140,15 @@ function gallery(photos,title){
   };
 }
 
+let CARD=null;        // карточка из API
+let SEL=null;         // выбранный размер (элемент sizes[])
+
+// размер можно купить: есть цена (тип «Розничные») и он не помечен как отсутствующий
+const buyable=s=>s.price!=null&&s.inStock!==false;
+const mainPhoto=c=>{const u=(c.photos||[])[0];return u?abs(u):null};
+
 function render(c){
+  CARD=c;SEL=null;
   const brand=c.brand;
   document.title=c.title+(brand?' — '+brand.name:'')+' — FASHION AVENUE, Омск';
   $('crumbs').innerHTML='<a href="brands.html">Бренды</a>'
@@ -138,9 +165,24 @@ function render(c){
   st.classList.toggle('out',c.inStock===false);
   gallery(c.photos||[],c.title);
 
+  // размеры — интерактивные кнопки; у каждой свой variantId (sizes[].id) и цена
   const sizes=(c.sizes||[]).filter(s=>s.size||s.color);
   $('secSizes').hidden=!sizes.length;
-  $('sizes').innerHTML=sizes.map(s=>`<div class="sz ${s.inStock===false?'off':''}">${esc(s.size||'—')}${s.color?'<small>'+esc(s.color)+'</small>':''}</div>`).join('');
+  $('sizes').innerHTML=sizes.map((s,i)=>{
+    const ok=buyable(s);
+    return `<button type="button" class="sz${ok?'':' off'}" data-i="${i}" ${ok?'':'disabled'}>`
+      +esc(s.size||'—')+(s.color?'<small>'+esc(s.color)+'</small>':'')+`</button>`;
+  }).join('');
+  $('sizes').onclick=e=>{const b=e.target.closest('button.sz[data-i]');if(!b||b.disabled)return;selectSize(sizes[+b.dataset.i],b);};
+
+  // блок покупки показываем, только если у товара есть хоть один покупаемый размер
+  const anyBuyable=sizes.some(buyable);
+  $('buy').hidden=!anyBuyable;
+  $('buyBtn').disabled=true;$('buyBtn').textContent='В корзину';
+  $('buySelPrice').hidden=true;
+  $('buyHint').className='buy-hint';
+  $('buyHint').textContent=anyBuyable?'Выберите размер':'';
+
   $('secDesc').hidden=!c.description;
   $('desc').textContent=c.description||'';
   const ch=c.characteristics||[];
@@ -148,6 +190,38 @@ function render(c){
   $('chars').innerHTML=ch.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.value)}</td></tr>`).join('');
   $('state').hidden=true;$('body').hidden=false;
 }
+
+function selectSize(s,btn){
+  SEL=s;
+  $('sizes').querySelectorAll('.sz').forEach(el=>el.classList.remove('on'));
+  btn.classList.add('on');
+  $('buySelPrice').hidden=s.price==null;
+  if(s.price!=null)$('buySelPrice').textContent=rub(s.price);
+  $('buyBtn').disabled=false;
+  $('buyHint').className='buy-hint';
+  $('buyHint').textContent='';
+}
+
+function addToCart(){
+  if(!SEL||!CARD){$('buyHint').className='buy-hint err';$('buyHint').textContent='Сначала выберите размер';return;}
+  const res=FACart.add({
+    cardId:CARD.id, variantId:SEL.id,
+    title:CARD.title, brand:CARD.brand?CARD.brand.name:null,
+    size:SEL.size||'', color:SEL.color||null,
+    price:SEL.price, photo:mainPhoto(CARD)
+  },1);
+  if(!res.ok){
+    $('buyHint').className='buy-hint err';
+    $('buyHint').textContent=res.reason==='full'
+      ?'В корзине уже максимум позиций ('+FACart.MAX_ITEMS+')'
+      :'Не удалось добавить товар';
+    return;
+  }
+  $('buyHint').className='buy-hint';$('buyHint').textContent='';
+  toast('Добавлено в корзину');
+}
+
+$('buyBtn').addEventListener('click',addToCart);
 
 (async()=>{
   const id=Number(new URLSearchParams(location.search).get('id'));

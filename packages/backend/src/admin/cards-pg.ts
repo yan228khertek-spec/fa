@@ -1,8 +1,10 @@
 import pg from 'pg';
+import { SITE_CARD_AUDIENCE_DDL } from './audience-schema.js';
 import { SITE_CARD_CATEGORY_DDL } from './card-category-schema.js';
 import { SITE_CARDS_DDL } from './cards-schema.js';
 import {
   AdminError,
+  type Audience,
   type CardCharacteristic,
   type CardPatch,
   type CardPhoto,
@@ -19,13 +21,14 @@ interface CardRow {
   description: string;
   characteristics: CardCharacteristic[];
   category: string | null;
+  gender: Audience;
   status: CardStatus;
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
 
-const COLS = `id::text, model_source_id, title, description, characteristics, category, status,
+const COLS = `id::text, model_source_id, title, description, characteristics, category, gender, status,
   published_at, created_at, updated_at`;
 
 export class PgCardRepository implements CardRepository {
@@ -40,6 +43,7 @@ export class PgCardRepository implements CardRepository {
     this.prepared ??= this.pool
       .query(SITE_CARDS_DDL)
       .then(() => this.pool.query(SITE_CARD_CATEGORY_DDL))
+      .then(() => this.pool.query(SITE_CARD_AUDIENCE_DDL))
       .catch((err: unknown) => {
         this.prepared = undefined;
         throw err;
@@ -71,6 +75,7 @@ export class PgCardRepository implements CardRepository {
       description: r.description,
       characteristics: r.characteristics,
       category: r.category,
+      gender: r.gender,
       status: r.status,
       publishedAt: r.published_at?.toISOString() ?? null,
       createdAt: r.created_at.toISOString(),
@@ -123,6 +128,7 @@ export class PgCardRepository implements CardRepository {
            WHEN $6::text IS NULL OR $6 = status THEN published_at
            WHEN $6 = 'published' THEN now() ELSE NULL END,
          category = CASE WHEN $7::boolean THEN $8 ELSE category END,
+         gender = coalesce($9, gender),
          status = coalesce($6, status),
          updated_at = now()
        WHERE id = $1`,
@@ -135,6 +141,7 @@ export class PgCardRepository implements CardRepository {
         patch.status ?? null,
         patch.category !== undefined,
         patch.category ?? null,
+        patch.gender ?? null,
       ],
     );
     if (!rowCount) throw new AdminError('Карточка не найдена', 404);

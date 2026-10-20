@@ -183,6 +183,19 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
     expect(live.get('m1')!.variants.map((v) => v.quantity)).toEqual([5, 0]);
   });
 
+  it('«для кого»: карточка по умолчанию для всех, раздел сохраняется и фильтрует витрину', async () => {
+    const card = await cards.create({ modelId: 'm1' });
+    expect(card.gender).toBe('all');
+    await repo.addPhoto(card.id, 'a.png');
+    await cards.update(card.id, { status: 'published' });
+    expect((await cards.publicList({ gender: 'men', limit: 10, offset: 0 })).total).toBe(1);
+    expect((await cards.update(card.id, { gender: 'women' })).gender).toBe('women');
+    expect((await cards.publicList({ gender: 'men', limit: 10, offset: 0 })).total).toBe(0);
+    expect((await cards.publicList({ gender: 'women', limit: 10, offset: 0 })).total).toBe(1);
+    expect((await cards.publicList({ limit: 10, offset: 0 })).total).toBe(1);
+    await expect(cards.update(card.id, { gender: 'kids' })).rejects.toThrow('gender');
+  });
+
   it('жизненный цикл: создать → фото → опубликовать → скрытие по остатку', async () => {
     const card = await cards.create({ modelId: 'm1' });
     await expect(cards.create({ modelId: 'm1' })).rejects.toMatchObject({ status: 409 });

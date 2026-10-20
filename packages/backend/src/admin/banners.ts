@@ -1,4 +1,4 @@
-import { AdminError } from './types.js';
+import { AdminError, parseAudience, type Audience } from './types.js';
 
 export const BANNER_THEMES = ['light', 'dark'] as const;
 export type BannerTheme = (typeof BANNER_THEMES)[number];
@@ -13,6 +13,8 @@ export type BannerFileKind = 'image' | 'imageMobile' | 'video' | 'videoMobile';
 export interface SiteBanner {
   id: number;
   placement: BannerPlacement;
+  /** Раздел сайта: all — в женском и в мужском. */
+  gender: Audience;
   title: string;
   subtitle: string;
   buttonText: string;
@@ -94,6 +96,7 @@ export class BannerService {
     }
     return this.repo.create({
       placement,
+      gender: body.gender === undefined ? 'all' : parseAudience(body.gender),
       title: text(body.title, 'title', 120),
       subtitle: text(body.subtitle, 'subtitle', 240),
       buttonText: text(body.buttonText, 'buttonText', 40),
@@ -126,6 +129,7 @@ export class BannerService {
     if (has(body, 'buttonText')) p.buttonText = text(body.buttonText, 'buttonText', 40);
     if (has(body, 'link')) p.link = link(body.link);
     if (has(body, 'theme')) p.theme = BannerService.theme(body.theme);
+    if (has(body, 'gender')) p.gender = parseAudience(body.gender);
     for (const k of ['focusX', 'focusY', 'mobileFocusX', 'mobileFocusY'] as const) {
       if (has(body, k)) p[k] = pct(body[k], k);
     }
@@ -134,7 +138,17 @@ export class BannerService {
   }
 
   /** Публичная выдача места: включённые баннеры с картинкой, по порядку. */
-  async publicList(placement: BannerPlacement = 'hero'): Promise<SiteBanner[]> {
-    return (await this.repo.list()).filter((b) => b.placement === placement && b.active && b.image);
+  /** gender — раздел сайта; без него отдаём всё (как раньше). Баннер «all» виден в обоих. */
+  async publicList(
+    placement: BannerPlacement = 'hero',
+    gender?: 'women' | 'men',
+  ): Promise<SiteBanner[]> {
+    return (await this.repo.list()).filter(
+      (b) =>
+        b.placement === placement &&
+        b.active &&
+        b.image &&
+        (!gender || b.gender === 'all' || b.gender === gender),
+    );
   }
 }

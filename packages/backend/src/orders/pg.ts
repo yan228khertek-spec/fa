@@ -47,7 +47,7 @@ const ORDER_COLS = `id::text, number, public_token, request_hash, created_at, st
 
 const inet = (ip: string | null) => (ip && isIP(ip) ? ip : null);
 
-/** Заказы в PostgreSQL (миграция 007). Staging не читает и не пишет. */
+/** Заказы в PostgreSQL (миграция 014). Staging не читает и не пишет. */
 export class PgOrderRepository implements OrderRepository {
   private readonly pool: pg.Pool;
   private prepared: Promise<unknown> | undefined;

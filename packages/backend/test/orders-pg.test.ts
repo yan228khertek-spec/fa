@@ -6,6 +6,7 @@ import pg from 'pg';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { PgCardRepository } from '../src/admin/cards-pg.js';
+import { PgSiteBrandRepository } from '../src/admin/pg.js';
 import { buildImportXml, writeImportXml, type ImportSpec } from '../src/catalog/fixtures.js';
 import { importCatalogFile } from '../src/catalog/import-runner.js';
 import { PgCatalogRepository } from '../src/catalog/pg.js';
@@ -139,9 +140,12 @@ describe.skipIf(!url)('заказы в PostgreSQL (HTTP end-to-end)', () => {
 
   beforeAll(async () => {
     pool = new pg.Pool({ connectionString: url, max: 2 });
+    // Все таблицы из TRUNCATE создаём сами: на пустой базе нельзя полагаться на то,
+    // что параллельный тестовый файл (admin-pg) успел создать site_brands раньше нас.
     for (const R of [
       PgCatalogRepository,
       PgOffersRepository,
+      PgSiteBrandRepository,
       PgCardRepository,
       PgOrderRepository,
     ]) {
@@ -180,7 +184,7 @@ describe.skipIf(!url)('заказы в PostgreSQL (HTTP end-to-end)', () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    await app?.close();
     await rm(dir, { recursive: true, force: true });
   });
 

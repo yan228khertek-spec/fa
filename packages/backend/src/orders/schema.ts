@@ -1,9 +1,9 @@
-// Схема заказов. Источник истины — migrations/007_orders.sql: тест orders-schema.test.ts
+// Схема заказов. Источник истины — migrations/014_orders.sql: тест orders-schema.test.ts
 // сверяет эту константу с файлом миграции ДОСЛОВНО (String.raw — обратные слэши в
 // регулярках CHECK остаются как в SQL), чтобы автоприменение и psql -f не разъехались.
 export const ORDERS_DDL = String.raw`-- Заказы сайта (трек F1) и согласия на рекламные рассылки.
 -- Применяется и автоматически при старте API заказов (PgOrderRepository), и вручную:
--- psql "$DATABASE_URL" -f migrations/007_orders.sql
+-- psql "$DATABASE_URL" -f migrations/014_orders.sql
 --
 -- Ссылок на staging (001–003) нет: позиция заказа хранит Ид SKU 1С и СНИМОК названия,
 -- размера и цены на момент заказа — обмен с 1С заказы не меняет. Поля под выгрузку в 1С
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS orders (
   -- Ключ из заголовка Idempotency-Key и хеш нормализованного запроса: повтор не плодит дубль.
   idempotency_key     text NOT NULL,
   request_hash        text NOT NULL,
-  -- Аккаунт покупателя (F5, миграция 008+). NULL — гостевой заказ; FK появится вместе с users.
+  -- Аккаунт покупателя (F5, миграция 015+). NULL — гостевой заказ; FK появится вместе с users.
   user_id             bigint,
   status              text NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'confirmed',
                         'processing', 'ready_for_pickup', 'shipped', 'delivered', 'completed',

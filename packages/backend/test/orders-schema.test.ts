@@ -13,9 +13,9 @@ const TABLES = [
   'marketing_consents',
 ];
 
-describe('миграция 007 и ORDERS_DDL', () => {
-  it('совпадают ДОСЛОВНО: автоприменение = psql -f migrations/007', async () => {
-    const file = await readFile(path.join(root, 'migrations', '007_orders.sql'), 'utf8');
+describe('миграция 014 и ORDERS_DDL', () => {
+  it('совпадают ДОСЛОВНО: автоприменение = psql -f migrations/014', async () => {
+    const file = await readFile(path.join(root, 'migrations', '014_orders.sql'), 'utf8');
     expect(ORDERS_DDL).toBe(file.replace(/\n+$/, ''));
   });
 

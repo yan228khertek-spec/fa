@@ -357,7 +357,7 @@
 
 Миграции **004–006** фиксируются как согласованная схема сайтового слоя (C1): `site_brands`, `site_brand_aliases`, `site_brand_placements`, `site_model_brand` (004); `site_cards`, `site_card_photos` (005); `site_brands.show_on_home` (006). DDL идемпотентен, продублирован в `src/admin/{schema,cards-schema,home-schema}.ts` и сверяется тестом `admin-schema.test.ts`.
 
-**Миграция 007 (v1.2, F1)** — заказы: `orders`, `order_items` (снимок позиции), `order_payments` (пустая до F4), `order_status_history`, `marketing_consents` (согласия на рассылку — записями, с историей отзыва). Тоже идемпотентна и сверяется тестом `orders-schema.test.ts`. Ссылок на staging нет: позиция заказа хранит Ид SKU 1С и снимок названия/размера/цены.
+**Миграция 014 (v1.2, F1)** (номера 007–013 в main заняты сайтовыми таблицами баннеров/бегущей строки/шапки бренда) — заказы: `orders`, `order_items` (снимок позиции), `order_payments` (пустая до F4), `order_status_history`, `marketing_consents` (согласия на рассылку — записями, с историей отзыва). Тоже идемпотентна и сверяется тестом `orders-schema.test.ts`. Ссылок на staging нет: позиция заказа хранит Ид SKU 1С и снимок названия/размера/цены.
 
 **Дальше DDL сайтовых таблиц меняет только Ян** (новая миграция). Админ-UI (Влад) строится поверх этой схемы и публичного API; staging (001–003) для сайтового слоя — read-only.
 

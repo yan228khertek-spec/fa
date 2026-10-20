@@ -197,6 +197,10 @@ export interface LiveVariant {
   size: string | null;
   color: string | null;
   quantity: number | null;
+  /** Цена SKU (тип цены витрины); null — цены нет. Необязательно: старые читатели не заполняют. */
+  price?: number | null;
+  /** Название SKU в 1С — для снимка в позиции заказа. */
+  name?: string | null;
 }
 
 /** Живые данные модели из staging: размеры, остатки, цена. Карточка их не хранит. */

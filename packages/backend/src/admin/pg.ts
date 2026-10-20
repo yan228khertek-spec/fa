@@ -433,8 +433,9 @@ export class PgCatalogReader implements CatalogReader {
       id: string;
       size: string | null;
       color: string | null;
+      name: string | null;
     }>(
-      `SELECT product_source_id AS model, source_id AS id, size, color FROM product_variants
+      `SELECT product_source_id AS model, source_id AS id, size, color, name FROM product_variants
         WHERE source = $1 AND NOT is_deleted ORDER BY product_source_id, source_id`,
       [SOURCE],
     );
@@ -471,12 +472,17 @@ export class PgCatalogReader implements CatalogReader {
       const offer = byOffer.get(v.id);
       const model = out.get(v.model) ?? { variants: [], price: null, stock: null };
       const quantity = offer ? Number(offer.quantity ?? 0) : null;
-      model.variants.push({ id: v.id, size: v.size, color: v.color, quantity });
+      const price = offer?.price != null ? Number(offer.price) : null;
+      model.variants.push({
+        id: v.id,
+        size: v.size,
+        color: v.color,
+        quantity,
+        price,
+        name: v.name,
+      });
       if (quantity !== null) model.stock = (model.stock ?? 0) + quantity;
-      if (offer?.price != null) {
-        const price = Number(offer.price);
-        model.price = model.price === null ? price : Math.min(model.price, price);
-      }
+      if (price !== null) model.price = model.price === null ? price : Math.min(model.price, price);
       out.set(v.model, model);
     }
     return out;

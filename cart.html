@@ -170,7 +170,7 @@ function render(){
       <div class="row-mid">
         <div class="row-brand">${esc(i.brand||'')}</div>
         <div class="row-title"><a href="${href}">${esc(i.title)}</a></div>
-        <div class="row-sz">Размер: ${esc(i.size||'—')}${i.color?' · '+esc(i.color):''}</div>
+        <div class="row-sz">${faSzLabel(i.size)}: ${esc(i.size||'—')}${i.color?' · '+esc(i.color):''}</div>
         ${warn?`<div class="${warnCls}">${esc(warn)}</div>`:''}
         <div class="row-ctl">
           <div class="qty">

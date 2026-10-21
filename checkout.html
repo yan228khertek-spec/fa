@@ -211,7 +211,7 @@ function renderSummary(){
   $('sumItems').innerHTML=items.map(i=>{
     const price=i.price!=null?i.price:null;
     return `<div class="sum-item">
-      <div class="t"><b>${esc(i.title)}</b><small>Размер ${esc(i.size||'—')}${i.color?' · '+esc(i.color):''} · ${i.qty} шт.</small></div>
+      <div class="t"><b>${esc(i.title)}</b><small>${faSzLabel(i.size)} ${esc(i.size||'—')}${i.color?' · '+esc(i.color):''} · ${i.qty} шт.</small></div>
       <div class="a">${price!=null?rub(price*i.qty):'—'}</div>
     </div>`;
   }).join('');
@@ -401,7 +401,7 @@ function handleError(status,err){
   }
   if(code==='ITEMS_UNAVAILABLE'){
     // переносим проблемы в корзину и возвращаем покупателя туда
-    const map={CARD_NOT_AVAILABLE:'Товар больше недоступен',VARIANT_NOT_FOUND:'Этого размера больше нет',
+    const map={CARD_NOT_AVAILABLE:'Товар больше недоступен',VARIANT_NOT_FOUND:'Этого размера или объёма больше нет',
       NO_PRICE:'Товар не в продаже',OUT_OF_STOCK:'Нет в наличии',INSUFFICIENT_STOCK:'Недостаточно на складе',
       PRICE_CHANGED:'Цена изменилась'};
     showFormErr('Часть товаров нельзя заказать. Открываем корзину, чтобы поправить состав.');

@@ -89,7 +89,7 @@ function fail(msg){
 function render(o){
   $('num').textContent=o.number||'—';
   $('items').innerHTML=(o.items||[]).map(it=>`<div class="ti">
-    <div class="t"><b>${esc(it.title)}</b><small>${it.size?'Размер '+esc(it.size):''}${it.color?' · '+esc(it.color):''}${it.quantity?' · '+it.quantity+' шт.':''}${it.article?' · арт. '+esc(it.article):''}</small></div>
+    <div class="t"><b>${esc(it.title)}</b><small>${it.size?faSzLabel(it.size)+' '+esc(it.size):''}${it.color?' · '+esc(it.color):''}${it.quantity?' · '+it.quantity+' шт.':''}${it.article?' · арт. '+esc(it.article):''}</small></div>
     <div class="a">${it.amount!=null?rub(it.amount):'—'}</div>
   </div>`).join('');
   $('goods').textContent=o.itemsTotal!=null?rub(o.itemsTotal):'—';

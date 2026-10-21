@@ -95,7 +95,7 @@ header .gender{display:none}
       <div class="pp-art" id="pArt"></div>
       <div class="pp-price" id="pPrice"></div>
       <div class="pp-stock" id="pStock"></div>
-      <div class="pp-sec" id="secSizes" hidden><h2>Размеры</h2><div class="sizes" id="sizes"></div></div>
+      <div class="pp-sec" id="secSizes" hidden><h2 id="szTitle">Размеры</h2><div class="sizes" id="sizes"></div></div>
       <div class="buy" id="buy" hidden>
         <div class="buy-selprice" id="buySelPrice" hidden></div>
         <button class="buy-btn" id="buyBtn" type="button" disabled>В корзину</button>
@@ -167,11 +167,16 @@ function render(c){
 
   // размеры — интерактивные кнопки; у каждой свой variantId (sizes[].id) и цена
   const sizes=(c.sizes||[]).filter(s=>s.size||s.color);
+  const perf=c.category==='Парфюмерия';
+  if(perf)sizes.sort((x,y)=>(parseFloat(String(x.size).replace(',','.'))||0)-(parseFloat(String(y.size).replace(',','.'))||0));
+  /* у парфюмерии вместо размера — объём флакона: «50» показываем как «50 мл» */
+  const vol=perf?faVol:v=>v;
+  $('szTitle').textContent=perf?'Объём':'Размеры';
   $('secSizes').hidden=!sizes.length;
   $('sizes').innerHTML=sizes.map((s,i)=>{
     const ok=buyable(s);
     return `<button type="button" class="sz${ok?'':' off'}" data-i="${i}" ${ok?'':'disabled'}>`
-      +esc(s.size||'—')+(s.color?'<small>'+esc(s.color)+'</small>':'')+`</button>`;
+      +esc(s.size?vol(s.size):'—')+(s.color?'<small>'+esc(s.color)+'</small>':'')+`</button>`;
   }).join('');
   $('sizes').onclick=e=>{const b=e.target.closest('button.sz[data-i]');if(!b||b.disabled)return;selectSize(sizes[+b.dataset.i],b);};
 
@@ -181,7 +186,7 @@ function render(c){
   $('buyBtn').disabled=true;$('buyBtn').textContent='В корзину';
   $('buySelPrice').hidden=true;
   $('buyHint').className='buy-hint';
-  $('buyHint').textContent=anyBuyable?'Выберите размер':'';
+  $('buyHint').textContent=anyBuyable?(perf?'Выберите объём':'Выберите размер'):'';
 
   $('secDesc').hidden=!c.description;
   $('desc').textContent=c.description||'';
@@ -203,11 +208,11 @@ function selectSize(s,btn){
 }
 
 function addToCart(){
-  if(!SEL||!CARD){$('buyHint').className='buy-hint err';$('buyHint').textContent='Сначала выберите размер';return;}
+  if(!SEL||!CARD){$('buyHint').className='buy-hint err';$('buyHint').textContent=(CARD&&CARD.category==='Парфюмерия'?'Сначала выберите объём':'Сначала выберите размер');return;}
   const res=FACart.add({
     cardId:CARD.id, variantId:SEL.id,
     title:CARD.title, brand:CARD.brand?CARD.brand.name:null,
-    size:SEL.size||'', color:SEL.color||null,
+    size:CARD.category==='Парфюмерия'?faVol(SEL.size||''):(SEL.size||''), color:SEL.color||null,
     price:SEL.price, photo:mainPhoto(CARD)
   },1);
   if(!res.ok){

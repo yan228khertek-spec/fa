@@ -216,6 +216,9 @@
     });
   }
   window.faGender = function(){ return gender; };
+  /* Парфюмерия: вместо размера — объём флакона. «50» → «50 мл»; подпись «Объём» по значению с «мл». */
+  window.faVol = function(v){ v = String(v == null ? '' : v).trim(); return /^\d+(?:[.,]\d+)?$/.test(v) ? v + ' мл' : v; };
+  window.faSzLabel = function(v){ return /\d\s*(мл|ml)\s*$/i.test(String(v == null ? '' : v)) ? 'Объём' : 'Размер'; };
   window.faSetGender = function(g, quiet){
     gender = g === 'men' ? 'men' : 'women';
     perfume = false;

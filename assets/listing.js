@@ -139,9 +139,15 @@
     var f=facets||{},h='';
     if(cfg.showBrands&&f.brands&&f.brands.length>1)
       h+=sec('brands','Бренд',list('brands','brands',f.brands,function(b){return b.slug},function(b){return b.name}),pend.brands.length);
-    if(f.sizes&&f.sizes.length)
-      h+=sec('sizes','Размер','<div class="fl-sz">'+f.sizes.map(function(z){
-        return '<label><input type="checkbox" data-f="sizes" value="'+esc(z.name)+'"'+(pend.sizes.indexOf(z.name)>=0?' checked':'')+'>'+esc(z.name)+'</label>'}).join('')+'</div>',pend.sizes.length);
+    if(f.sizes&&f.sizes.length){
+      /* парфюмерия: вместо размера — объём флакона («50» → «50 мл»); в смешанной выдаче — «Размер / объём» */
+      var cats=(f.categories||[]).map(function(c){return c.name}),
+          perf=S.category==='Парфюмерия'||(cats.length===1&&cats[0]==='Парфюмерия'),
+          mixed=!perf&&!S.category&&cats.indexOf('Парфюмерия')>=0&&cats.length>1,
+          vol=function(n){return perf&&/^\d+(?:[.,]\d+)?$/.test(n)?n+' мл':n};
+      h+=sec('sizes',perf?'Объём':mixed?'Размер / объём':'Размер','<div class="fl-sz">'+f.sizes.map(function(z){
+        return '<label><input type="checkbox" data-f="sizes" value="'+esc(z.name)+'"'+(pend.sizes.indexOf(z.name)>=0?' checked':'')+'>'+esc(vol(z.name))+'</label>'}).join('')+'</div>',pend.sizes.length);
+    }
     if(f.colors&&f.colors.length)
       h+=sec('colors','Цвет',list('colors','colors',f.colors,function(c){return c.name},function(c){return c.name}),pend.colors.length);
     if(f.price)

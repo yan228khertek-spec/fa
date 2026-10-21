@@ -158,8 +158,8 @@ function render(c){
   $('pTitle').textContent=c.title;
   $('pArt').textContent=c.article?'Артикул: '+c.article:'';
   const p=$('pPrice');
-  p.textContent=c.price!=null?rub(c.price):'Цену уточняйте в бутике';
-  p.classList.toggle('na',c.price==null);
+  p.textContent=c.price!=null?rub(c.price):'';   // цены подгрузим позже — без цены строку не показываем
+  p.hidden=c.price==null;
   const st=$('pStock');
   st.textContent=c.inStock===true?'В наличии':c.inStock===false?'Нет в наличии':'';
   st.classList.toggle('out',c.inStock===false);

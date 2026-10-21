@@ -2098,7 +2098,7 @@
               (c) => `<tr class="click" data-id="${c.id}">
     <td>${c.photos[0] ? `<img class="thumb" loading="lazy" src="${esc(c.photos[0].url)}" alt="">` : '<div class="thumb"></div>'}</td>
     <td><b>${esc(c.title || c.model?.name || c.modelId)}</b><div class="muted" style="font-size:12px">${esc(c.model?.article || '')}</div></td>
-    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
+    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}${c.sale ? '<div style="font-size:12px;color:#c0392b">распродажа</div>' : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
             )
             .join('') ||
           '<tr><td colspan="6" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
@@ -2183,6 +2183,8 @@
       <div class="hint muted">Для парфюмерии выберите «Парфюмерия»: она попадёт в блок на главной и в раздел каталога.</div></div>
     <div class="fld"><label>Для кого</label><select id="kGender">${AUD.map(([v, t]) => `<option value="${v}" ${(c.gender || 'all') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <div class="hint muted">Где карточка видна на сайте: в женском разделе, в мужском или в обоих. Сайт показывает покупателю только товары выбранного раздела.</div></div>
+    <div class="fld"><label class="row" style="gap:8px;cursor:pointer"><input type="checkbox" id="kSale" ${c.sale ? 'checked' : ''}> В распродажу</label>
+      <div class="hint muted">Карточка появится в разделе «Распродажа» (catalog.html?sale=1) и получит красную метку «Распродажа» на сайте. Цена берётся из 1С как есть.</div></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
       <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
@@ -2200,6 +2202,7 @@
           title: $('#kTitle').value,
           category: $('#kCat').value,
           gender: $('#kGender').value,
+          sale: $('#kSale').checked,
           description: $('#kDesc').value,
           characteristics: $$('#kKv .kv')
             .map((r) => {

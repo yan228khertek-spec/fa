@@ -8,6 +8,7 @@ import { SITE_TICKER_DDL } from '../src/admin/ticker-schema.js';
 import { SITE_BANNER_PLACEMENT_DDL } from '../src/admin/banner-placement-schema.js';
 import { SITE_BANNER_PROMO_DDL } from '../src/admin/banner-promo-schema.js';
 import { SITE_AUDIENCE_DDL } from '../src/admin/audience-schema.js';
+import { SITE_CARD_SALE_DDL } from '../src/admin/card-sale-schema.js';
 import { SITE_POSTS_DDL } from '../src/admin/posts-schema.js';
 import { SITE_BRAND_HERO_DDL } from '../src/admin/brand-hero-schema.js';
 import { SITE_BANNER_VIDEO_DDL } from '../src/admin/banner-video-schema.js';
@@ -186,5 +187,18 @@ describe('миграция 016 и SITE_POSTS_DDL', () => {
   it('идемпотентна и ничего не удаляет', () => {
     expect(SITE_POSTS_DDL).toContain('CREATE TABLE IF NOT EXISTS site_posts');
     expect(SITE_POSTS_DDL).not.toMatch(/\b(DELETE|TRUNCATE|DROP)\b/i);
+  });
+});
+
+describe('миграция 017 и SITE_CARD_SALE_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/017', async () => {
+    const file = await readFile(path.join(root, 'migrations', '017_site_card_sale.sql'), 'utf8');
+    expect(normalize(SITE_CARD_SALE_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и только добавляет колонку, всё остальное не в распродаже', () => {
+    expect(SITE_CARD_SALE_DDL).toContain('ADD COLUMN IF NOT EXISTS on_sale');
+    expect(SITE_CARD_SALE_DDL).toContain('DEFAULT false');
+    expect(SITE_CARD_SALE_DDL).not.toMatch(/\b(DELETE|TRUNCATE|DROP)\b/i);
   });
 });

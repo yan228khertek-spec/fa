@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { SITE_CARD_SALE_DDL } from './card-sale-schema.js';
 import { SITE_CARD_AUDIENCE_DDL } from './audience-schema.js';
 import { SITE_CARD_CATEGORY_DDL } from './card-category-schema.js';
 import { SITE_CARDS_DDL } from './cards-schema.js';
@@ -22,13 +23,14 @@ interface CardRow {
   characteristics: CardCharacteristic[];
   category: string | null;
   gender: Audience;
+  on_sale: boolean;
   status: CardStatus;
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
 
-const COLS = `id::text, model_source_id, title, description, characteristics, category, gender, status,
+const COLS = `id::text, model_source_id, title, description, characteristics, category, gender, on_sale, status,
   published_at, created_at, updated_at`;
 
 export class PgCardRepository implements CardRepository {
@@ -44,6 +46,7 @@ export class PgCardRepository implements CardRepository {
       .query(SITE_CARDS_DDL)
       .then(() => this.pool.query(SITE_CARD_CATEGORY_DDL))
       .then(() => this.pool.query(SITE_CARD_AUDIENCE_DDL))
+      .then(() => this.pool.query(SITE_CARD_SALE_DDL))
       .catch((err: unknown) => {
         this.prepared = undefined;
         throw err;
@@ -76,6 +79,7 @@ export class PgCardRepository implements CardRepository {
       characteristics: r.characteristics,
       category: r.category,
       gender: r.gender,
+      sale: r.on_sale,
       status: r.status,
       publishedAt: r.published_at?.toISOString() ?? null,
       createdAt: r.created_at.toISOString(),
@@ -129,6 +133,7 @@ export class PgCardRepository implements CardRepository {
            WHEN $6 = 'published' THEN now() ELSE NULL END,
          category = CASE WHEN $7::boolean THEN $8 ELSE category END,
          gender = coalesce($9, gender),
+         on_sale = coalesce($10, on_sale),
          status = coalesce($6, status),
          updated_at = now()
        WHERE id = $1`,
@@ -142,6 +147,7 @@ export class PgCardRepository implements CardRepository {
         patch.category !== undefined,
         patch.category ?? null,
         patch.gender ?? null,
+        patch.sale ?? null,
       ],
     );
     if (!rowCount) throw new AdminError('Карточка не найдена', 404);

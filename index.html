@@ -407,7 +407,7 @@ function card(p){
     return `<div class="card">
    <a class="pic" href="product.html?id=${i.id}">${img?`<img src="${E(img)}" class="on" alt="${E(i.title)}" loading="lazy">`:''}${i.sale?'<span class="lab red">Распродажа</span>':lab?`<span class="lab">${lab}</span>`:''}</a>
    <div class="ci"><div class="br">${E(i.brand?i.brand.name:'')}</div><div class="nm"><a href="product.html?id=${i.id}">${E(i.title)}</a></div>
-    ${i.price!=null?`<div class="prs"><span class="now">${rub(i.price)}</span></div>`:''}</div></div>`;
+    ${i.price!=null?`<div class="prs">${i.oldPrice?`<span class="now red">${rub(i.price)}</span><span class="old">${rub(i.oldPrice)}</span>`:`<span class="now">${rub(i.price)}</span>`}</div>`:''}</div></div>`;
   };
   let seq=0;
   const getJ=u=>fetch(API_BASE+u).then(r=>r.ok?r.json():null).catch(()=>null);

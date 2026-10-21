@@ -34,6 +34,8 @@ header .gender{display:none}
 .info h1{font-size:22px;font-weight:600;line-height:1.25;margin-top:8px}
 .pp-art{margin-top:6px;font-size:12px;color:var(--muted);letter-spacing:.04em}
 .pp-price{margin-top:16px;font-size:22px;font-weight:600}
+.pp-price.sale{color:var(--red)}
+.pp-old{margin-left:12px;font-size:16px;font-weight:400;color:var(--muted);text-decoration:line-through}
 .pp-price.na{font-size:14px;font-weight:400;color:var(--muted)}
 .pp-stock{margin-top:6px;font-size:13px;color:var(--muted)}
 .pp-stock.out{color:#a33}
@@ -158,7 +160,9 @@ function render(c){
   $('pTitle').textContent=c.title;
   $('pArt').textContent=c.article?'Артикул: '+c.article:'';
   const p=$('pPrice');
-  p.textContent=c.price!=null?rub(c.price):'';   // цены подгрузим позже — без цены строку не показываем
+  // цены подгрузим позже — без цены строку не показываем; старая цена (из админки) — перечёркнутой рядом
+  p.innerHTML=c.price!=null?esc(rub(c.price))+(c.oldPrice?'<span class="pp-old">'+esc(rub(c.oldPrice))+'</span>':''):'';
+  p.classList.toggle('sale',!!c.oldPrice);
   p.hidden=c.price==null;
   const st=$('pStock');
   st.textContent=c.inStock===true?'В наличии':c.inStock===false?'Нет в наличии':'';
@@ -201,7 +205,10 @@ function selectSize(s,btn){
   $('sizes').querySelectorAll('.sz').forEach(el=>el.classList.remove('on'));
   btn.classList.add('on');
   $('buySelPrice').hidden=s.price==null;
-  if(s.price!=null)$('buySelPrice').textContent=rub(s.price);
+  if(s.price!=null){
+    const o=CARD&&CARD.oldPrice&&CARD.oldPrice>s.price?CARD.oldPrice:null;   // старая цена — только выше цены выбранного размера
+    $('buySelPrice').innerHTML=esc(rub(s.price))+(o?'<span class="pp-old" style="font-size:13px">'+esc(rub(o))+'</span>':'');
+  }
   $('buyBtn').disabled=false;
   $('buyHint').className='buy-hint';
   $('buyHint').textContent='';

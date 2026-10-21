@@ -39,6 +39,8 @@
 .pc-title{margin-top:3px;font-size:13px;line-height:1.35;color:#3a3936;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pc-price{margin-top:6px;font-size:13.5px;font-weight:500}
+.pc-price.sale{color:var(--red)}
+.pc-old{margin-left:8px;font-size:12px;font-weight:400;color:var(--muted);text-decoration:line-through}
 .bp-state{text-align:center;color:var(--muted);padding:56px 0}
 .more[hidden]{display:none}
 .more{display:block;margin:34px auto 0;padding:15px 38px;border:1px solid var(--graphite);
@@ -210,7 +212,7 @@ function card(i){
     <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}${i.sale?'<span class="pc-lab">Распродажа</span>':''}</div>
     <div class="pc-brand">${esc(i.brand?.name||S.brand.name)}</div>
     <div class="pc-title">${esc(i.title)}</div>
-    ${i.price!=null?`<div class="pc-price">${rub(i.price)}</div>`:''}
+    ${i.price!=null?`<div class="pc-price${i.oldPrice?' sale':''}">${rub(i.price)}${i.oldPrice?`<span class="pc-old">${rub(i.oldPrice)}</span>`:''}</div>`:''}
   </a>`;
 }
 

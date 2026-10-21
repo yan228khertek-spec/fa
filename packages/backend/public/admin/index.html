@@ -2174,7 +2174,7 @@
         const live = m
           ? `<div class="live"><div><b>${esc(m.article || '—')}</b><span>Артикул</span></div><div><b>${esc(m.brand?.name || '—')}</b><span>Бренд</span></div>
     <div><b>${money(m.price)}</b><span>Цена из 1С</span></div><div><b>${m.stock ?? '—'}</b><span>Остаток</span></div>
-    <div><b>${m.variants.map((v) => esc([v.size, v.color].filter(Boolean).join(' ')) || '—').join(', ') || '—'}</b><span>Размеры / цвета</span></div></div>`
+    <div><b>${m.variants.map((v) => esc([v.size, v.color].filter(Boolean).join(' ')) || '—').join(', ') || '—'}</b><span>Размеры или объём / цвета</span></div></div>`
           : '<p class="err">Этого товара больше нет в 1С — карточка скрыта с сайта.</p>';
         $('#dlgBody').innerHTML =
           `<h3>${esc(c.title || m?.name || c.modelId)} ${cbadge(c)}</h3><div class="sub">${esc(m?.name || '')}</div>${live}

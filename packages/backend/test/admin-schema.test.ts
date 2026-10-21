@@ -8,6 +8,7 @@ import { SITE_TICKER_DDL } from '../src/admin/ticker-schema.js';
 import { SITE_BANNER_PLACEMENT_DDL } from '../src/admin/banner-placement-schema.js';
 import { SITE_BANNER_PROMO_DDL } from '../src/admin/banner-promo-schema.js';
 import { SITE_AUDIENCE_DDL } from '../src/admin/audience-schema.js';
+import { SITE_CARD_OLD_PRICE_DDL } from '../src/admin/card-old-price-schema.js';
 import { SITE_CARD_SALE_DDL } from '../src/admin/card-sale-schema.js';
 import { SITE_POSTS_DDL } from '../src/admin/posts-schema.js';
 import { SITE_BRAND_HERO_DDL } from '../src/admin/brand-hero-schema.js';
@@ -200,5 +201,20 @@ describe('миграция 017 и SITE_CARD_SALE_DDL', () => {
     expect(SITE_CARD_SALE_DDL).toContain('ADD COLUMN IF NOT EXISTS on_sale');
     expect(SITE_CARD_SALE_DDL).toContain('DEFAULT false');
     expect(SITE_CARD_SALE_DDL).not.toMatch(/\b(DELETE|TRUNCATE|DROP)\b/i);
+  });
+});
+
+describe('миграция 018 и SITE_CARD_OLD_PRICE_DDL', () => {
+  it('не разъехались: автоприменение = psql -f migrations/018', async () => {
+    const file = await readFile(
+      path.join(root, 'migrations', '018_site_card_old_price.sql'),
+      'utf8',
+    );
+    expect(normalize(SITE_CARD_OLD_PRICE_DDL)).toBe(normalize(file));
+  });
+
+  it('идемпотентна и только добавляет колонку', () => {
+    expect(SITE_CARD_OLD_PRICE_DDL).toContain('ADD COLUMN IF NOT EXISTS old_price');
+    expect(SITE_CARD_OLD_PRICE_DDL).not.toMatch(/\b(DELETE|TRUNCATE|DROP)\b/i);
   });
 });

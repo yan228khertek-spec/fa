@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { SITE_CARD_OLD_PRICE_DDL } from './card-old-price-schema.js';
 import { SITE_CARD_SALE_DDL } from './card-sale-schema.js';
 import { SITE_CARD_AUDIENCE_DDL } from './audience-schema.js';
 import { SITE_CARD_CATEGORY_DDL } from './card-category-schema.js';
@@ -24,13 +25,14 @@ interface CardRow {
   category: string | null;
   gender: Audience;
   on_sale: boolean;
+  old_price: number | null;
   status: CardStatus;
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
 
-const COLS = `id::text, model_source_id, title, description, characteristics, category, gender, on_sale, status,
+const COLS = `id::text, model_source_id, title, description, characteristics, category, gender, on_sale, old_price::float8, status,
   published_at, created_at, updated_at`;
 
 export class PgCardRepository implements CardRepository {
@@ -47,6 +49,7 @@ export class PgCardRepository implements CardRepository {
       .then(() => this.pool.query(SITE_CARD_CATEGORY_DDL))
       .then(() => this.pool.query(SITE_CARD_AUDIENCE_DDL))
       .then(() => this.pool.query(SITE_CARD_SALE_DDL))
+      .then(() => this.pool.query(SITE_CARD_OLD_PRICE_DDL))
       .catch((err: unknown) => {
         this.prepared = undefined;
         throw err;
@@ -80,6 +83,7 @@ export class PgCardRepository implements CardRepository {
       category: r.category,
       gender: r.gender,
       sale: r.on_sale,
+      oldPrice: r.old_price,
       status: r.status,
       publishedAt: r.published_at?.toISOString() ?? null,
       createdAt: r.created_at.toISOString(),
@@ -134,6 +138,7 @@ export class PgCardRepository implements CardRepository {
          category = CASE WHEN $7::boolean THEN $8 ELSE category END,
          gender = coalesce($9, gender),
          on_sale = coalesce($10, on_sale),
+         old_price = CASE WHEN $11::boolean THEN $12::numeric ELSE old_price END,
          status = coalesce($6, status),
          updated_at = now()
        WHERE id = $1`,
@@ -148,6 +153,8 @@ export class PgCardRepository implements CardRepository {
         patch.category ?? null,
         patch.gender ?? null,
         patch.sale ?? null,
+        patch.oldPrice !== undefined,
+        patch.oldPrice ?? null,
       ],
     );
     if (!rowCount) throw new AdminError('Карточка не найдена', 404);

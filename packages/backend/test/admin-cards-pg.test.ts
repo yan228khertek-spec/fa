@@ -213,6 +213,15 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
     await expect(cards.update(card.id, { sale: 'yes' })).rejects.toThrow('sale');
   });
 
+  it('старая цена: сохраняется с копейками, не сбрасывается другими правками, пусто снимает', async () => {
+    const card = await cards.create({ modelId: 'm1' });
+    expect(card.oldPrice).toBeNull();
+    expect((await cards.update(card.id, { oldPrice: '32 990,5' })).oldPrice).toBe(32990.5);
+    expect((await cards.update(card.id, { sale: true })).oldPrice).toBe(32990.5);
+    expect((await cards.update(card.id, { oldPrice: null })).oldPrice).toBeNull();
+    await expect(cards.update(card.id, { oldPrice: -1 })).rejects.toThrow('oldPrice');
+  });
+
   it('жизненный цикл: создать → фото → опубликовать → скрытие по остатку', async () => {
     const card = await cards.create({ modelId: 'm1' });
     await expect(cards.create({ modelId: 'm1' })).rejects.toMatchObject({ status: 409 });

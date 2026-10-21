@@ -150,4 +150,9 @@ describe('фильтры и сортировка витрины', () => {
     const sorted = ['XL', '48', 'M', 'ONE', '9,5', 'XS', '46'].sort(compareSizes);
     expect(sorted).toEqual(['9,5', '46', '48', 'XS', 'M', 'XL', 'ONE']);
   });
+
+  it('объём флакона сортируется по числу, а не по буквам', () => {
+    const sorted = ['100 мл', '30 мл', '50 мл', '7,5 мл', '100ml', '50ml'].sort(compareSizes);
+    expect(sorted).toEqual(['7,5 мл', '30 мл', '50 мл', '50ml', '100 мл', '100ml']);
+  });
 });

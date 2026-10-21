@@ -81,12 +81,19 @@ export interface PublicCardFacets {
 
 export type CardSort = 'new' | 'priceAsc' | 'priceDesc';
 
-/** Размеры по порядку: буквенные XS…XXL, числовые по возрастанию, остальное по алфавиту. */
+/** Размеры по порядку: буквенные XS…XXL, числовые и объёмы («50 мл») по возрастанию, остальное по алфавиту. */
 const LETTER_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 export function compareSizes(a: string, b: string): number {
   const na = Number(a.replace(',', '.'));
   const nb = Number(b.replace(',', '.'));
   if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  // «30 мл», «100 мл»: объём флакона сравниваем по числу в начале, а не по буквам
+  const va = /^\d+(?:[.,]\d+)?/.exec(a.trim());
+  const vb = /^\d+(?:[.,]\d+)?/.exec(b.trim());
+  if (va && vb) {
+    const d = Number(va[0].replace(',', '.')) - Number(vb[0].replace(',', '.'));
+    if (d !== 0) return d;
+  }
   if (!Number.isNaN(na)) return -1;
   if (!Number.isNaN(nb)) return 1;
   const ia = LETTER_SIZES.indexOf(a.toUpperCase());

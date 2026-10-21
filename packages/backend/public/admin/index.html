@@ -243,12 +243,12 @@
 
       /* блог */
       .pp {
-        max-width: 320px;
+        max-width: 420px;
         background: #fff;
         border: 1px solid var(--line, #ddd);
       }
       .pp .ph {
-        aspect-ratio: 4 / 3;
+        aspect-ratio: 2.17 / 1;
         background: #e9e9e9;
         display: grid;
         place-items: center;
@@ -261,6 +261,11 @@
         height: 100%;
         object-fit: cover;
         display: block;
+      }
+      .pp .ph.m {
+        aspect-ratio: 4 / 3;
+        width: 150px;
+        margin: 0 0 8px 14px;
       }
       .pp .pt {
         padding: 14px;
@@ -933,16 +938,18 @@
 
       <section id="t-posts" class="hidden">
         <p class="muted" style="margin-top: 0">
-          Блог показывается на главной под блоками брендов: лента постов из фото, заголовка,
-          короткого описания и кнопки. Новые посты встают в начало ленты, порядок можно менять
+          Посты показываются на главной под блоками брендов без отдельного заголовка: каждый пост
+          занимает всю ширину сайта, как баннер (фото сверху, под ним заголовок, короткое описание и
+          кнопка), а посты идут один за другим. Новые встают в начало, порядок можно менять
           стрелками. «Для кого» решает, в каком разделе сайта виден пост: женском, мужском или в
           обоих. Пост без фото или без заголовка, а также скрытый на сайте не показывается.
         </p>
         <div class="row" style="margin-bottom: 16px">
           <button class="btn" id="pAdd">+ Новый пост</button>
           <span class="hint muted"
-            >Фото — горизонтальное 4:3 (например, 1600×1200), JPEG/PNG/WebP до 8 МБ. На сайте фото
-            обрезается по центру, как в превью ниже</span
+            >Фото — горизонтальное, лучше 1920×1080 и шире, JPEG/PNG/WebP до 8 МБ. Фото на всю
+            ширину сайта, обрезается по центру: на компьютере в широкую полосу, на телефоне 4:3 (оба
+            варианта видны в превью ниже, главное держать в центре)</span
           >
         </div>
         <div id="pList"></div>
@@ -1487,6 +1494,8 @@
       const PB_TEXTS = ['Купить', 'Смотреть', 'Читать', 'Подробнее', 'Перейти'];
       function postPreview(p) {
         return `<div class="pp"><div class="ph">${p.image ? `<img src="${esc(p.image)}" alt="">` : 'Загрузите фото'}</div>
+          <div class="muted" style="font-size:11px;margin:8px 14px 4px">На телефоне фото обрезается так:</div>
+          <div class="ph m">${p.image ? `<img src="${esc(p.image)}" alt="">` : ''}</div>
           <div class="pt"><h4><span class="pp-t">${esc(p.title) || 'Заголовок'}</span><i class="pp-b">${esc(p.badge)}</i></h4>
           <p class="pp-d">${esc(p.description)}</p>
           <span class="pb pp-btn" ${p.link || p.buttonText ? '' : 'hidden'}>${esc(p.buttonText) || 'Смотреть'}</span></div></div>`;

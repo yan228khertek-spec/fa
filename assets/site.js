@@ -9,7 +9,7 @@
     <a class="logo" href="index.html">FASHION AVENUE<small>ГАЛЕРЕЯ МОДЫ · ОМСК</small></a>
     <div class="right">
       <button class="ic" onclick="toast('Поиск по каталогу')" aria-label="Поиск"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
-      <button class="ic" onclick="toast('Корзина')" aria-label="Корзина"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4.5" y="8" width="15" height="12.5" rx="1.2"/><path d="M8.5 8V7a3.5 3.5 0 0 1 7 0v1"/></svg><span class="n" id="cnt" style="display:none">0</span></button>
+      <a class="ic" href="cart.html" aria-label="Корзина"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4.5" y="8" width="15" height="12.5" rx="1.2"/><path d="M8.5 8V7a3.5 3.5 0 0 1 7 0v1"/></svg><span class="n" id="cnt" style="display:none">0</span></a>
     </div>
   </div>
   <div class="gender">

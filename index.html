@@ -143,6 +143,7 @@
 <div class="tick"><div class="tk" id="tk"></div></div>
 
 <script src="assets/site.js"></script>
+<script src="assets/cart.js"></script>
 
 <!-- ГЕРОЙ: КАРУСЕЛЬ -->
 <div class="hero">
@@ -524,7 +525,9 @@ document.querySelectorAll('.pic').forEach(fr=>{
   }
 });
 
-function add(n,s){cart++;const e=document.getElementById('cnt');e.textContent=cart;e.style.display='grid';toast(n+' · размер '+s+' — в корзине')}
+/* Плитки на главной — демо-макет без реальных Ид товара, к заказу не подключены.
+   Настоящая корзина (бейдж #cnt) живёт в assets/cart.js и наполняется со страницы товара. */
+function add(n,s){toast(n+' · размер '+s+' — смотрите в каталоге')}
 function fav(el){el.classList.toggle('on');event.stopPropagation()}
 /* sw() и mtab() — общие, в assets/site.js (пол витрины и топ-бренды в меню) */
 

@@ -30,8 +30,9 @@
 .chip.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
 .pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 10px}
 .pc{display:block}
-.pc-photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
+.pc-photo{position:relative;aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
   color:var(--muted);font-size:12px}
+.pc-lab{position:absolute;top:8px;left:8px;z-index:3;font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;background:var(--red,#c0392b);color:#fff}
 .pc-photo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .5s ease}
 .pc:hover .pc-photo img{transform:scale(1.03)}
 .pc-brand{margin-top:12px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
@@ -206,7 +207,7 @@ function render(){
 function card(i){
   const img=abs(i.photo);
   return `<a class="pc" href="product.html?id=${i.id}">
-    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}</div>
+    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}${i.sale?'<span class="pc-lab">Распродажа</span>':''}</div>
     <div class="pc-brand">${esc(i.brand?.name||S.brand.name)}</div>
     <div class="pc-title">${esc(i.title)}</div>
     ${i.price!=null?`<div class="pc-price">${rub(i.price)}</div>`:''}

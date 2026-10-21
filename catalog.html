@@ -32,8 +32,9 @@
 .chip.on{background:var(--graphite);color:#fff;border-color:var(--graphite)}
 .pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 10px}
 .pc{display:block}
-.pc-photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
+.pc-photo{position:relative;aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;
   color:var(--muted);font-size:12px}
+.pc-lab{position:absolute;top:8px;left:8px;z-index:3;font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;background:var(--red,#c0392b);color:#fff}
 .pc-photo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .5s ease}
 .pc:hover .pc-photo img{transform:scale(1.03)}
 .pc-brand{margin-top:12px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
@@ -109,12 +110,11 @@ function syncUrl(){
 }
 
 async function load(reset){
-  if(S.sale){render();showState('Распродажа скоро откроется. Загляните в разделы каталога.');return}
   const my=++S.seq;
   S.loading=true;
   if(reset){S.items=[];document.getElementById('more').hidden=true;showState('Загружаем товары…')}
   const url=`${API_BASE}/api/cards?limit=${PAGE}&offset=${S.items.length}`
-    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'')+'&gender='+(window.faGender?faGender():'women')+FAList.qs(S);
+    +(S.category?'&category='+encodeURIComponent(S.category):'')+(S.kind?'&kind='+encodeURIComponent(S.kind):'')+(S.sale?'&sale=1':'')+'&gender='+(window.faGender?faGender():'women')+FAList.qs(S);
   try{
     const r=await fetch(url);
     if(my!==S.seq)return;
@@ -141,7 +141,7 @@ function render(){
   document.title=name+' — Каталог — FASHION AVENUE, Омск';
   document.getElementById('bName').textContent=name;
   document.getElementById('crumb').textContent=name;
-  document.getElementById('bCount').textContent=S.sale?'':S.total+' '+plural(S.total,'товар','товара','товаров');
+  document.getElementById('bCount').textContent=S.total+' '+plural(S.total,'товар','товара','товаров');
   // слева: внутри раздела — его типы (туфли, лоферы…), на общей странице — разделы
   const nav=document.getElementById('cats');
   if(S.category){
@@ -159,7 +159,7 @@ function render(){
   document.querySelector('.bp-body').classList.toggle('nonav',!document.getElementById('cats').innerHTML.trim());
   document.getElementById('pgrid').innerHTML=S.items.map(card).join('');
   document.getElementById('state').hidden=S.items.length>0;
-  if(!S.items.length)showState(S.sale?'Распродажа скоро откроется. Загляните в разделы каталога.':FAList.count(S)?'Ничего не найдено. Измените или очистите фильтр':'В этом разделе пока нет товаров');
+  if(!S.items.length)showState(FAList.count(S)?'Ничего не найдено. Измените или очистите фильтр':(S.sale?'В распродаже пока нет товаров. Загляните в разделы каталога':'В этом разделе пока нет товаров'));
   document.getElementById('more').hidden=S.items.length>=S.total;
   FAList.render(S,S.facets);
   syncUrl();
@@ -168,7 +168,7 @@ function render(){
 function card(i){
   const img=abs(i.photo);
   return `<a class="pc" href="product.html?id=${i.id}">
-    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}</div>
+    <div class="pc-photo">${img?`<img src="${esc(img)}" alt="${esc(i.title)}" loading="lazy">`:'Нет фото'}${i.sale?'<span class="pc-lab">Распродажа</span>':''}</div>
     <div class="pc-brand">${esc(i.brand?.name||'')}</div>
     <div class="pc-title">${esc(i.title)}</div>
     ${i.price!=null?`<div class="pc-price">${rub(i.price)}</div>`:''}

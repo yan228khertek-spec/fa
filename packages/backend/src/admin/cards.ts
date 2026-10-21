@@ -69,6 +69,8 @@ export interface PublicCardItem {
   gender: Audience;
   /** В распродаже (галочка в админке). */
   sale: boolean;
+  /** Старая цена для показа перечёркнутой: только если задана и больше текущей, иначе null. */
+  oldPrice: number | null;
 }
 
 export interface PublicCardFacets {
@@ -148,6 +150,7 @@ export interface CardInput {
   category?: unknown;
   gender?: unknown;
   sale?: unknown;
+  oldPrice?: unknown;
 }
 
 function parseTitle(v: unknown): string | null {
@@ -187,6 +190,21 @@ function parseCharacteristics(v: unknown): CardCharacteristic[] {
 }
 
 /** Раздел вручную: пусто — «по названию из 1С», иначе один из разделов витрины. */
+/** Старая цена: пусто — не задана; иначе положительное число (допускаем запятую), не больше 100 млн. */
+function parseOldPrice(v: unknown): number | null {
+  if (v === null || v === '') return null;
+  const n = typeof v === 'string' ? Number(v.trim().replace(/\s/g, '').replace(',', '.')) : v;
+  if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0 || n > 100_000_000) {
+    throw new AdminError('oldPrice: положительное число или пусто');
+  }
+  return Math.round(n * 100) / 100;
+}
+
+/** Старую цену показываем, только если она выше текущей (иначе «скидка» теряет смысл). */
+function showOldPrice(oldPrice: number | null, price: number | null): number | null {
+  return oldPrice !== null && price !== null && oldPrice > price ? oldPrice : null;
+}
+
 function parseCategory(v: unknown): string | null {
   if (v === null || v === '') return null;
   if (typeof v === 'string' && (CATEGORIES as readonly string[]).includes(v)) return v;
@@ -334,6 +352,7 @@ export class CardService {
     }
     if (input.category !== undefined) patch.category = parseCategory(input.category);
     if (input.gender !== undefined) patch.gender = parseAudience(input.gender);
+    if (input.oldPrice !== undefined) patch.oldPrice = parseOldPrice(input.oldPrice);
     if (input.sale !== undefined) {
       if (typeof input.sale !== 'boolean') throw new AdminError('sale: true или false');
       patch.sale = input.sale;
@@ -389,6 +408,7 @@ export class CardService {
       kind: x.card.category ?? kindOf(m.name),
       gender: x.card.gender,
       sale: x.card.sale,
+      oldPrice: showOldPrice(x.card.oldPrice, m.price),
     };
   }
 

@@ -208,4 +208,38 @@ describe('раздел сайта: женское и мужское', () => {
         .statusCode,
     ).toBe(400);
   });
+
+  it('старая цена: показывается только если задана и больше текущей', async () => {
+    const dress = await cardId('Платье Zara'); // текущая цена 3990
+    const noPrice = await cardId('Джемпер Zara без цены');
+    const old = async (id: number) =>
+      (await get(`/api/cards/${id}`)) as { oldPrice: number | null };
+    expect((await old(dress)).oldPrice).toBeNull();
+    await send('PUT', `/admin/api/cards/${dress}`, { oldPrice: 5990 });
+    expect((await old(dress)).oldPrice).toBe(5990);
+    const item = (await get('/api/cards')).items.find((i: { id: number }) => i.id === dress);
+    expect(item.oldPrice).toBe(5990);
+    // не больше текущей — скрыта, но в админке значение хранится
+    await send('PUT', `/admin/api/cards/${dress}`, { oldPrice: 3990 });
+    expect((await old(dress)).oldPrice).toBeNull();
+    const adm = (await app.inject({ url: `/admin/api/cards/${dress}`, headers: write })).json();
+    expect(adm.oldPrice).toBe(3990);
+    // строка с пробелами и запятой, округление до копеек
+    await send('PUT', `/admin/api/cards/${dress}`, { oldPrice: ' 5 990,555 ' });
+    expect((await old(dress)).oldPrice).toBe(5990.56);
+    // пусто снимает
+    await send('PUT', `/admin/api/cards/${dress}`, { oldPrice: '' });
+    expect((await old(dress)).oldPrice).toBeNull();
+    expect(
+      (await app.inject({ url: `/admin/api/cards/${dress}`, headers: write })).json().oldPrice,
+    ).toBeNull();
+    // цены у товара нет — старую не показываем
+    await send('PUT', `/admin/api/cards/${noPrice}`, { oldPrice: 9999 });
+    expect((await old(noPrice)).oldPrice).toBeNull();
+    for (const bad of ['abc', -5, 0, 1e9, true]) {
+      expect((await send('PUT', `/admin/api/cards/${dress}`, { oldPrice: bad })).statusCode).toBe(
+        400,
+      );
+    }
+  });
 });

@@ -901,6 +901,7 @@
                 <th>Бренд</th>
                 <th>Цена</th>
                 <th>Остаток</th>
+                <th>Распродажа</th>
                 <th>Статус</th>
               </tr>
             </thead>
@@ -2098,10 +2099,10 @@
               (c) => `<tr class="click" data-id="${c.id}">
     <td>${c.photos[0] ? `<img class="thumb" loading="lazy" src="${esc(c.photos[0].url)}" alt="">` : '<div class="thumb"></div>'}</td>
     <td><b>${esc(c.title || c.model?.name || c.modelId)}</b><div class="muted" style="font-size:12px">${esc(c.model?.article || '')}</div></td>
-    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}${c.sale ? '<div style="font-size:12px;color:#c0392b">распродажа</div>' : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
+    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td class="salecell"><input type="checkbox" data-sale ${c.sale ? 'checked' : ''} title="Показывать в разделе «Распродажа»" style="width:18px;height:18px;cursor:pointer"></td><td>${cbadge(c)}</td></tr>`,
             )
             .join('') ||
-          '<tr><td colspan="6" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
+          '<tr><td colspan="7" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
         $('#cMore').classList.toggle('hidden', CD.items.length >= CD.total);
       }
       $('#cq').oninput = () => {
@@ -2111,8 +2112,24 @@
       $('#cf').onchange = () => loadCards();
       $('#cMore').onclick = () => loadCards(true);
       $('#cBody').onclick = (e) => {
+        if (e.target.closest('.salecell')) return; // галочка «В распродажу» не открывает карточку
         const tr = e.target.closest('tr[data-id]');
         if (tr) openCard(+tr.dataset.id);
+      };
+      /* галочка прямо в списке: сохраняется сразу, без захода в карточку */
+      $('#cBody').onchange = async (e) => {
+        const cb = e.target.closest('input[data-sale]');
+        if (!cb) return;
+        const id = +cb.closest('tr').dataset.id,
+          on = cb.checked;
+        try {
+          await api('/cards/' + id, { method: 'PUT', json: { sale: on } });
+          const c = CD.items.find((v) => v.id === id);
+          if (c) c.sale = on;
+          toast(on ? 'Добавлено в распродажу' : 'Убрано из распродажи');
+        } catch {
+          cb.checked = !on;
+        }
       };
       $('#cs').oninput = () => {
         clearTimeout($('#cs').t);
@@ -2183,8 +2200,8 @@
       <div class="hint muted">Для парфюмерии выберите «Парфюмерия»: она попадёт в блок на главной и в раздел каталога.</div></div>
     <div class="fld"><label>Для кого</label><select id="kGender">${AUD.map(([v, t]) => `<option value="${v}" ${(c.gender || 'all') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <div class="hint muted">Где карточка видна на сайте: в женском разделе, в мужском или в обоих. Сайт показывает покупателю только товары выбранного раздела.</div></div>
-    <div class="fld"><label class="row" style="gap:8px;cursor:pointer"><input type="checkbox" id="kSale" ${c.sale ? 'checked' : ''}> В распродажу</label>
-      <div class="hint muted">Карточка появится в разделе «Распродажа» (catalog.html?sale=1) и получит красную метку «Распродажа» на сайте. Цена берётся из 1С как есть.</div></div>
+    <div class="fld"><label>Старая цена, ₽ <span class="muted">· по желанию</span></label><input type="text" id="kOld" inputmode="decimal" maxlength="12" style="max-width:200px" value="${c.oldPrice ?? ''}" placeholder="например 32 990">
+      <div class="hint muted">Показывается на сайте перечёркнутой рядом с текущей ценой из 1С${m?.price != null ? ` (сейчас ${money(m.price)})` : ''}. Если поле пустое или старая цена не больше текущей, на сайте её не видно. Галочка «В распродажу» стоит в списке карточек.</div></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
       <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
@@ -2202,7 +2219,7 @@
           title: $('#kTitle').value,
           category: $('#kCat').value,
           gender: $('#kGender').value,
-          sale: $('#kSale').checked,
+          oldPrice: $('#kOld').value.trim(),
           description: $('#kDesc').value,
           characteristics: $$('#kKv .kv')
             .map((r) => {

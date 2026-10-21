@@ -13,6 +13,7 @@
 <style>
 /* ═════ СПАСИБО ЗА ЗАКАЗ ═════ */
 header .gender{display:none}
+[hidden]{display:none!important} /* иначе display:flex у строк сводки перебивает атрибут hidden */
 .tp{max-width:760px;margin:0 auto;padding:calc(60px + 36px) 12px 70px}
 .tp-state{text-align:center;color:var(--muted);padding:70px 0;line-height:1.6}
 .tp-state .b{display:inline-block;margin-top:20px;padding:14px 34px;border:1px solid var(--graphite);

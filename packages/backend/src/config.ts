@@ -1,4 +1,5 @@
 import { DEFAULT_ORDERS_CONFIG, type OrdersConfig } from './orders/types.js';
+import { DEFAULT_SALE_EXPORT_CONFIG, type SaleExportConfig } from './orders/export.js';
 
 /** Витринный слой брендов и админка (миграция 004). */
 export interface AdminConfig {
@@ -57,6 +58,8 @@ export interface AppConfig {
   trustProxy?: boolean;
   /** Приём заказов (F1). Не задано — значения по умолчанию (DEFAULT_ORDERS_CONFIG). */
   orders?: OrdersConfig;
+  /** Выгрузка заказов в 1С (F2, sale:query). Не задано — DEFAULT_SALE_EXPORT_CONFIG. */
+  saleExport?: SaleExportConfig;
 }
 
 /**
@@ -108,6 +111,18 @@ export function loadOrdersConfig(env: NodeJS.ProcessEnv = process.env): OrdersCo
   };
 }
 
+export function loadSaleExportConfig(env: NodeJS.ProcessEnv = process.env): SaleExportConfig {
+  const d = DEFAULT_SALE_EXPORT_CONFIG;
+  return {
+    schemaVersion: env.SALE_SCHEMA_VERSION?.trim() || d.schemaVersion,
+    timeZone: env.SALE_TIME_ZONE?.trim() || d.timeZone,
+    // Идентичность продавца (ИП Астафьев) — через env, в код не зашита; пусто → не выводится.
+    sellerName: env.SALE_SELLER_NAME?.trim() ?? d.sellerName,
+    sellerInn: env.SALE_SELLER_INN?.trim() ?? d.sellerInn,
+    batchLimit: positiveInt(env, 'SALE_BATCH_LIMIT', d.batchLimit),
+  };
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   return {
     port: Number(env.PORT ?? 3000),
@@ -132,5 +147,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     },
     trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
     orders: loadOrdersConfig(env),
+    saleExport: loadSaleExportConfig(env),
   };
 }

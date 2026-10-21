@@ -19,7 +19,9 @@ import {
 } from './files.js';
 import { syncImportMedia } from './media.js';
 import { type ImportJobRegistry, settleWithin } from './import-jobs.js';
-import { emptyCommerceInfoXml, sendFailure, sendPlain, sendSuccess, sendXml } from './protocol.js';
+import { sendFailure, sendPlain, sendSuccess, sendXml } from './protocol.js';
+import type { OrderExportSource, SaleExportConfig } from '../orders/export.js';
+import { buildSaleQueryXml } from '../orders/export.js';
 
 interface ExchangeQuery {
   type?: string;
@@ -34,6 +36,10 @@ export interface ExchangeOptions {
   offers: OffersRepository;
   /** Реестр фоновых загрузок — создаётся в buildApp, он же их и дожидается. */
   jobs: ImportJobRegistry;
+  /** Источник заказов для выгрузки в 1С (F2, sale:query/success). */
+  orders: OrderExportSource;
+  /** Настройки сборщика CommerceML заказов (F2). */
+  saleExport: SaleExportConfig;
 }
 
 /** Файл выгрузки не доехал: куска нет ни в inbox, ни в unpacked. */
@@ -64,9 +70,16 @@ function classifyImportFile(relative: string): 'catalog' | 'offers' | 'other' {
  * Ответы — plain text windows-1251, формат байт-точный (см. скилл commerceml-exchange).
  */
 export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions): Promise<void> {
-  const { config, logSink, catalog, offers, jobs } = opts;
+  const { config, logSink, catalog, offers, jobs, orders, saleExport } = opts;
   const inboxDir = path.join(config.spoolDir, 'inbox');
   const unpackedDir = path.join(config.spoolDir, 'unpacked');
+
+  // Рукопожатие sale:query→success (F2): мутирует success, а не query. query читает
+  // очередь и запоминает Ид отданной пачки; success помечает ровно её выгруженной.
+  // Состояние — в замыкании процесса (fa-dev: один backend, один узел 1С — один
+  // последовательный потребитель). Потеря пачки при рестарте безопасна: exported_at
+  // остаётся NULL, заказы уедут повторно следующим query, 1С дедуплицирует по Ид.
+  let lastOffered: string[] = [];
 
   // Тело POST не буферизуем: отдаём сырой поток обработчику.
   app.addContentTypeParser('*', (_req, payload, done) => done(null, payload));
@@ -232,13 +245,34 @@ export async function exchangePlugin(app: FastifyInstance, opts: ExchangeOptions
       }
 
       case 'sale:query':
-        // Заглушка этапа 1: заказов пока нет — валидный пустой документ.
-        await log(req, q, 0, 'success', 'empty orders');
-        return sendXml(reply, emptyCommerceInfoXml());
+        // Выгрузка заказов в 1С: читаем очередь, строим CommerceML, пачку запоминаем
+        // для sale:success. Ничего не мутируем — пометку делает success.
+        try {
+          await orders.ready();
+          const pending = await orders.listPendingExport(saleExport.batchLimit);
+          lastOffered = pending.map((o) => o.id);
+          const xml = buildSaleQueryXml(pending, saleExport);
+          await log(req, q, 0, 'success', pending.length ? `orders ${pending.length}` : 'empty');
+          return sendXml(reply, xml);
+        } catch (err) {
+          // Пачку не трогаем — следующий query попробует снова.
+          await log(req, q, 0, 'failure', String(err));
+          return sendFailure(reply, 'Ошибка подготовки выгрузки заказов, см. журнал обмена');
+        }
 
       case 'sale:success':
-        await log(req, q, 0, 'success', null);
-        return sendSuccess(reply);
+        // Подтверждение приёма: помечаем выгруженной пачку последнего query.
+        // Идемпотентно (markExported guard'ит exported_at IS NULL): повтор — no-op.
+        try {
+          const marked = lastOffered.length ? await orders.markExported(lastOffered) : 0;
+          lastOffered = [];
+          await log(req, q, 0, 'success', `exported ${marked}`);
+          return sendSuccess(reply);
+        } catch (err) {
+          // Пачку сохраняем: повторный success (или следующий query) домечает заказы.
+          await log(req, q, 0, 'failure', String(err));
+          return sendFailure(reply, 'Ошибка подтверждения выгрузки, см. журнал обмена');
+        }
 
       default:
         await log(req, q, 0, 'failure', `unknown type/mode: ${type}/${mode}`);

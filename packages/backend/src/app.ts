@@ -40,6 +40,7 @@ import { MemoryOrderRepository } from './orders/memory.js';
 import { PgOrderRepository } from './orders/pg.js';
 import { OrderService } from './orders/service.js';
 import { DEFAULT_ORDERS_CONFIG, type OrderRepository } from './orders/types.js';
+import { DEFAULT_SALE_EXPORT_CONFIG, type OrderExportSource } from './orders/export.js';
 
 export interface BuildAppOptions {
   config?: AppConfig;
@@ -63,8 +64,8 @@ export interface BuildAppOptions {
   posterMaker?: PosterMaker;
   /** Часы для календаря акций (тесты). */
   now?: () => Date;
-  /** Заказы (миграция 014). */
-  orderRepo?: OrderRepository;
+  /** Заказы (миграция 014): приём (F1) и выгрузка в 1С (F2). */
+  orderRepo?: OrderRepository & OrderExportSource;
 }
 
 export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -135,7 +136,16 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
 
   app.get('/healthz', async (_req, reply) => reply.type('text/plain; charset=utf-8').send('ok'));
 
-  await app.register(exchangePlugin, { config, logSink, catalog, offers, jobs });
+  await app.register(exchangePlugin, {
+    config,
+    logSink,
+    catalog,
+    offers,
+    jobs,
+    // Тот же экземпляр, что обслуживает приём заказов, — отдельного пула нет.
+    orders: orderRepo,
+    saleExport: config.saleExport ?? DEFAULT_SALE_EXPORT_CONFIG,
+  });
 
   const brandService = new BrandService(siteBrands, catalogReader);
   const cardService = new CardService(cardRepo, catalogReader, brandService);

@@ -67,6 +67,8 @@ export interface PublicCardItem {
   kind: string;
   /** Для кого карточка: all — видна и в женском, и в мужском разделе. */
   gender: Audience;
+  /** В распродаже (галочка в админке). */
+  sale: boolean;
 }
 
 export interface PublicCardFacets {
@@ -145,6 +147,7 @@ export interface CardInput {
   status?: unknown;
   category?: unknown;
   gender?: unknown;
+  sale?: unknown;
 }
 
 function parseTitle(v: unknown): string | null {
@@ -331,6 +334,10 @@ export class CardService {
     }
     if (input.category !== undefined) patch.category = parseCategory(input.category);
     if (input.gender !== undefined) patch.gender = parseAudience(input.gender);
+    if (input.sale !== undefined) {
+      if (typeof input.sale !== 'boolean') throw new AdminError('sale: true или false');
+      patch.sale = input.sale;
+    }
     if (input.status !== undefined) {
       patch.status = parseStatus(input.status);
       if (patch.status === 'published') {
@@ -381,6 +388,7 @@ export class CardService {
       // у карточки с ручным разделом первое слово названия — не вид изделия (часто бренд)
       kind: x.card.category ?? kindOf(m.name),
       gender: x.card.gender,
+      sale: x.card.sale,
     };
   }
 
@@ -393,6 +401,8 @@ export class CardService {
     brandSlug?: string;
     /** Раздел сайта: показываем карточки «для всех» и для этого раздела. */
     gender?: 'women' | 'men';
+    /** Только карточки с галочкой «В распродажу». */
+    sale?: boolean;
     category?: string;
     kind?: string;
     /** Фильтры страницы: бренды (slug), размеры и цвета «любой из», цена «от и до». */
@@ -410,6 +420,7 @@ export class CardService {
     const byBrand = (await this.visibleCards())
       .filter((x) => !opts.brandSlug || x.view.model?.brand?.slug === opts.brandSlug)
       .filter((x) => !opts.gender || x.card.gender === 'all' || x.card.gender === opts.gender)
+      .filter((x) => !opts.sale || x.card.sale)
       .map((x) => {
         const v = (x.view.model?.variants ?? []).filter((w) => w.inStock !== false);
         sizesOf.set(x.card.id, {

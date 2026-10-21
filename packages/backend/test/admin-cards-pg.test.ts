@@ -196,6 +196,23 @@ describe.skipIf(!url)('карточки в PostgreSQL', () => {
     await expect(cards.update(card.id, { gender: 'kids' })).rejects.toThrow('gender');
   });
 
+  it('«в распродажу»: по умолчанию выключено, галочка сохраняется и фильтрует витрину', async () => {
+    const card = await cards.create({ modelId: 'm1' });
+    expect(card.sale).toBe(false);
+    await repo.addPhoto(card.id, 'a.png');
+    await cards.update(card.id, { status: 'published' });
+    expect((await cards.publicList({ sale: true, limit: 10, offset: 0 })).total).toBe(0);
+    expect((await cards.update(card.id, { sale: true })).sale).toBe(true);
+    const sale = await cards.publicList({ sale: true, limit: 10, offset: 0 });
+    expect(sale.total).toBe(1);
+    expect(sale.items[0]!.sale).toBe(true);
+    // другие поля при правке галочку не сбрасывают
+    expect((await cards.update(card.id, { gender: 'men' })).sale).toBe(true);
+    expect((await cards.update(card.id, { sale: false })).sale).toBe(false);
+    expect((await cards.publicList({ sale: true, limit: 10, offset: 0 })).total).toBe(0);
+    await expect(cards.update(card.id, { sale: 'yes' })).rejects.toThrow('sale');
+  });
+
   it('жизненный цикл: создать → фото → опубликовать → скрытие по остатку', async () => {
     const card = await cards.create({ modelId: 'm1' });
     await expect(cards.create({ modelId: 'm1' })).rejects.toMatchObject({ status: 409 });

@@ -180,4 +180,32 @@ describe('раздел сайта: женское и мужское', () => {
     );
     expect((await send('POST', '/admin/api/banners', { gender: 'x' })).statusCode).toBe(400);
   });
+
+  it('распродажа: ?sale=1 отдаёт только карточки с галочкой, в том числе внутри раздела и бренда', async () => {
+    expect((await get('/api/cards?sale=1')).total).toBe(0);
+    await send('PUT', `/admin/api/cards/${await cardId('Платье Zara')}`, {
+      sale: true,
+      gender: 'women',
+    });
+    await send('PUT', `/admin/api/cards/${await cardId('Джинсы Diesel синие')}`, {
+      sale: true,
+      gender: 'men',
+    });
+    expect(titles(await get('/api/cards?sale=1')).sort()).toEqual([
+      'Джинсы Diesel синие',
+      'Платье Zara',
+    ]);
+    expect(titles(await get('/api/cards?sale=1&gender=women'))).toEqual(['Платье Zara']);
+    expect(titles(await get('/api/brands/diesel/models?sale=1'))).toEqual(['Джинсы Diesel синие']);
+    expect((await get('/api/cards?sale=1')).facets.price).toEqual({ min: 3990, max: 9990 });
+    // без параметра выдача прежняя, метка есть в элементах
+    const all = await get('/api/cards');
+    expect(all.total).toBe(4);
+    expect(all.items.filter((i: { sale: boolean }) => i.sale)).toHaveLength(2);
+    expect((await get('/api/cards?sale=0')).total).toBe(4);
+    expect(
+      (await send('PUT', `/admin/api/cards/${await cardId('Платье Zara')}`, { sale: 'yes' }))
+        .statusCode,
+    ).toBe(400);
+  });
 });

@@ -1,6 +1,7 @@
 import { isIP } from 'node:net';
 import pg from 'pg';
 import { ORDERS_DDL } from './schema.js';
+import type { OrderExport, OrderExportItem, OrderExportSource } from './export.js';
 import {
   NumberTakenError,
   type CreateResult,
@@ -47,8 +48,42 @@ const ORDER_COLS = `id::text, number, public_token, request_hash, created_at, st
 
 const inet = (ip: string | null) => (ip && isIP(ip) ? ip : null);
 
+interface ExportOrderRow {
+  id: string;
+  number: string;
+  created_at: Date;
+  customer_name: string;
+  phone_normalized: string;
+  customer_email: string;
+  delivery_method: OrderExport['deliveryMethod'];
+  delivery_city: string | null;
+  delivery_address: string | null;
+  delivery_pvz_code: string | null;
+  payment_method: OrderExport['paymentMethod'];
+  comment: string | null;
+  currency: string;
+  items_total: string;
+  delivery_cost: string;
+  bonus_amount: string;
+  total: string;
+}
+
+interface ExportItemRow {
+  order_id: string;
+  line_no: number;
+  variant_source_id: string;
+  article: string | null;
+  name_1c: string | null;
+  title: string;
+  size: string | null;
+  color: string | null;
+  price: string;
+  quantity: number;
+  amount: string;
+}
+
 /** Заказы в PostgreSQL (миграция 014). Staging не читает и не пишет. */
-export class PgOrderRepository implements OrderRepository {
+export class PgOrderRepository implements OrderRepository, OrderExportSource {
   private readonly pool: pg.Pool;
   private prepared: Promise<unknown> | undefined;
 
@@ -216,6 +251,95 @@ export class PgOrderRepository implements OrderRepository {
       const order = await this.view(row, client);
       await client.query('COMMIT');
       return { kind: 'created', order };
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Очередь на выгрузку в 1С (F2): невыгруженные заказы с полными ПД и позициями.
+   * Отбор `exported_at IS NULL AND status='new'` идёт по индексу orders_not_exported_idx;
+   * гостевые (user_id IS NULL) — наравне со всеми. Позиции берём одним запросом (без N+1).
+   */
+  async listPendingExport(limit: number): Promise<OrderExport[]> {
+    await this.ready();
+    const { rows } = await this.pool.query<ExportOrderRow>(
+      `SELECT id::text, number, created_at, customer_name, phone_normalized, customer_email,
+         delivery_method, delivery_city, delivery_address, delivery_pvz_code, payment_method,
+         comment, currency, items_total::text, delivery_cost::text, bonus_amount::text, total::text
+         FROM orders
+         WHERE exported_at IS NULL AND status = 'new'
+         ORDER BY created_at, id
+         LIMIT $1`,
+      [limit],
+    );
+    if (rows.length === 0) return [];
+    const ids = rows.map((r) => r.id);
+    const { rows: itemRows } = await this.pool.query<ExportItemRow>(
+      `SELECT order_id::text, line_no, variant_source_id, article, name_1c, title, size, color,
+         price::text, quantity, amount::text
+         FROM order_items WHERE order_id = ANY($1::bigint[]) ORDER BY order_id, line_no`,
+      [ids],
+    );
+    const itemsByOrder = new Map<string, OrderExportItem[]>();
+    for (const it of itemRows) {
+      const list = itemsByOrder.get(it.order_id) ?? [];
+      list.push({
+        lineNo: it.line_no,
+        variantSourceId: it.variant_source_id,
+        article: it.article,
+        name1c: it.name_1c,
+        title: it.title,
+        size: it.size,
+        color: it.color,
+        priceKop: numericToKop(it.price),
+        quantity: it.quantity,
+        amountKop: numericToKop(it.amount),
+      });
+      itemsByOrder.set(it.order_id, list);
+    }
+    return rows.map((r) => ({
+      id: r.id,
+      number: r.number,
+      createdAt: r.created_at,
+      customerName: r.customer_name,
+      phoneNormalized: r.phone_normalized,
+      email: r.customer_email,
+      deliveryMethod: r.delivery_method,
+      deliveryCity: r.delivery_city,
+      deliveryAddress: r.delivery_address,
+      deliveryPvzCode: r.delivery_pvz_code,
+      paymentMethod: r.payment_method,
+      comment: r.comment,
+      currency: r.currency,
+      itemsTotalKop: numericToKop(r.items_total),
+      deliveryCostKop: numericToKop(r.delivery_cost),
+      bonusAmountKop: numericToKop(r.bonus_amount),
+      totalKop: numericToKop(r.total),
+      items: itemsByOrder.get(r.id) ?? [],
+    }));
+  }
+
+  /**
+   * Пометить заказы выгруженными (sale:success), идемпотентно, в транзакции.
+   * `AND exported_at IS NULL` делает повторный success no-op. Возвращает число помеченных.
+   */
+  async markExported(ids: string[], now: Date = new Date()): Promise<number> {
+    if (ids.length === 0) return 0;
+    await this.ready();
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const res = await client.query(
+        `UPDATE orders SET exported_at = $2, updated_at = now()
+           WHERE id = ANY($1::bigint[]) AND exported_at IS NULL`,
+        [ids, now],
+      );
+      await client.query('COMMIT');
+      return res.rowCount ?? 0;
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
       throw err;

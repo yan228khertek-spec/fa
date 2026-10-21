@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
 import iconv from 'iconv-lite';
+import { SaxesParser } from 'saxes';
 import { buildImportXml, generateLargeCatalog, writeImportXml } from '../src/catalog/fixtures.js';
 import { buildOffersXml, generateLargeOffers, writeOffersXml } from '../src/offers/fixtures.js';
 
@@ -81,6 +82,82 @@ async function get(params: string): Promise<{ lines: string[]; raw: Buffer; cont
   const body = iconv.decode(raw, 'win1251');
   if (!res.ok) throw new StepError(`HTTP ${res.status} на ?${params}: ${body.slice(0, 200)}`);
   return { lines: body.split('\n'), raw, contentType: res.headers.get('content-type') ?? '' };
+}
+
+/** JSON-запрос к публичному API (эмулятор играет и покупателя — создаёт тест-заказ). */
+async function apiJson<T>(
+  method: string,
+  pathname: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<{ status: number; json: T }> {
+  const res = await fetch(`${BASE}${pathname}`, {
+    method,
+    headers: { 'content-type': 'application/json', ...headers },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  const text = await res.text();
+  let json: T;
+  try {
+    json = text ? (JSON.parse(text) as T) : ({} as T);
+  } catch {
+    throw new StepError(`${method} ${pathname}: не JSON (${res.status}): ${text.slice(0, 160)}`);
+  }
+  return { status: res.status, json };
+}
+
+interface CardSize {
+  id: string;
+  size: string | null;
+  color: string | null;
+  inStock: boolean | null;
+  price: number | null;
+}
+
+/**
+ * Найти заказуемый размер опубликованной карточки через публичный API витрины
+ * (цена есть и есть остаток). На fa-dev такие карточки есть; локально без них
+ * sale-круг проверяет только рукопожатие. Возвращает null, если не нашли.
+ */
+async function findOrderableSize(): Promise<{ cardId: number; size: CardSize } | null> {
+  const list = await apiJson<{ items?: { id: number }[] }>('GET', '/api/cards?limit=50');
+  for (const item of list.json.items ?? []) {
+    const card = await apiJson<{ sizes?: CardSize[] }>('GET', `/api/cards/${item.id}`);
+    const size = (card.json.sizes ?? []).find(
+      (s) => s.price !== null && s.price > 0 && s.inStock === true,
+    );
+    if (size) return { cardId: item.id, size };
+  }
+  return null;
+}
+
+/** Разбор ответа sale:query: валидность CommerceML (saxes бросит на битом) + номера заказов. */
+function parseSaleXml(xml: string): { documents: number; numbers: string[] } {
+  const parser = new SaxesParser({ fileName: 'orders.xml' });
+  let documents = 0;
+  let sawRoot = false;
+  const numbers: string[] = [];
+  const stack: string[] = [];
+  let текст = '';
+  parser.on('opentag', (tag) => {
+    if (tag.name === 'КоммерческаяИнформация') sawRoot = true;
+    if (tag.name === 'Документ') documents++;
+    stack.push(tag.name);
+    текст = '';
+  });
+  parser.on('text', (t) => (текст += t));
+  parser.on('closetag', (tag) => {
+    // Номер документа — прямой <Номер> внутри <Документ> (не внутри Товара/Контрагента).
+    if (tag.name === 'Номер' && stack[stack.length - 2] === 'Документ') numbers.push(текст.trim());
+    stack.pop();
+  });
+  let error: Error | null = null;
+  parser.on('error', (e) => (error = e));
+  parser.write(xml).close();
+  if (error) throw new StepError(`невалидный CommerceML: ${(error as Error).message}`);
+  if (!sawRoot) throw new StepError('в ответе нет корня КоммерческаяИнформация');
+  return { documents, numbers };
 }
 
 async function postChunk(filename: string, chunk: Buffer): Promise<void> {
@@ -190,11 +267,62 @@ try {
   );
   if (offersDetail) process.stdout.write(`      ${offersDetail}\n`);
 
-  await step('sale:query — валидный CommerceML в win-1251', async () => {
-    const { lines, contentType } = await get('type=sale&mode=query');
+  // --- sale-круг: эмулятор играет и покупателя (создаёт ТЕСТ-заказ через публичный
+  //     API), и 1С (забирает его sale:query, подтверждает success, проверяет пропажу). ---
+  let testOrderNumber: string | null = null;
+  await step(
+    'заказ: создать ТЕСТ-заказ через публичный API (если есть заказуемая карточка)',
+    async () => {
+      const found = await findOrderableSize();
+      if (!found) {
+        process.stdout.write('      нет заказуемых карточек — проверяем только рукопожатие\n');
+        return;
+      }
+      const idem = `emulate-sale-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const { status, json } = await apiJson<{ number?: string; error?: string }>(
+        'POST',
+        '/api/orders',
+        {
+          customer: {
+            name: 'ТЕСТ Эмулятор',
+            phone: '+7 900 000-00-00',
+            email: 'test-emulate@fa.local',
+          },
+          delivery: { method: 'pickup' },
+          payment: { method: 'on_receipt' },
+          items: [
+            {
+              cardId: found.cardId,
+              variantId: found.size.id,
+              quantity: 1,
+              price: found.size.price,
+            },
+          ],
+          comment: 'ТЕСТ — удалить',
+          consents: { personalData: true },
+        },
+        { 'idempotency-key': idem },
+      );
+      if (status !== 201 || !json.number) {
+        throw new StepError(`POST /api/orders → ${status}: ${json.error ?? JSON.stringify(json)}`);
+      }
+      testOrderNumber = json.number;
+      process.stdout.write(
+        `      создан ${testOrderNumber} (карточка ${found.cardId}, ${found.size.id})\n`,
+      );
+    },
+  );
+
+  await step('sale:query — валидный CommerceML, ТЕСТ-заказ присутствует', async () => {
+    const { raw, contentType } = await get('type=sale&mode=query');
     if (!contentType.includes('text/xml')) throw new StepError(`content-type: ${contentType}`);
-    if (!lines.join('\n').includes('КоммерческаяИнформация')) {
-      throw new StepError('в ответе нет корня КоммерческаяИнформация');
+    const xml = iconv.decode(raw, 'win1251');
+    const { documents, numbers } = parseSaleXml(xml);
+    process.stdout.write(`      документов: ${documents}\n`);
+    if (testOrderNumber && !numbers.includes(testOrderNumber)) {
+      throw new StepError(
+        `созданный ${testOrderNumber} не найден в выгрузке (${numbers.length} шт.)`,
+      );
     }
   });
 
@@ -202,6 +330,25 @@ try {
     const { lines } = await get('type=sale&mode=success');
     if (lines[0] !== 'success') throw new StepError(`ожидался success, пришло: ${lines[0]}`);
   });
+
+  await step('sale:query (повторный) — подтверждённый заказ больше не выгружается', async () => {
+    const { raw } = await get('type=sale&mode=query');
+    const { numbers } = parseSaleXml(iconv.decode(raw, 'win1251'));
+    if (testOrderNumber && numbers.includes(testOrderNumber)) {
+      throw new StepError(
+        `${testOrderNumber} выгружается снова после success — идемпотентность нарушена`,
+      );
+    }
+  });
+
+  if (testOrderNumber) {
+    process.stdout.write(
+      `\n⚠ Создан ТЕСТ-заказ ${testOrderNumber} (комментарий «ТЕСТ — удалить»).\n`,
+    );
+    process.stdout.write(
+      '  Удалить: DATABASE_URL=… bash packages/backend/scripts/cleanup-test-orders.sh --yes\n',
+    );
+  }
 
   const total = steps.reduce((n, s) => n + s.ms, 0);
   process.stdout.write(`\nOK: полный цикл 1С пройден против ${BASE} за ${total} мс\n`);

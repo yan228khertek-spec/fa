@@ -127,15 +127,22 @@
 #blogSec[hidden]{display:none}
 .bp-ph{display:block;width:100%;aspect-ratio:4/3;background:var(--soft);overflow:hidden}
 .bp-ph img{width:100%;height:100%;object-fit:cover;display:block}
-.bp-tx{padding-top:24px;padding-bottom:44px}
-.bp-t{margin:0 0 10px;font-size:22px;font-weight:500;line-height:1.25;letter-spacing:.01em}
+.bp-tx{padding:24px calc(12px + var(--sr)) 44px calc(12px + var(--sl))}
+.bp-t{margin:0 0 10px;font-size:24px;font-weight:700;line-height:1.2;letter-spacing:0}
 .bp-t i{font-style:normal;font-size:13px;font-weight:600;color:#5fb300;margin-left:8px;letter-spacing:.04em}
 .bp-d{margin:0;max-width:720px;font-size:16px;line-height:1.55;color:#4a4945}
 .bp-btn{display:inline-block;margin-top:22px;padding:15px 36px;background:var(--graphite);color:#fff;font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--graphite)}
 @media(hover:hover){.bp-btn:hover{background:#fff;color:var(--graphite)}}
 .blog-more{text-align:center;padding:0 0 44px}
 .blog-more button{font:inherit;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:14px 30px;background:#fff;border:1px solid var(--graphite);cursor:pointer}
-@media(min-width:900px){.bp-ph{aspect-ratio:auto;height:min(46vw,640px)}.bp-tx{padding-top:30px;padding-bottom:56px}.bp-t{font-size:28px}.bp-d{font-size:17px}}
+/* компьютер: фото сбоку от текста, текст по центру своей половины; телефон: фото сверху */
+@media(min-width:900px){
+  .bp{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
+  .bp-ph{aspect-ratio:auto;height:min(42vw,680px)}
+  .bp-tx{align-self:center;padding:48px clamp(40px,6vw,120px)}
+  .bp-t{font-size:clamp(28px,2.6vw,42px);margin-bottom:16px}
+  .bp-d{font-size:17px}
+}
 </style>
 </head>
 <body>
@@ -474,7 +481,7 @@ function card(p){
     const ph=`<img src="${E(img)}" alt="${E(p.title)}" loading="lazy">`;
     return `<article class="bp">
       ${href?`<a class="bp-ph" href="${E(href)}">${ph}</a>`:`<div class="bp-ph">${ph}</div>`}
-      <div class="wrap bp-tx">
+      <div class="bp-tx">
         <h3 class="bp-t">${E(p.title)}${p.badge?`<i>${E(p.badge)}</i>`:''}</h3>
         ${p.description?`<p class="bp-d">${E(p.description)}</p>`:''}
         ${href?`<a class="bp-btn" href="${E(href)}">${E(p.buttonText||'Смотреть')}</a>`:''}

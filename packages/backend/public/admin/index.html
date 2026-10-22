@@ -600,6 +600,34 @@
       dialog::backdrop {
         background: rgba(0, 0, 0, 0.4);
       }
+      /* Ручка перетаскивания окна. sticky — чтобы тянуть можно было и когда
+         содержимое прокручено (у dialog overflow: auto). */
+      .dlg-grip {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        height: 18px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--line);
+        cursor: grab;
+        touch-action: none;
+      }
+      .dlg-grip::before {
+        content: '';
+        display: block;
+        width: 44px;
+        height: 4px;
+        margin: 6px auto;
+        border-radius: 2px;
+        background: var(--line);
+      }
+      dialog.dragging .dlg-grip {
+        cursor: grabbing;
+      }
+      /* Во время перетаскивания текст в окне не выделяется. */
+      dialog.dragging {
+        user-select: none;
+      }
       .dlg {
         padding: 24px;
       }
@@ -1109,7 +1137,15 @@
       </section>
     </main>
 
-    <dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+    <dialog id="dlg">
+      <div
+        class="dlg-grip"
+        id="dlgGrip"
+        aria-hidden="true"
+        title="Потяните, чтобы сдвинуть окно"
+      ></div>
+      <div class="dlg" id="dlgBody"></div>
+    </dialog>
     <div class="toast" id="toast"></div>
 
     <script>
@@ -2411,6 +2447,61 @@
         if (!$('#t-cards').classList.contains('hidden')) loadCards();
         if (!$('#t-top').classList.contains('hidden')) loadTop(true);
       });
+
+      /* Окно заполнения можно сдвинуть: тянем за полоску сверху (pointer
+         events, без зависимостей). Окно общее для карточки и бренда, поэтому
+         работает в обоих редакторах. Позиция сбрасывается при закрытии —
+         следующее открытие снова по центру, как раньше. */
+      (() => {
+        const dlg = $('#dlg'),
+          grip = $('#dlgGrip');
+        let dx = 0,
+          dy = 0,
+          pid = null;
+        const clamp = (v, max) => Math.min(Math.max(v, 0), Math.max(0, max));
+        /* Держим окно целиком в пределах вьюпорта: ручка не уедет за экран. */
+        const place = (x, y) => {
+          const r = dlg.getBoundingClientRect();
+          dlg.style.left = clamp(x, innerWidth - r.width) + 'px';
+          dlg.style.top = clamp(y, innerHeight - r.height) + 'px';
+        };
+        grip.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          /* С полей и кнопок перетаскивание не начинаем. */
+          if (e.target.closest('input,textarea,button,label,select,a')) return;
+          const r = dlg.getBoundingClientRect();
+          dx = e.clientX - r.left;
+          dy = e.clientY - r.top;
+          /* Снимаем центрирование margin:auto и фиксируем текущее место. */
+          dlg.style.position = 'fixed';
+          dlg.style.margin = '0';
+          place(r.left, r.top);
+          dlg.classList.add('dragging');
+          pid = e.pointerId;
+          grip.setPointerCapture(pid);
+          e.preventDefault();
+        });
+        grip.addEventListener('pointermove', (e) => {
+          if (pid === null) return;
+          place(e.clientX - dx, e.clientY - dy);
+        });
+        const drop = () => {
+          if (pid === null) return;
+          if (grip.hasPointerCapture(pid)) grip.releasePointerCapture(pid);
+          pid = null;
+          dlg.classList.remove('dragging');
+        };
+        grip.addEventListener('pointerup', drop);
+        grip.addEventListener('pointercancel', drop);
+        /* Окно браузера уменьшили — возвращаем окно в видимую область. */
+        addEventListener('resize', () => {
+          if (!dlg.style.left) return;
+          place(parseFloat(dlg.style.left), parseFloat(dlg.style.top));
+        });
+        dlg.addEventListener('close', () => {
+          dlg.style.position = dlg.style.margin = dlg.style.left = dlg.style.top = '';
+        });
+      })();
 
       /* без бренда */
       let UN = { items: [], total: 0 };

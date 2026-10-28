@@ -57,6 +57,11 @@ services:
       # (публичное API /api/brands работает в любом случае).
       ADMIN_LOGIN: ${ADMIN_LOGIN:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Дополнительные полноценные аккаунты админки (например, для заказчика); пусто — нет.
+      ADMIN_LOGIN_2: ${ADMIN_LOGIN_2:-}
+      ADMIN_PASSWORD_2: ${ADMIN_PASSWORD_2:-}
+      ADMIN_LOGIN_3: ${ADMIN_LOGIN_3:-}
+      ADMIN_PASSWORD_3: ${ADMIN_PASSWORD_3:-}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
       IMAGES_BASE_URL: ${IMAGES_BASE_URL:-}
       # Тип цены и склад витрины (решение 13.10). Пусто — минимум/сумма по всем (легаси).

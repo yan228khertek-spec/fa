@@ -6,6 +6,8 @@ export interface AdminConfig {
   /** Basic auth админки. Пусто — админка выключена, публичное API брендов работает. */
   login: string;
   password: string;
+  /** Дополнительные полноценные аккаунты (ADMIN_LOGIN_2/ADMIN_PASSWORD_2, _3): права те же, что у основного. */
+  extraUsers?: { login: string; password: string }[];
   /** Каталог для загруженных фото и логотипов брендов (в проде — volume). */
   uploadsDir: string;
   /** Публичный адрес бэкенда (https://…), чтобы API отдавало абсолютные ссылки; пусто — относительные. */
@@ -123,6 +125,17 @@ export function loadSaleExportConfig(env: NodeJS.ProcessEnv = process.env): Sale
   };
 }
 
+/** Дополнительные аккаунты админки: пары ADMIN_LOGIN_n / ADMIN_PASSWORD_n, n = 2…5; неполная пара игнорируется. */
+export function loadExtraAdmins(env: NodeJS.ProcessEnv): { login: string; password: string }[] {
+  const users: { login: string; password: string }[] = [];
+  for (let n = 2; n <= 5; n++) {
+    const login = env[`ADMIN_LOGIN_${n}`] ?? '';
+    const password = env[`ADMIN_PASSWORD_${n}`] ?? '';
+    if (login && password) users.push({ login, password });
+  }
+  return users;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   return {
     port: Number(env.PORT ?? 3000),
@@ -141,6 +154,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     admin: {
       login: env.ADMIN_LOGIN ?? '',
       password: env.ADMIN_PASSWORD ?? '',
+      extraUsers: loadExtraAdmins(env),
       uploadsDir: env.ADMIN_UPLOADS_DIR ?? 'uploads',
       publicBaseUrl: env.PUBLIC_BASE_URL ?? '',
       imagesBaseUrl: env.IMAGES_BASE_URL ?? '',

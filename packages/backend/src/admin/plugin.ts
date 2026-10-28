@@ -311,7 +311,12 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
   });
 
   // ---------- админка ----------
-  if (!admin.login || !admin.password) {
+  // Основной аккаунт и дополнительные (для заказчика и т. п.): права у всех одинаковые.
+  const accounts = [
+    { login: admin.login, password: admin.password },
+    ...(admin.extraUsers ?? []),
+  ].filter((a) => a.login && a.password);
+  if (!accounts.length) {
     app.log.warn(
       'ADMIN_LOGIN/ADMIN_PASSWORD не заданы — админка выключена, публичное API работает',
     );
@@ -352,7 +357,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       if (limiter.blocked(req.ip)) {
         return reply.code(429).header('retry-after', '600').send('Слишком много попыток входа');
       }
-      if (!checkAdminAuth(req.headers.authorization, admin.login, admin.password)) {
+      if (!accounts.some((a) => checkAdminAuth(req.headers.authorization, a.login, a.password))) {
         limiter.fail(req.ip);
         return reply
           .code(401)

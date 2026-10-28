@@ -89,15 +89,17 @@
   var me = document.currentScript;
   me.insertAdjacentHTML('beforebegin', HEADER);
 
-  // Бегущую строку (если страница её содержит — сейчас только главная) переносим
-  // первым элементом внутрь шапки. Иначе фиксированная шапка (top:0) ложится
-  // поверх строки и полностью её скрывает. Внутри шапки строка видна над баром
-  // и скрывается/появляется вместе с шапкой при скролле.
+  // Бегущая строка (сейчас только на главной) закреплена над всем: не уезжает при скролле и
+  // остаётся на месте при открытии меню. Шапка, меню и затемнение сдвинуты вниз на её высоту (--tkh).
   var tick = document.querySelector('.tick');
   var hdr = document.querySelector('header');
   if (tick && hdr) {
-    hdr.insertBefore(tick, hdr.firstChild);
-    hdr.classList.add('has-tick');
+    document.documentElement.classList.add('has-tk');
+    var setH = function(){ document.documentElement.style.setProperty('--tkh', tick.offsetHeight + 'px'); };
+    setH();
+    addEventListener('resize', setH);
+    if (window.ResizeObserver) new ResizeObserver(setH).observe(tick);
+    addEventListener('load', setH);
   }
 
   function mountFooter(){

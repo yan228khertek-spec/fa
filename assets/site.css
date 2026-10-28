@@ -20,12 +20,14 @@ img{display:block;max-width:100%}
 @media(min-width:900px){.wrap{max-width:1600px;margin:0 auto;padding:0 24px}}
 
 /* ═════ ШАПКА ═════ */
-header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+header{position:fixed;top:var(--tkh,0px);left:0;right:0;z-index:100;background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);transition:transform .3s ease;padding-top:var(--st)}
 header.hidden{transform:translateY(-100%)}
 /* Когда внутри шапки есть бегущая строка (главная), безопасную зону сверху
    держит сама строка (её padding-top), иначе отступ задвоится. */
-header.has-tick{padding-top:0}
+html.has-tk header{padding-top:0}
+.tick{position:fixed;top:0;left:0;right:0;z-index:110;will-change:transform}
+html.has-tk .mtop{padding-top:0}
 /* прозрачность 80% задаёт сама шапка; внутренние полосы без своей заливки, иначе она удвоится */
 header .bar,header .gender{background:transparent}
 .bar{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;height:72px;position:relative;
@@ -46,10 +48,10 @@ header .bar,header .gender{background:transparent}
 @media(max-width:760px){.bar{height:60px}.logo{font-size:18px;letter-spacing:.1em}.logo small{font-size:6.5px;letter-spacing:.22em}}
 
 /* ═════ МЕНЮ ═════ */
-.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:101;opacity:0;visibility:hidden;
+.menu-overlay{position:fixed;inset:var(--tkh,0px) 0 0 0;background:rgba(0,0,0,.4);z-index:101;opacity:0;visibility:hidden;
   transition:opacity .3s ease,visibility .3s}
 .menu-overlay.on{opacity:1;visibility:visible}
-.menu{position:fixed;top:0;left:0;bottom:0;width:320px;max-width:88vw;background:#fff;z-index:102;display:flex;flex-direction:column;
+.menu{position:fixed;top:var(--tkh,0px);left:0;bottom:0;width:320px;max-width:88vw;background:#fff;z-index:102;display:flex;flex-direction:column;
   transform:translateX(-100%);visibility:hidden;transition:transform .3s ease,visibility .3s;box-shadow:4px 0 20px rgba(0,0,0,.1)}
 .menu.on{transform:translateX(0);visibility:visible}
 .mtop{display:flex;align-items:center;height:52px;padding:0 8px;padding-top:var(--st);flex:none}

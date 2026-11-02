@@ -243,12 +243,12 @@
 
       /* блог */
       .pp {
-        max-width: 320px;
+        max-width: 360px;
         background: #fff;
         border: 1px solid var(--line, #ddd);
       }
       .pp .ph {
-        aspect-ratio: 4 / 3;
+        aspect-ratio: 6 / 5;
         background: #e9e9e9;
         display: grid;
         place-items: center;
@@ -261,6 +261,11 @@
         height: 100%;
         object-fit: cover;
         display: block;
+      }
+      .pp .ph.m {
+        aspect-ratio: 4 / 3;
+        width: 150px;
+        margin: 0 0 8px 14px;
       }
       .pp .pt {
         padding: 14px;
@@ -901,6 +906,7 @@
                 <th>Бренд</th>
                 <th>Цена</th>
                 <th>Остаток</th>
+                <th>Распродажа</th>
                 <th>Статус</th>
               </tr>
             </thead>
@@ -932,16 +938,18 @@
 
       <section id="t-posts" class="hidden">
         <p class="muted" style="margin-top: 0">
-          Блог показывается на главной под блоками брендов: лента постов из фото, заголовка,
-          короткого описания и кнопки. Новые посты встают в начало ленты, порядок можно менять
+          Посты показываются на главной под блоками брендов без отдельного заголовка, во всю ширину
+          сайта, один за другим. На компьютере фото стоит сбоку от текста (заголовок, описание,
+          кнопка), на телефоне фото сверху. Новые посты встают в начало, порядок можно менять
           стрелками. «Для кого» решает, в каком разделе сайта виден пост: женском, мужском или в
           обоих. Пост без фото или без заголовка, а также скрытый на сайте не показывается.
         </p>
         <div class="row" style="margin-bottom: 16px">
           <button class="btn" id="pAdd">+ Новый пост</button>
           <span class="hint muted"
-            >Фото — горизонтальное 4:3 (например, 1600×1200), JPEG/PNG/WebP до 8 МБ. На сайте фото
-            обрезается по центру, как в превью ниже</span
+            >Фото — JPEG/PNG/WebP до 8 МБ, лучше от 1600×1300. Обрезается по центру: на компьютере
+            почти квадратно (6:5), на телефоне 4:3 (оба варианта в превью ниже, главное держать в
+            центре)</span
           >
         </div>
         <div id="pList"></div>
@@ -1486,6 +1494,8 @@
       const PB_TEXTS = ['Купить', 'Смотреть', 'Читать', 'Подробнее', 'Перейти'];
       function postPreview(p) {
         return `<div class="pp"><div class="ph">${p.image ? `<img src="${esc(p.image)}" alt="">` : 'Загрузите фото'}</div>
+          <div class="muted" style="font-size:11px;margin:8px 14px 4px">На телефоне фото обрезается так:</div>
+          <div class="ph m">${p.image ? `<img src="${esc(p.image)}" alt="">` : ''}</div>
           <div class="pt"><h4><span class="pp-t">${esc(p.title) || 'Заголовок'}</span><i class="pp-b">${esc(p.badge)}</i></h4>
           <p class="pp-d">${esc(p.description)}</p>
           <span class="pb pp-btn" ${p.link || p.buttonText ? '' : 'hidden'}>${esc(p.buttonText) || 'Смотреть'}</span></div></div>`;
@@ -2098,10 +2108,10 @@
               (c) => `<tr class="click" data-id="${c.id}">
     <td>${c.photos[0] ? `<img class="thumb" loading="lazy" src="${esc(c.photos[0].url)}" alt="">` : '<div class="thumb"></div>'}</td>
     <td><b>${esc(c.title || c.model?.name || c.modelId)}</b><div class="muted" style="font-size:12px">${esc(c.model?.article || '')}</div></td>
-    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td>${cbadge(c)}</td></tr>`,
+    <td>${esc(c.model?.brand?.name || '—')}${c.gender && c.gender !== 'all' ? `<div class="muted" style="font-size:12px">${c.gender === 'women' ? 'женское' : 'мужское'}</div>` : ''}</td><td>${money(c.model?.price)}</td><td>${c.model?.stock ?? '—'}</td><td class="salecell"><input type="checkbox" data-sale ${c.sale ? 'checked' : ''} title="Показывать в разделе «Распродажа»" style="width:18px;height:18px;cursor:pointer"></td><td>${cbadge(c)}</td></tr>`,
             )
             .join('') ||
-          '<tr><td colspan="6" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
+          '<tr><td colspan="7" class="muted">Карточек пока нет — найдите товар строкой выше</td></tr>';
         $('#cMore').classList.toggle('hidden', CD.items.length >= CD.total);
       }
       $('#cq').oninput = () => {
@@ -2111,8 +2121,24 @@
       $('#cf').onchange = () => loadCards();
       $('#cMore').onclick = () => loadCards(true);
       $('#cBody').onclick = (e) => {
+        if (e.target.closest('.salecell')) return; // галочка «В распродажу» не открывает карточку
         const tr = e.target.closest('tr[data-id]');
         if (tr) openCard(+tr.dataset.id);
+      };
+      /* галочка прямо в списке: сохраняется сразу, без захода в карточку */
+      $('#cBody').onchange = async (e) => {
+        const cb = e.target.closest('input[data-sale]');
+        if (!cb) return;
+        const id = +cb.closest('tr').dataset.id,
+          on = cb.checked;
+        try {
+          await api('/cards/' + id, { method: 'PUT', json: { sale: on } });
+          const c = CD.items.find((v) => v.id === id);
+          if (c) c.sale = on;
+          toast(on ? 'Добавлено в распродажу' : 'Убрано из распродажи');
+        } catch {
+          cb.checked = !on;
+        }
       };
       $('#cs').oninput = () => {
         clearTimeout($('#cs').t);
@@ -2174,7 +2200,7 @@
         const live = m
           ? `<div class="live"><div><b>${esc(m.article || '—')}</b><span>Артикул</span></div><div><b>${esc(m.brand?.name || '—')}</b><span>Бренд</span></div>
     <div><b>${money(m.price)}</b><span>Цена из 1С</span></div><div><b>${m.stock ?? '—'}</b><span>Остаток</span></div>
-    <div><b>${m.variants.map((v) => esc([v.size, v.color].filter(Boolean).join(' ')) || '—').join(', ') || '—'}</b><span>Размеры / цвета</span></div></div>`
+    <div><b>${m.variants.map((v) => esc([v.size, v.color].filter(Boolean).join(' ')) || '—').join(', ') || '—'}</b><span>Размеры или объём / цвета</span></div></div>`
           : '<p class="err">Этого товара больше нет в 1С — карточка скрыта с сайта.</p>';
         $('#dlgBody').innerHTML =
           `<h3>${esc(c.title || m?.name || c.modelId)} ${cbadge(c)}</h3><div class="sub">${esc(m?.name || '')}</div>${live}
@@ -2183,6 +2209,8 @@
       <div class="hint muted">Для парфюмерии выберите «Парфюмерия»: она попадёт в блок на главной и в раздел каталога.</div></div>
     <div class="fld"><label>Для кого</label><select id="kGender">${AUD.map(([v, t]) => `<option value="${v}" ${(c.gender || 'all') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <div class="hint muted">Где карточка видна на сайте: в женском разделе, в мужском или в обоих. Сайт показывает покупателю только товары выбранного раздела.</div></div>
+    <div class="fld"><label>Старая цена, ₽ <span class="muted">· по желанию</span></label><input type="text" id="kOld" inputmode="decimal" maxlength="12" style="max-width:200px" value="${c.oldPrice ?? ''}" placeholder="например 32 990">
+      <div class="hint muted">Показывается на сайте перечёркнутой рядом с текущей ценой из 1С${m?.price != null ? ` (сейчас ${money(m.price)})` : ''}. Если поле пустое или старая цена не больше текущей, на сайте её не видно. Галочка «В распродажу» стоит в списке карточек.</div></div>
     <div class="fld"><label>Фото (первое — главное, до ${12})</label><div class="photos" id="kPh">${photos || '<span class="muted">Фото нет</span>'}</div>
       <label class="btn ghost sm">+ Добавить фото<input type="file" id="kUp" multiple accept="image/jpeg,image/png,image/webp,image/avif" hidden></label>
       <button class="btn ghost sm" id="kFrom1c">Взять фото из 1С</button>
@@ -2200,6 +2228,7 @@
           title: $('#kTitle').value,
           category: $('#kCat').value,
           gender: $('#kGender').value,
+          oldPrice: $('#kOld').value.trim(),
           description: $('#kDesc').value,
           characteristics: $$('#kKv .kv')
             .map((r) => {

@@ -164,6 +164,10 @@ export interface SiteCard {
   category: string | null;
   /** Раздел сайта, где карточка видна: all — в обоих. */
   gender: Audience;
+  /** Галочка «В распродажу»: карточка попадает в раздел «Распродажа». */
+  sale: boolean;
+  /** Старая цена для показа перечёркнутой; null — не задана. */
+  oldPrice: number | null;
   status: CardStatus;
   publishedAt: string | null;
   createdAt: string;
@@ -184,6 +188,8 @@ export interface CardPatch {
   characteristics?: CardCharacteristic[];
   category?: string | null;
   gender?: Audience;
+  sale?: boolean;
+  oldPrice?: number | null;
   status?: CardStatus;
 }
 

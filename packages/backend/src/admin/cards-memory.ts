@@ -47,6 +47,8 @@ export class MemoryCardRepository implements CardRepository {
       characteristics: structuredClone(input.characteristics),
       category: null,
       gender: 'all',
+      sale: false,
+      oldPrice: null,
       status: 'draft',
       publishedAt: null,
       createdAt: now,
@@ -65,6 +67,8 @@ export class MemoryCardRepository implements CardRepository {
       c.characteristics = structuredClone(patch.characteristics);
     if (patch.category !== undefined) c.category = patch.category;
     if (patch.gender !== undefined) c.gender = patch.gender;
+    if (patch.sale !== undefined) c.sale = patch.sale;
+    if (patch.oldPrice !== undefined) c.oldPrice = patch.oldPrice;
     if (patch.status !== undefined && patch.status !== c.status) {
       c.status = patch.status;
       c.publishedAt = patch.status === 'published' ? new Date().toISOString() : null;

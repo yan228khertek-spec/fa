@@ -99,6 +99,8 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
     };
   };
 
+  /** Распродажа: ?sale=1 оставляет только карточки с галочкой. */
+  const siteSale = (q: Record<string, string | undefined>): boolean => q.sale === '1';
   /** Раздел сайта из ?gender=: только men или women, иначе не фильтруем (как раньше). */
   const siteGender = (q: Record<string, string | undefined>): 'women' | 'men' | undefined =>
     q.gender === 'men' || q.gender === 'women' ? q.gender : undefined;
@@ -137,6 +139,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const res = await cards.publicList({
         brandSlug: slug,
         gender: siteGender(req.query as Record<string, string | undefined>),
+        sale: siteSale(req.query as Record<string, string | undefined>),
         category: category?.slice(0, 40),
         kind: kind?.slice(0, 60),
         ...listFilters(req.query as Record<string, string | undefined>),
@@ -246,6 +249,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       const { category, kind } = req.query as { category?: string; kind?: string };
       const res = await cards.publicList({
         gender: siteGender(req.query as Record<string, string | undefined>),
+        sale: siteSale(req.query as Record<string, string | undefined>),
         category: category?.slice(0, 40),
         kind: kind?.slice(0, 60),
         ...listFilters(req.query as Record<string, string | undefined>),
@@ -307,7 +311,12 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
   });
 
   // ---------- админка ----------
-  if (!admin.login || !admin.password) {
+  // Основной аккаунт и дополнительные (для заказчика и т. п.): права у всех одинаковые.
+  const accounts = [
+    { login: admin.login, password: admin.password },
+    ...(admin.extraUsers ?? []),
+  ].filter((a) => a.login && a.password);
+  if (!accounts.length) {
     app.log.warn(
       'ADMIN_LOGIN/ADMIN_PASSWORD не заданы — админка выключена, публичное API работает',
     );
@@ -348,7 +357,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
       if (limiter.blocked(req.ip)) {
         return reply.code(429).header('retry-after', '600').send('Слишком много попыток входа');
       }
-      if (!checkAdminAuth(req.headers.authorization, admin.login, admin.password)) {
+      if (!accounts.some((a) => checkAdminAuth(req.headers.authorization, a.login, a.password))) {
         limiter.fail(req.ip);
         return reply
           .code(401)

@@ -67,6 +67,10 @@ export interface PublicCardItem {
   kind: string;
   /** Для кого карточка: all — видна и в женском, и в мужском разделе. */
   gender: Audience;
+  /** В распродаже (галочка в админке). */
+  sale: boolean;
+  /** Старая цена для показа перечёркнутой: только если задана и больше текущей, иначе null. */
+  oldPrice: number | null;
 }
 
 export interface PublicCardFacets {
@@ -81,12 +85,19 @@ export interface PublicCardFacets {
 
 export type CardSort = 'new' | 'priceAsc' | 'priceDesc';
 
-/** Размеры по порядку: буквенные XS…XXL, числовые по возрастанию, остальное по алфавиту. */
+/** Размеры по порядку: буквенные XS…XXL, числовые и объёмы («50 мл») по возрастанию, остальное по алфавиту. */
 const LETTER_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 export function compareSizes(a: string, b: string): number {
   const na = Number(a.replace(',', '.'));
   const nb = Number(b.replace(',', '.'));
   if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  // «30 мл», «100 мл»: объём флакона сравниваем по числу в начале, а не по буквам
+  const va = /^\d+(?:[.,]\d+)?/.exec(a.trim());
+  const vb = /^\d+(?:[.,]\d+)?/.exec(b.trim());
+  if (va && vb) {
+    const d = Number(va[0].replace(',', '.')) - Number(vb[0].replace(',', '.'));
+    if (d !== 0) return d;
+  }
   if (!Number.isNaN(na)) return -1;
   if (!Number.isNaN(nb)) return 1;
   const ia = LETTER_SIZES.indexOf(a.toUpperCase());
@@ -138,6 +149,8 @@ export interface CardInput {
   status?: unknown;
   category?: unknown;
   gender?: unknown;
+  sale?: unknown;
+  oldPrice?: unknown;
 }
 
 function parseTitle(v: unknown): string | null {
@@ -177,6 +190,21 @@ function parseCharacteristics(v: unknown): CardCharacteristic[] {
 }
 
 /** Раздел вручную: пусто — «по названию из 1С», иначе один из разделов витрины. */
+/** Старая цена: пусто — не задана; иначе положительное число (допускаем запятую), не больше 100 млн. */
+function parseOldPrice(v: unknown): number | null {
+  if (v === null || v === '') return null;
+  const n = typeof v === 'string' ? Number(v.trim().replace(/\s/g, '').replace(',', '.')) : v;
+  if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0 || n > 100_000_000) {
+    throw new AdminError('oldPrice: положительное число или пусто');
+  }
+  return Math.round(n * 100) / 100;
+}
+
+/** Старую цену показываем, только если она выше текущей (иначе «скидка» теряет смысл). */
+function showOldPrice(oldPrice: number | null, price: number | null): number | null {
+  return oldPrice !== null && price !== null && oldPrice > price ? oldPrice : null;
+}
+
 function parseCategory(v: unknown): string | null {
   if (v === null || v === '') return null;
   if (typeof v === 'string' && (CATEGORIES as readonly string[]).includes(v)) return v;
@@ -324,6 +352,11 @@ export class CardService {
     }
     if (input.category !== undefined) patch.category = parseCategory(input.category);
     if (input.gender !== undefined) patch.gender = parseAudience(input.gender);
+    if (input.oldPrice !== undefined) patch.oldPrice = parseOldPrice(input.oldPrice);
+    if (input.sale !== undefined) {
+      if (typeof input.sale !== 'boolean') throw new AdminError('sale: true или false');
+      patch.sale = input.sale;
+    }
     if (input.status !== undefined) {
       patch.status = parseStatus(input.status);
       if (patch.status === 'published') {
@@ -374,6 +407,8 @@ export class CardService {
       // у карточки с ручным разделом первое слово названия — не вид изделия (часто бренд)
       kind: x.card.category ?? kindOf(m.name),
       gender: x.card.gender,
+      sale: x.card.sale,
+      oldPrice: showOldPrice(x.card.oldPrice, m.price),
     };
   }
 
@@ -386,6 +421,8 @@ export class CardService {
     brandSlug?: string;
     /** Раздел сайта: показываем карточки «для всех» и для этого раздела. */
     gender?: 'women' | 'men';
+    /** Только карточки с галочкой «В распродажу». */
+    sale?: boolean;
     category?: string;
     kind?: string;
     /** Фильтры страницы: бренды (slug), размеры и цвета «любой из», цена «от и до». */
@@ -403,6 +440,7 @@ export class CardService {
     const byBrand = (await this.visibleCards())
       .filter((x) => !opts.brandSlug || x.view.model?.brand?.slug === opts.brandSlug)
       .filter((x) => !opts.gender || x.card.gender === 'all' || x.card.gender === opts.gender)
+      .filter((x) => !opts.sale || x.card.sale)
       .map((x) => {
         const v = (x.view.model?.variants ?? []).filter((w) => w.inStock !== false);
         sizesOf.set(x.card.id, {

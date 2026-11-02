@@ -1,5 +1,5 @@
 import type { OrderExport, OrderExportItem, OrderExportSource } from './export.js';
-import type { CreateResult, NewOrder, OrderRepository, OrderView } from './types.js';
+import type { AccountOrder, CreateResult, NewOrder, OrderRepository, OrderView } from './types.js';
 
 /** Хранимый заказ: поля NewOrder (как в F1) + id, createdAt и метка выгрузки (F2). */
 type StoredOrder = NewOrder & {
@@ -18,7 +18,9 @@ export class MemoryOrderRepository implements OrderRepository, OrderExportSource
 
   async findByIdempotencyKey(key: string) {
     const o = this.orders.find((x) => x.idempotencyKey === key);
-    return o ? { requestHash: o.requestHash, order: structuredClone(o.view) } : null;
+    return o
+      ? { requestHash: o.requestHash, order: structuredClone(o.view), userId: o.userId ?? null }
+      : null;
   }
 
   async findByToken(token: string): Promise<OrderView | null> {
@@ -62,6 +64,30 @@ export class MemoryOrderRepository implements OrderRepository, OrderExportSource
       view,
     });
     return { kind: 'created', order: structuredClone(view) };
+  }
+
+  private accountView(o: StoredOrder): AccountOrder {
+    const { name, phone, email } = o.input.customer;
+    const customer = { name, phone, email };
+    return structuredClone({
+      ...o.view,
+      customer,
+      delivery: o.input.delivery,
+      comment: o.input.comment,
+    });
+  }
+
+  async listForUser(userId: string, limit: number, offset: number): Promise<AccountOrder[]> {
+    return this.orders
+      .filter((o) => o.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || Number(b.id) - Number(a.id))
+      .slice(offset, offset + limit)
+      .map((o) => this.accountView(o));
+  }
+
+  async findForUser(userId: string, number: string): Promise<AccountOrder | null> {
+    const row = this.orders.find((o) => o.userId === userId && o.number === number);
+    return row ? this.accountView(row) : null;
   }
 
   async listPendingExport(limit: number): Promise<OrderExport[]> {

@@ -4,6 +4,7 @@ import { ORDERS_DDL } from './schema.js';
 import type { OrderExport, OrderExportItem, OrderExportSource } from './export.js';
 import {
   NumberTakenError,
+  type AccountOrder,
   type CreateResult,
   type NewOrder,
   type OrderRepository,
@@ -16,6 +17,7 @@ export const kopToNumeric = (kop: number): string =>
 const numericToKop = (v: string): number => Math.round(Number(v) * 100);
 
 interface OrderRow {
+  user_id: string | null;
   id: string;
   number: string;
   public_token: string;
@@ -42,7 +44,19 @@ interface ItemRow {
   amount: string;
 }
 
-const ORDER_COLS = `id::text, number, public_token, request_hash, created_at, status, payment_status,
+interface AccountFields {
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  delivery_city: string | null;
+  delivery_address: string | null;
+  delivery_pvz_code: string | null;
+  comment: string | null;
+}
+const ACCOUNT_COLS =
+  'customer_name, customer_phone, customer_email, delivery_city, delivery_address, delivery_pvz_code, comment';
+
+const ORDER_COLS = `id::text, user_id::text, number, public_token, request_hash, created_at, status, payment_status,
   payment_method, delivery_method, items_total::text, delivery_cost::text, bonus_amount::text,
   total::text`;
 
@@ -143,7 +157,9 @@ export class PgOrderRepository implements OrderRepository, OrderExportSource {
 
   async findByIdempotencyKey(key: string) {
     const hit = await this.one('idempotency_key', key);
-    return hit ? { requestHash: hit.row.request_hash, order: hit.order } : null;
+    return hit
+      ? { requestHash: hit.row.request_hash, order: hit.order, userId: hit.row.user_id }
+      : null;
   }
 
   async findByToken(token: string): Promise<OrderView | null> {
@@ -163,9 +179,9 @@ export class PgOrderRepository implements OrderRepository, OrderExportSource {
            customer_name, customer_phone, phone_normalized, customer_email, comment,
            delivery_method, delivery_city, delivery_address, delivery_pvz_code,
            items_total, delivery_cost, bonus_amount, total,
-           pd_consent_at, pd_policy_version, offer_version, client_ip, user_agent)
+           pd_consent_at, pd_policy_version, offer_version, client_ip, user_agent, user_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-           $15::numeric, $16::numeric, $17::numeric, $18::numeric, now(), $19, $20, $21::inet, $22)
+           $15::numeric, $16::numeric, $17::numeric, $18::numeric, now(), $19, $20, $21::inet, $22, $23)
          ON CONFLICT DO NOTHING
          RETURNING ${ORDER_COLS}`,
         [
@@ -191,6 +207,7 @@ export class PgOrderRepository implements OrderRepository, OrderExportSource {
           o.offerVersion,
           inet(o.clientIp),
           o.userAgent,
+          o.userId ?? null,
         ],
       );
       const row = ins.rows[0];
@@ -235,9 +252,9 @@ export class PgOrderRepository implements OrderRepository, OrderExportSource {
       // Согласие на рассылку — отдельной записью и только при поставленной галочке.
       if (input.consents.marketing) {
         await client.query(
-          `INSERT INTO marketing_consents (email, phone_normalized, order_id, source,
+          `INSERT INTO marketing_consents (email, phone_normalized, order_id, source, user_id,
              consent_text_version, ip, user_agent)
-           VALUES ($1, $2, $3, 'checkout', $4, $5::inet, $6)`,
+           VALUES ($1, $2, $3, 'checkout', $7, $4, $5::inet, $6)`,
           [
             input.customer.email,
             input.customer.phoneNormalized,
@@ -245,6 +262,7 @@ export class PgOrderRepository implements OrderRepository, OrderExportSource {
             o.marketingConsentVersion,
             inet(o.clientIp),
             o.userAgent,
+            o.userId ?? null,
           ],
         );
       }
@@ -257,6 +275,40 @@ export class PgOrderRepository implements OrderRepository, OrderExportSource {
     } finally {
       client.release();
     }
+  }
+
+  private async accountView(row: OrderRow & AccountFields): Promise<AccountOrder> {
+    return {
+      ...(await this.view(row)),
+      customer: { name: row.customer_name, phone: row.customer_phone, email: row.customer_email },
+      delivery: {
+        method: row.delivery_method,
+        city: row.delivery_city,
+        address: row.delivery_address,
+        pvzCode: row.delivery_pvz_code,
+      },
+      comment: row.comment,
+    };
+  }
+
+  async listForUser(userId: string, limit: number, offset: number): Promise<AccountOrder[]> {
+    await this.ready();
+    const { rows } = await this.pool.query<OrderRow & AccountFields>(
+      `SELECT ${ORDER_COLS}, ${ACCOUNT_COLS} FROM orders WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2 OFFSET $3`,
+      [userId, limit, offset],
+    );
+    const result: AccountOrder[] = [];
+    for (const row of rows) result.push(await this.accountView(row));
+    return result;
+  }
+
+  async findForUser(userId: string, number: string): Promise<AccountOrder | null> {
+    await this.ready();
+    const { rows } = await this.pool.query<OrderRow & AccountFields>(
+      `SELECT ${ORDER_COLS}, ${ACCOUNT_COLS} FROM orders WHERE user_id = $1 AND number = $2`,
+      [userId, number],
+    );
+    return rows[0] ? this.accountView(rows[0]) : null;
   }
 
   /**

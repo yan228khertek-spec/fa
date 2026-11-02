@@ -41,8 +41,15 @@ import { PgOrderRepository } from './orders/pg.js';
 import { OrderService } from './orders/service.js';
 import { DEFAULT_ORDERS_CONFIG, type OrderRepository } from './orders/types.js';
 import { DEFAULT_SALE_EXPORT_CONFIG, type OrderExportSource } from './orders/export.js';
+import type { AuthRepository, SmsSender } from './auth/types.js';
+import { AuthService } from './auth/service.js';
+import { MemoryAuthRepository } from './auth/memory.js';
+import { PgAuthRepository } from './auth/pg.js';
+import { accountPlugin } from './account/plugin.js';
 
 export interface BuildAppOptions {
+  authRepo?: AuthRepository;
+  smsSender?: SmsSender;
   config?: AppConfig;
   logSink?: ExchangeLogSink;
   catalog?: CatalogRepository;
@@ -70,6 +77,18 @@ export interface BuildAppOptions {
 
 export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInstance> {
   const config = opts.config ?? loadConfig();
+  if (config.account?.enabled) {
+    if (!opts.smsSender) throw new Error('Account API requires an SMS sender');
+    if (config.account.codeSecret.length < 32 || config.account.origins.length === 0)
+      throw new Error('Invalid account configuration');
+    if (
+      config.production &&
+      (!config.databaseUrl ||
+        opts.smsSender.kind !== 'provider' ||
+        opts.authRepo instanceof MemoryAuthRepository)
+    )
+      throw new Error('Production account API requires PostgreSQL and a real SMS sender');
+  }
   const logSink =
     opts.logSink ??
     (config.databaseUrl ? new PgExchangeLog(config.databaseUrl) : new MemoryExchangeLog());
@@ -126,7 +145,11 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       : new MemoryTickerRepository());
 
   const app = Fastify({
-    logger: !config.quiet,
+    logger: config.quiet
+      ? false
+      : {
+          redact: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]'],
+        },
     // Глобальный лимит тела маленький: большие тела легальны только в
     // /api/1c-exchange mode=file, где поток пишется на диск и ограничен
     // config.fileLimit внутри appendChunk (ревью этапа 0, пункт 2).
@@ -165,11 +188,27 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   }
 
   // Заказы проверяют позиции по той же выдаче, что видит витрина (CardService.orderable).
-  await app.register(ordersPlugin, {
-    orders: new OrderService(orderRepo, cardService, config.orders ?? DEFAULT_ORDERS_CONFIG),
-  });
+  const orderService = new OrderService(
+    orderRepo,
+    cardService,
+    config.orders ?? DEFAULT_ORDERS_CONFIG,
+  );
+  await app.register(ordersPlugin, { orders: orderService });
+
+  const authRepo = config.account?.enabled
+    ? (opts.authRepo ??
+      (config.databaseUrl ? new PgAuthRepository(config.databaseUrl) : new MemoryAuthRepository()))
+    : undefined;
+  if (authRepo && config.account && opts.smsSender) {
+    await app.register(accountPlugin, {
+      auth: new AuthService(authRepo, opts.smsSender, config.account.codeSecret, opts.now),
+      orders: orderService,
+      config: config.account,
+    });
+  }
 
   app.addHook('onClose', async () => {
+    await authRepo?.close();
     // Фоновая загрузка каталога должна дописаться до закрытия пулов.
     await jobs.drain();
     await catalog.close();

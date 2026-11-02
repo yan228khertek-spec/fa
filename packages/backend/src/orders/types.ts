@@ -93,6 +93,8 @@ export interface OrderLine {
 
 /** Всё, что пишется в БД одной транзакцией. */
 export interface NewOrder {
+  /** Only supplied by server-side session resolution. null/undefined means guest. */
+  userId?: string | null;
   number: string;
   publicToken: string;
   idempotencyKey: string;
@@ -142,7 +144,9 @@ export type CreateResult = { kind: 'created'; order: OrderView } | { kind: 'key-
 export interface OrderRepository {
   ready(): Promise<void>;
   /** Заказ по ключу идемпотентности: hash — для сверки «тот же запрос или нет». */
-  findByIdempotencyKey(key: string): Promise<{ requestHash: string; order: OrderView } | null>;
+  findByIdempotencyKey(
+    key: string,
+  ): Promise<{ requestHash: string; order: OrderView; userId: string | null } | null>;
   /**
    * Создаёт заказ атомарно (заказ, позиции, история, согласие на рассылку).
    * Ключ идемпотентности уже занят → key-taken, второй заказ не создаётся.
@@ -150,7 +154,19 @@ export interface OrderRepository {
    */
   create(order: NewOrder): Promise<CreateResult>;
   findByToken(token: string): Promise<OrderView | null>;
+  listForUser(userId: string, limit: number, offset: number): Promise<AccountOrder[]>;
+  findForUser(userId: string, number: string): Promise<AccountOrder | null>;
   close(): Promise<void>;
+}
+
+export interface AccountOrder extends OrderView {
+  customer: { name: string; phone: string; email: string };
+  delivery: OrderView['delivery'] & {
+    city: string | null;
+    address: string | null;
+    pvzCode: string | null;
+  };
+  comment: string | null;
 }
 
 export class NumberTakenError extends Error {

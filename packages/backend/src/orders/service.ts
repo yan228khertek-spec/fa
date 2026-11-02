@@ -122,12 +122,18 @@ export class OrderService {
 
   async create(
     input: OrderInput,
-    meta: { idempotencyKey: string; clientIp: string | null; userAgent: string | null },
+    meta: {
+      idempotencyKey: string;
+      clientIp: string | null;
+      userAgent: string | null;
+      userId?: string | null;
+    },
   ): Promise<{ replayed: boolean; order: OrderView }> {
     const hash = requestHash(input);
     // Повтор проверяем ДО каталога: заказ уже создан, даже если товар с тех пор закончился.
     const prior = await this.repo.findByIdempotencyKey(meta.idempotencyKey);
-    if (prior) return this.replay(prior.requestHash, hash, prior.order);
+    const userId = meta.userId ?? null;
+    if (prior) return this.replay(prior.requestHash, hash, prior.order, prior.userId, userId);
 
     const lines = await this.checkItems(input);
     const itemsTotalKop = lines.reduce((s, l) => s + l.amountKop, 0);
@@ -147,6 +153,7 @@ export class OrderService {
       let res: CreateResult;
       try {
         res = await this.repo.create({
+          userId,
           number: newOrderNumber(),
           publicToken: newPublicToken(),
           idempotencyKey: meta.idempotencyKey,
@@ -172,7 +179,7 @@ export class OrderService {
       // Параллельный запрос с тем же ключом успел первым — отвечаем его заказом.
       const winner = await this.repo.findByIdempotencyKey(meta.idempotencyKey);
       if (!winner) throw new Error('Заказ по ключу идемпотентности не найден после конфликта');
-      return this.replay(winner.requestHash, hash, winner.order);
+      return this.replay(winner.requestHash, hash, winner.order, winner.userId, userId);
     }
   }
 
@@ -180,8 +187,10 @@ export class OrderService {
     priorHash: string,
     hash: string,
     order: OrderView,
+    priorUserId: string | null,
+    userId: string | null,
   ): { replayed: boolean; order: OrderView } {
-    if (priorHash !== hash) {
+    if (priorHash !== hash || priorUserId !== userId) {
       throw new OrderError(
         409,
         'IDEMPOTENCY_KEY_REUSED',

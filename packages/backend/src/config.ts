@@ -1,5 +1,6 @@
 import { DEFAULT_ORDERS_CONFIG, type OrdersConfig } from './orders/types.js';
 import { DEFAULT_SALE_EXPORT_CONFIG, type SaleExportConfig } from './orders/export.js';
+import type { AccountConfig } from './auth/types.js';
 
 /** Витринный слой брендов и админка (миграция 004). */
 export interface AdminConfig {
@@ -17,6 +18,8 @@ export interface AdminConfig {
 }
 
 export interface AppConfig {
+  account?: AccountConfig;
+  production?: boolean;
   port: number;
   host: string;
   /** Логин/пароль Basic auth для «Обмена с сайтом» (1С). Только из env. */
@@ -137,7 +140,41 @@ export function loadExtraAdmins(env: NodeJS.ProcessEnv): { login: string; passwo
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  const enabled = ['1', 'true'].includes((env.ACCOUNT_ENABLED ?? '').trim().toLowerCase());
+  const origins = (env.ACCOUNT_ORIGINS ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const codeSecret = env.AUTH_CODE_SECRET ?? '';
+  if (enabled) {
+    if (codeSecret.length < 32)
+      throw new Error('AUTH_CODE_SECRET must contain at least 32 characters');
+    if (
+      !origins.length ||
+      origins.some((origin) => {
+        try {
+          const url = new URL(origin);
+          return (
+            url.origin !== origin ||
+            (url.protocol !== 'https:' &&
+              !(
+                env.NODE_ENV !== 'production' &&
+                url.protocol === 'http:' &&
+                ['localhost', '127.0.0.1'].includes(url.hostname)
+              ))
+          );
+        } catch {
+          return true;
+        }
+      })
+    )
+      throw new Error('ACCOUNT_ORIGINS must contain explicit HTTPS origins');
+    if (env.NODE_ENV === 'production' && !env.DATABASE_URL)
+      throw new Error('ACCOUNT_ENABLED requires DATABASE_URL in production');
+  }
   return {
+    account: { enabled, origins, codeSecret },
+    production: env.NODE_ENV === 'production',
     port: Number(env.PORT ?? 3000),
     host: env.HOST ?? '0.0.0.0',
     exchangeLogin: env.EXCHANGE_LOGIN ?? '',

@@ -1,6 +1,7 @@
 import { DEFAULT_ORDERS_CONFIG, type OrdersConfig } from './orders/types.js';
 import { DEFAULT_SALE_EXPORT_CONFIG, type SaleExportConfig } from './orders/export.js';
 import type { AccountConfig } from './auth/types.js';
+import { loadCdekConfig, type CdekConfig } from './delivery/cdek.js';
 
 /** Витринный слой брендов и админка (миграция 004). */
 export interface AdminConfig {
@@ -18,6 +19,7 @@ export interface AdminConfig {
 }
 
 export interface AppConfig {
+  cdek?: CdekConfig;
   account?: AccountConfig;
   production?: boolean;
   port: number;
@@ -174,6 +176,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   }
   return {
     account: { enabled, origins, codeSecret },
+    cdek: loadCdekConfig(env),
     production: env.NODE_ENV === 'production',
     port: Number(env.PORT ?? 3000),
     host: env.HOST ?? '0.0.0.0',

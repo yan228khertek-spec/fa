@@ -18,8 +18,11 @@ import { MAX_IMAGE_BYTES, OWN_FILE_RE, page, parseId, removeOwnFile, saveImage }
 import { seedBrands } from './seed.js';
 import type { BrandService } from './service.js';
 import { AdminError, type Gender, type ImageKind } from './types.js';
+import type { CdekCalculator } from '../delivery/cdek.js';
+import { registerCdekRoutes } from '../delivery/admin-routes.js';
 
 export interface AdminPluginOptions {
+  cdek?: CdekCalculator;
   admin: AdminConfig;
   service: BrandService;
   cards: CardService;
@@ -394,6 +397,7 @@ export async function adminPlugin(app: FastifyInstance, opts: AdminPluginOptions
         .send(await readFile(path.join(UI_DIR, 'index.html')));
     adm.get('/admin', sendUi);
     adm.get('/admin/', sendUi);
+    registerCdekRoutes(adm, opts.cdek);
 
     const dto = <
       T extends {

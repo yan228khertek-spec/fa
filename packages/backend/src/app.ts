@@ -46,6 +46,7 @@ import { AuthService } from './auth/service.js';
 import { MemoryAuthRepository } from './auth/memory.js';
 import { PgAuthRepository } from './auth/pg.js';
 import { accountPlugin } from './account/plugin.js';
+import { CdekClient } from './delivery/cdek.js';
 
 export interface BuildAppOptions {
   authRepo?: AuthRepository;
@@ -174,6 +175,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   const cardService = new CardService(cardRepo, catalogReader, brandService);
   if (config.admin) {
     await app.register(adminPlugin, {
+      cdek: config.cdek ? new CdekClient(config.cdek) : undefined,
       admin: config.admin,
       service: brandService,
       cards: cardService,

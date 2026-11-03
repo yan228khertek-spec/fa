@@ -81,6 +81,12 @@ services:
       ACCOUNT_ENABLED: ${ACCOUNT_ENABLED:-0}
       ACCOUNT_ORIGINS: ${ACCOUNT_ORIGINS:-}
       AUTH_CODE_SECRET: ${AUTH_CODE_SECRET:-}
+      # Закрытый проверочный калькулятор СДЭК, отдельно от оформления заказа.
+      CDEK_ENABLED: ${CDEK_ENABLED:-0}
+      CDEK_ENVIRONMENT: ${CDEK_ENVIRONMENT:-}
+      CDEK_CLIENT_ID: ${CDEK_CLIENT_ID:-}
+      CDEK_CLIENT_SECRET: ${CDEK_CLIENT_SECRET:-}
+      CDEK_TIMEOUT_MS: ${CDEK_TIMEOUT_MS:-10000}
       # Перед backend стоит Caddy: адрес клиента — из X-Forwarded-For
       # (иначе ограничитель подбора пароля видит один адрес — Caddy).
       TRUST_PROXY: '1'

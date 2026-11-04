@@ -146,7 +146,10 @@ function render(){
   document.getElementById('bCount').textContent=S.total+' '+plural(S.total,'товар','товара','товаров');
   // слева: внутри раздела — его типы (туфли, лоферы…), на общей странице — разделы
   const nav=document.getElementById('cats');
-  if(S.category){
+  if(S.category === 'Парфюмерия'){
+    // в разделе Парфюмерия фасетная навигация не нужна
+    nav.innerHTML='';
+  }else if(S.category){
     const t=S.facets.kinds.reduce((a,k)=>a+k.count,0);
     nav.innerHTML=S.facets.kinds.length||S.kind?
       `<button class="${S.kind?'':'on'}" data-k="">Все<i>${t}</i></button>`

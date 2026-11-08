@@ -143,6 +143,7 @@
   .bp-t{font-size:clamp(28px,2.6vw,42px);margin-bottom:16px}
   .bp-d{font-size:17px}
 }
+.state{text-align:center;color:var(--muted);padding:40px 0;font-size:15px}
 </style>
 </head>
 <body>
@@ -424,7 +425,9 @@ function card(p){
     });
   getJ('/api/home/parfum'+q).then(d=>{
       if(my!==seq||!d)return;
-      document.getElementById('gperf').innerHTML=d.items.map(i=>real(i)).join('');
+      const g=document.getElementById('gperf');
+      if(d.items.length)g.innerHTML=d.items.map(i=>real(i)).join('');
+      else g.innerHTML='<div class="state"><span class="muted">В разделе парфюмерии пока нет товаров. Скоро будет!</span></div>';
     });
     getJ('/api/home?gender='+g).then(d=>{
       if(my!==seq||!d)return;

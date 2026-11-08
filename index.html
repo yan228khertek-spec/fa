@@ -234,7 +234,7 @@ function slideHTML(x,cls,h){
     const pos=(x.fx!=null?`--dp:${x.fx}% ${x.fy}%;--mp:${x.mfx}% ${x.mfy}%`:''),
           href=safeHref(x.link),
           txt=(x.t||x.s||x.cta)?`<div class="c ${x.theme==='dark'?'dk':''}">${x.t?`<${h}>${fmt(x.t)}</${h}>`:''}${x.s?`<p class="sub">${fmt(x.s)}</p>`:''}${href&&x.cta?`<a class="btn ${x.theme==='dark'?'dark':''}" href="${esc(href)}">${esc(x.cta)}</a>`:''}</div>`:'';
-    return `<div class="slide${cls?' '+cls:''}" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(x.imM)}">`:''}<img src="${esc(x.im)}" alt="${esc(x.t||'')}"></picture>${(x.vd||x.vm)?`<video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-vd="${esc(x.vd||'')}" data-vm="${esc(x.vm||'')}"></video>`:''}${txt}</div>`;
+    return `<div class="slide${cls?' '+cls:''}" style="${pos}"><picture>${x.imM?`<source media="(max-width:899px)" srcset="${esc(API_BASE+x.imM)}">`:''}<img src="${esc(API_BASE+x.im)}" alt="${esc(x.t||'')}"></picture>${(x.vd||x.vm)?`<video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" data-vd="${esc(x.vd||'')}" data-vm="${esc(x.vm||'')}"></video>`:''}${txt}</div>`;
 }
 function paintSlides(list){
   N=list.length;

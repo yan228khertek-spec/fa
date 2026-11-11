@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бренды | FASHION AVENUE</title>
+    <style>
+        /* Базовые переменные из вашего index.html для единого стиля */
+        :root {
+            --bg: #ffffff;
+            --tx: #1a1a1a;
+            --line: #e5e5e5;
+            --accent: #000000;
+            --f: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            padding-top: 64px; /* Отступ под фиксированную шапку */
+            font-family: var(--f);
+            background: var(--bg);
+            color: var(--tx);
+            line-height: 1.5;
+        }
+
+        /* Шапка (упрощенная копия вашей для единообразия) */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: var(--bg); border-bottom: 1px solid var(--line);
+            transition: transform 0.3s ease;
+        }
+        header.hidden { transform: translateY(-100%); }
+        .bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; max-width: 1200px; margin: 0 auto; }
+        .logo { font-size: 18px; font-weight: 700; text-decoration: none; color: var(--tx); text-transform: uppercase; letter-spacing: 1px; }
+        .logo small { display: block; font-size: 10px; font-weight: 400; color: #666; letter-spacing: 0.5px; margin-top: 2px; }
+        .back-link { text-decoration: none; color: var(--tx); font-size: 14px; display: flex; align-items: center; gap: 6px; }
+
+        /* Основной контент страницы брендов */
+        .brands-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px 80px;
+        }
+
+        .brands-title {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .brands-search {
+            width: 100%;
+            max-width: 400px;
+            padding: 14px 18px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            margin-bottom: 40px;
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .brands-search:focus {
+            border-color: var(--tx);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+        }
+
+        .brand-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--tx);
+            transition: all 0.3s ease;
+            background: var(--bg);
+        }
+
+        .brand-card:hover {
+            border-color: var(--tx);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .brand-logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 16px;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .brand-card:hover .brand-logo {
+            filter: grayscale(0%);
+        }
+
+        .brand-name {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Адаптив для мобильных */
+        @media (max-width: 600px) {
+            .brands-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .brand-card { padding: 16px 8px; }
+            .brand-logo { width: 70px; height: 70px; }
+            .brands-title { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Шапка -->
+    <header>
+        <div class="bar">
+            <a href="index.html" class="back-link">← Назад в каталог</a>
+            <a class="logo" href="index.html">FASHION AVENUE<small>ГАЛЕРЕЯ МОДЫ · ОМСК</small></a>
+            <div style="width: 80px;"></div> <!-- Пустой блок для центровки логотипа -->
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="brands-container">
+        <h1 class="brands-title">Все бренды</h1>
+        
+        <input type="text" class="brands-search" placeholder="Поиск бренда (например: Gucci)..." id="brandSearch">
+        
+        <div class="brands-grid" id="brandsGrid">
+            <!-- Бренды (извлечены из вашего дампа ЦУМ) -->
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/b65cedbd98da6de5d4b3620ac6318b24/width/0/i/a3/7a/b1/ee/a37ab1ee-0ee0-4161-bb7f-9ec3bef9ec2f.png" alt="Balmain" class="brand-logo">
+                <span class="brand-name">Balmain</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/b003531ab5222366a918ca0507a6327a/width/0/i/f6/a2/f8/00/f6a2f800-f24e-471a-b9ff-b65591ebaf8a.png" alt="Bottega Veneta" class="brand-logo">
+                <span class="brand-name">Bottega Veneta</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/51a6d7466125e4d79d4a5a04d41f2fcd/width/0/i/56/d5/53/79/56d55379-efc3-4220-9d7e-8b40e33fbc51.png" alt="Burberry" class="brand-logo">
+                <span class="brand-name">Burberry</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/ffd96129eb0e6ca929bd94bc4b33da4d/width/0/i/b/88885716-7c51-4b5c-8408-c9de9372e139.png" alt="Chloé" class="brand-logo">
+                <span class="brand-name">Chloé</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/06766a1cb910157c6f70e264c930c45f/width/0/i/d1/49/86/a3/d14986a3-cecd-4f3e-9731-bf66d6222a65.png" alt="Diesel" class="brand-logo">
+                <span class="brand-name">Diesel</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/d350d2a55a5841e516c3b81df78cc811/width/0/i/7b/68/8e/69/7b688e69-372b-4a73-a232-a3ed3f74f1a7.png" alt="Gucci" class="brand-logo">
+                <span class="brand-name">Gucci</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/6acceaa91cbae28332eae45e380438cf/width/0/i/6a/fb/7a/44/6afb7a44-3498-42d9-9d74-5b599535cd2a.png" alt="Prada" class="brand-logo">
+                <span class="brand-name">Prada</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/dbc2b656a38e0cc43d2f11a92c2e6b9d/width/0/i/bd/24/1e/0c/bd241e0c-a0fd-4c80-8034-de37e7215393.png" alt="Saint Laurent" class="brand-logo">
+                <span class="brand-name">Saint Laurent</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/f5600ac4ecbb3062b2000628e52cb5b3/width/0/i/f6/a2/65/7f/f6a2657f-4bd6-4a15-9aff-d37353196479.png" alt="Brunello Cucinelli" class="brand-logo">
+                <span class="brand-name">Brunello Cucinelli</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/010486196108a678aa88ddc247a54a8a/width/0/i/27/be/ab/71/27beab71-fd4b-476d-b9ff-7985c1537569.png" alt="TOTEME" class="brand-logo">
+                <span class="brand-name">TOTEME</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/bce1ab3076f328fefd014daf054f1645/width/0/i/93/b1/42/a8/93b142a8-b455-4e7b-9c75-aa8a4bd08656.png" alt="Santoni" class="brand-logo">
+                <span class="brand-name">Santoni</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/44723017827f3d1c8722035ff8eed768/width/0/i/16/e2/c8/c6/16e2c8c6-878f-4767-b2e2-c6838fe56240.png" alt="Marni" class="brand-logo">
+                <span class="brand-name">Marni</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/2820211269cdecbee68cb3c27775973e/width/0/i/29/00/bc/f5/2900bcf5-ad2e-4190-b440-b75b225a7556.png" alt="Moschino" class="brand-logo">
+                <span class="brand-name">Moschino</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/8c6514032330f1d948ee74479736f867/width/0/i/06/6a/d1/9d/066ad19d-44aa-4bde-bd5e-fdc2eb071920.png" alt="Giorgio Armani" class="brand-logo">
+                <span class="brand-name">Giorgio Armani</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/59e5e8c5c3cff5a232f5942ae08b20c2/width/0/i/6c/d3/0c/a1/6cd30ca1-65b4-4790-8d2c-7b26064b99a6.png" alt="BOSS" class="brand-logo">
+                <span class="brand-name">BOSS</span>
+            </a>
+            <a href="#" class="brand-card">
+                <img src="https://st-cdn.tsum.com/sig/026d90c7d1b04b6cfed1f6b75e83d543/width/0/i/a2/f4/9f/83/a2f49f83-9762-4a22-9771-11a2f8efebb5.png" alt="Brioni" class="brand-logo">
+                <span class="brand-name">Brioni</span>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        // 1. Скрипт живого поиска по брендам
+        document.getElementById('brandSearch').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.brand-card').forEach(card => {
+                const name = card.querySelector('.brand-name').textContent.toLowerCase();
+                card.style.display = name.includes(term) ? 'flex' : 'none';
+            });
+        });
+
+        // 2. Скрипт скрытия шапки при скролле (тот же, что и в index.html)
+        (function(){
+            const header = document.querySelector('header');
+            let lastY = 0;
+            window.addEventListener('scroll', () => {
+                const y = window.scrollY;
+                if (y > lastY && y > 80) header.classList.add('hidden');
+                else if (y < lastY) header.classList.remove('hidden');
+                if (y <= 0) header.classList.remove('hidden');
+                lastY = y;
+            }, { passive: true });
+        })();
+    </script>
+</body>
+</html>
